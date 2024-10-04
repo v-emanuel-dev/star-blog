@@ -1,0 +1,14 @@
+<div class="container">
+  <div class="card p-5 m-5 shadow p-3 mb-5 bg-white rounded">
+    <div class="text-center mb-4">
+      <i class="fa-regular fa-message fa-5x"></i>
+    </div>
+    <div *ngIf="post">
+      <p class="display-4 mb-4">{{ post.title }}</p>
+      <p>{{ post.content }}</p>
+    </div>
+    <div class="flex justify-end mt-5">
+      <button routerLink="/blog" class="btn btn-primary me-2">Back</button>
+    </div>
+  </div>
+</div>

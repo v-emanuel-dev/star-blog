@@ -1,0 +1,49 @@
+<div class="container">
+  <div class="card p-5 m-5 shadow p-3 mb-5 bg-white rounded">
+  <div class="text-center">
+    <i class="fa-solid fa-pen-to-square fa-5x mb-4"></i>
+  </div>
+  <h2 class="text-center mb-4 display-4">Edit Post</h2>
+  <div
+    *ngIf="message"
+    [ngClass]="{ 'text-green-600': success, 'text-red-600': !success }"
+    class="mb-4 text-center"
+  >
+    {{ message }}
+  </div>
+  <form (ngSubmit)="updatePost()" class="p-6">
+    <div class="mb-6">
+      <label for="title" class="block text-gray-800 text-lg font-semibold mb-2"
+        >Title:</label
+      >
+      <input
+        type="text"
+        [(ngModel)]="title"
+        name="title"
+        required
+        class="mt-1 block w-full border border-gray-300 rounded-lg py-3 px-4 focus:outline-none focus:ring focus:ring-blue-300"
+        placeholder="Enter the title of your post"
+      />
+    </div>
+    <div class="mb-6">
+      <label
+        for="content"
+        class="block text-gray-800 text-lg font-semibold mb-2"
+        >Content:</label
+      >
+      <textarea
+        [(ngModel)]="content"
+        name="content"
+        required
+        class="mt-1 block w-full border border-gray-300 rounded-lg py-3 px-4 focus:outline-none focus:ring focus:ring-blue-300"
+        rows="5"
+        placeholder="Edit your post content here..."
+      ></textarea>
+    </div>
+    <div class="flex justify-between">
+      <a routerLink="/blog" class="btn btn-warning me-2"> Back </a>
+      <button type="submit" class="btn btn-primary me-2">Update Post</button>
+    </div>
+  </form>
+  </div>
+</div>

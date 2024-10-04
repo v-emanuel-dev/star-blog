@@ -1,0 +1,43 @@
+import { HttpClientModule } from '@angular/common/http';
+import { NgModule } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { BrowserModule } from '@angular/platform-browser';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { AuthGuard } from '../app/guards/auth.guard';
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+import { BlogCreateComponent } from './components/blog-create/blog-create.component';
+import { BlogDetailComponent } from './components/blog-detail/blog-detail.component';
+import { BlogEditComponent } from './components/blog-edit/blog-edit.component';
+import { BlogListComponent } from './components/blog-list/blog-list.component';
+import { LoginComponent } from './components/login/login.component';
+import { NavbarComponent } from './components/navbar/navbar.component';
+import { RegisterComponent } from './components/register/register.component';
+import { UserProfileComponent } from './components/user-profile/user-profile.component';
+import { AuthService } from './services/auth.service';
+
+@NgModule({
+  declarations: [
+    AppComponent,
+    LoginComponent,
+    RegisterComponent,
+    NavbarComponent,
+    BlogListComponent,
+    BlogCreateComponent,
+    BlogEditComponent,
+    UserProfileComponent,
+    BlogDetailComponent
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    FormsModule,
+    HttpClientModule,
+    BrowserAnimationsModule,
+    NgbModule
+  ],
+  providers: [AuthService, AuthGuard],
+  bootstrap: [AppComponent]
+})
+export class AppModule {}

@@ -1,0 +1,23 @@
+/* Estilo de transição para os itens da lista e botões */
+.transition {
+  transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+/* Efeito de sombra para o item da lista */
+.list-item {
+  transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.list-item:hover {
+  background-color: #f9fafb; /* Cor de fundo ao passar o mouse */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Sombra ao passar o mouse */
+}
+
+/* Efeitos de transição para os botões */
+.button-transition {
+  transition: background-color 0.3s ease-in-out;
+}
+
+.button-transition:hover {
+  background-color: darken(var(--bg-color), 10%); /* Altere a cor para um tom mais escuro */
+}
