@@ -1,5 +1,5 @@
-<div class="container">
-  <div class="card p-5 m-5 shadow p-3 mb-5 bg-white rounded">
+<div class="container d-flex justify-content-center">
+  <div class="card p-3 m-5 shadow bg-white rounded w-100" style="max-width: 450px;">
     <div
       *ngIf="message"
       [ngClass]="{ 'text-green-600': success, 'text-red-600': !success }"
@@ -8,10 +8,11 @@
       {{ message }}
     </div>
     <div class="text-center">
-      <i class="fa-solid fa-plus fa-5x mb-4"></i>
+      <i class="fa-solid fa-plus fa-4x m-4"></i>
     </div>
     <h2 class="text-center mb-4 display-4">Register</h2>
     <form
+      class="mx-4"
       #registrationForm="ngForm"
       (ngSubmit)="register(registrationForm)"
       novalidate
@@ -126,7 +127,7 @@
         Register
       </button>
     </form>
-    <p class="mt-4 text-center text-gray-600">
+    <p class="m-4 text-center text-gray-600">
       Already have an account?
       <a routerLink="/login" class="text-blue-600 hover:underline">Login</a>
     </p>

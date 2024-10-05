@@ -45,7 +45,9 @@
         </button>
       </div>
       <div class="flex flex-shrink-0 items-center">
-        <i class="fa-solid fa-splotch fa-2x text-white ml-12"></i>
+        <a routerLink="/blog" class="ml-12">
+          <i class="fa-solid fa-splotch fa-2x text-white"></i>
+        </a>
       </div>
       <span class="text-white text-xl font-bold ml-3">Star Blog</span>
       <span
@@ -87,7 +89,7 @@
           </div>
         </div>
       </span>
-      <div class="flex space-x-4 mr-3">
+      <div class="hidden sm:flex items-center space-x-4 mr-3">
         <span *ngIf="isLoggedIn()" class="text-white">
           Welcome, {{ formattedUserName }}!
         </span>
@@ -104,19 +106,29 @@
       >
       <a
         *ngIf="!isLoggedIn()"
-        class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+        class="block rounded-md px-3 py-2 text-base font-medium
+         text-gray-300 hover:bg-gray-700 hover:text-white"
+        routerLink="/login"
+        >Login</a
+      >
+      <a
+        *ngIf="!isLoggedIn()"
+        class="block rounded-md px-3 py-2 text-base font-medium
+         text-gray-300 hover:bg-gray-700 hover:text-white"
         routerLink="/register"
         >Register</a
       >
       <a
         *ngIf="isLoggedIn()"
-        class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+        class="block rounded-md px-3 py-2 text-base font-medium
+         text-gray-300 hover:bg-gray-700 hover:text-white"
         routerLink="/user"
         >User Profile</a
       >
       <a
         *ngIf="isLoggedIn()"
-        class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+        class="block rounded-md px-3 py-2 text-base font-medium
+         text-gray-300 hover:bg-gray-700 hover:text-white"
         (click)="logout()"
       >
         Logout

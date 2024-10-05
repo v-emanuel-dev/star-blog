@@ -63,8 +63,18 @@ export class AuthService {
   }
 
   logout() {
+    // Removendo os dados do localStorage
     localStorage.removeItem('accessToken');
+    localStorage.removeItem('token');
     localStorage.removeItem('userName');
-    this.userNameSubject.next(undefined); // Emitindo undefined quando fizer logout
+    localStorage.removeItem('userId');
+    localStorage.removeItem('email');
+
+    // Emitindo undefined para limpar a exibição do nome de usuário
+    this.userNameSubject.next(undefined);
+
+    // Redirecionando para a página de login após o logout
+    this.router.navigate(['/login']);
   }
+
 }
