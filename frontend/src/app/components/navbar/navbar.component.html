@@ -1,7 +1,6 @@
 <nav class="bg-gray-800">
   <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
     <div class="relative flex h-16 items-center justify-between">
-      <!-- Ícone de menu mobile (hamburger) -->
       <div class="absolute inset-y-0 left-0 flex items-center sm:hidden">
         <button
           type="button"
@@ -45,60 +44,56 @@
           </svg>
         </button>
       </div>
-
-      <!-- Logo com ícone -->
-      <div class="flex items-center">
-        <i class="fa-solid fa-splotch fa-2x text-white ml-12 sm:ml-0"></i>
-        <span class="text-white text-xl font-bold ml-3">Star Blog</span>
+      <div class="flex flex-shrink-0 items-center">
+        <i class="fa-solid fa-splotch fa-2x text-white ml-12"></i>
       </div>
-
-      <!-- Links do menu desktop -->
-      <div class="hidden sm:ml-6 sm:block">
-        <div class="flex space-x-4">
-          <a
-            *ngIf="isLoggedIn()"
-            class="rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white"
-            aria-current="page"
-            routerLink="/blog"
-            >Blog</a
-          >
-          <a
-            *ngIf="!isLoggedIn()"
-            class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-            routerLink="/login"
-            >Login</a
-          >
-          <a
-            *ngIf="!isLoggedIn()"
-            class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-            routerLink="/register"
-            >Register</a
-          >
-          <a
-            *ngIf="isLoggedIn()"
-            class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-            routerLink="/user"
-            >User Profile</a
-          >
-          <a
-            *ngIf="isLoggedIn()"
-            class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-            (click)="logout()"
-            >Logout</a
-          >
+      <span class="text-white text-xl font-bold ml-3">Star Blog</span>
+      <span
+        class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start"
+      >
+        <div class="hidden sm:ml-6 sm:block">
+          <div class="flex space-x-4">
+            <a
+              *ngIf="isLoggedIn()"
+              class="rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white"
+              aria-current="page"
+              routerLink="/blog"
+              >Blog</a
+            >
+            <a
+              *ngIf="!isLoggedIn()"
+              class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+              routerLink="/login"
+              >Login</a
+            >
+            <a
+              *ngIf="!isLoggedIn()"
+              class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+              routerLink="/register"
+              >Register</a
+            >
+            <a
+              *ngIf="isLoggedIn()"
+              class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+              routerLink="/user"
+              >User Profile</a
+            >
+            <a
+              *ngIf="isLoggedIn()"
+              class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+              (click)="logout()"
+              >Logout</a
+            >
+          </div>
         </div>
-      </div>
-
-      <!-- Saudação ao usuário -->
-      <div class="hidden sm:flex items-center space-x-4 mr-3">
+      </span>
+      <div class="flex space-x-4 mr-3">
         <span *ngIf="isLoggedIn()" class="text-white">
           Welcome, {{ formattedUserName }}!
         </span>
       </div>
     </div>
   </div>
-
-  <!-- Menu mobile -->
   <div class="sm:hidden" id="mobile-menu" *ngIf="isMenuOpen">
     <div class="space-y-1 px-2 pb-3 pt-2">
       <a
