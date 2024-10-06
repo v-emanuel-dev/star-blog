@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const authRoutes = require('./routes/auth.routes');
 const postRoutes = require('./routes/post.routes'); // Importing post routes
+const commentRoutes = require('./routes/comment.routes'); // Ajuste o caminho conforme necessário
 const cors = require('cors');
 
 require('dotenv').config();
@@ -24,6 +25,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes); // Adding post routes
+app.use('/api/comments', commentRoutes); // Rotas de comentários
 
 // Start the server
 app.listen(PORT, () => {

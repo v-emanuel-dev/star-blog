@@ -1,14 +1,97 @@
 <div class="container d-flex justify-content-center">
-  <div class="card p-5 m-5 shadow bg-white rounded w-100" style="max-width: 450px;">
-    <div class="text-center mb-4">
-      <i class="fa-regular fa-message fa-5x"></i>
-    </div>
+  <div
+    class="card p-5 mt-5 shadow bg-white rounded w-100"
+    style="max-width: 600px"
+  >
     <div *ngIf="post">
-      <p class="display-4 mb-4">{{ post.title }}</p>
-      <p>{{ post.content }}</p>
+      <h2 class="display-4 mb-4">{{ post.title }}</h2>
+      <p class="lead">{{ post.content }}</p>
     </div>
-    <div class="flex justify-end mt-5">
+    <div class="d-flex justify-content-end mt-4">
       <button routerLink="/blog" class="btn btn-primary me-2">Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- Comments Section -->
+<div class="container my-5">
+  <h1 class="mb-4"><strong>Comments:</strong></h1>
+  <!-- Adicionar Comentário -->
+  <div class="card my-4">
+    <div class="card-header">
+      <h3 class="mb-0">Add a Comment</h3>
+    </div>
+    <div class="card-body">
+      <textarea
+        [(ngModel)]="newComment"
+        placeholder="Write your comment here..."
+        class="form-control mb-2"
+      ></textarea>
+      <button (click)="addComment()" class="btn btn-outline-dark">
+        Add Comment
+      </button>
+    </div>
+  </div>
+  <div *ngFor="let comment of comments" class="card mb-3">
+    <div class="card-header">
+      <strong>{{ userName }}</strong>
+    </div>
+    <div class="card-body">
+      <div class="d-flex align-items-center">
+        <!-- Exibição do comentário quando não está em modo de edição -->
+        <div *ngIf="editCommentId !== comment.id" class="flex-grow-1">
+          <p class="mb-0">{{ comment.content }}</p>
+        </div>
+
+        <!-- Campo de edição do comentário -->
+        <div *ngIf="editCommentId === comment.id" class="flex-grow-1">
+          <input
+            [(ngModel)]="editCommentContent"
+            class="form-control"
+            placeholder="Edit your comment..."
+            aria-label="Edit comment"
+          />
+        </div>
+      </div>
+
+      <!-- Botões de ações: Editar, Salvar, Cancelar e Deletar -->
+      <div class="d-flex justify-content-end mt-3">
+        <!-- Botão de Editar -->
+        <button
+          *ngIf="editCommentId !== comment.id"
+          (click)="editComment(comment)"
+          class="btn btn-outline-dark btn-sm me-2"
+        >
+          Edit
+        </button>
+
+        <!-- Botão de Salvar -->
+        <button
+          *ngIf="editCommentId === comment.id"
+          (click)="saveComment()"
+          class="btn btn-outline-success btn-sm me-2"
+        >
+          Save
+        </button>
+
+        <!-- Botão de Cancelar -->
+        <button
+          *ngIf="editCommentId === comment.id"
+          (click)="cancelEdit()"
+          class="btn btn-outline-danger btn-sm me-2"
+        >
+          Cancel
+        </button>
+
+        <!-- Botão de Deletar -->
+        <button
+          *ngIf="comment.id !== undefined"
+          (click)="deleteComment(comment.id)"
+          class="btn btn-outline-danger btn-sm"
+        >
+          Delete
+        </button>
+      </div>
     </div>
   </div>
 </div>

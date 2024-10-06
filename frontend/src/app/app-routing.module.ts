@@ -13,7 +13,7 @@ const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
-  { path: 'blog', component: BlogListComponent, canActivate: [AuthGuard] }, // Rota para listar posts
+  { path: 'blog', component: BlogListComponent }, // Rota para listar posts
   { path: 'blog/create', component: BlogCreateComponent, canActivate: [AuthGuard] }, // Rota para criar post
   { path: 'blog/edit/:id', component: BlogEditComponent, canActivate: [AuthGuard] }, // Rota para editar post
   { path: 'blog/post/:id', component: BlogDetailComponent, canActivate: [AuthGuard] }, // Rota para detalhes do post

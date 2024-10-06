@@ -1,85 +1,82 @@
-<div class="container my-5">
-  <div class="text-center mb-4">
-    <i class="fa-regular fa-star fa-4x"></i>
+<div class="container mx-auto my-5">
+  <h2 class="text-center m-4 display-4">{{ postsTitle }}</h2>
+  <div class="flex justify-start mb-4">
+    <a
+      routerLink="/blog/create"
+      class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-300"
+    >
+      <i class="fa-solid fa-plus mr-2"></i> New Post
+    </a>
   </div>
   <div
     *ngIf="message"
-    [ngClass]="{ 'text-success': success, 'text-danger': !success }"
+    [ngClass]="{ 'text-green-500': success, 'text-red-500': !success }"
     class="mb-4 text-center"
   >
     {{ message }}
   </div>
-  <h2 class="text-center mb-4 display-4">Blog Posts</h2>
-  <div class="text-center mb-4">
-    <a routerLink="/blog/create" class="btn btn-primary">
-      <i class="fa-solid fa-plus me-2"></i> New Post
-    </a>
-  </div>
-
-  <div class="row justify-content-center">
+  <div class="mb-4">
     <input
       type="text"
-      class="form-control shadow-sm p-3 bg-transparent text-dark rounded"
+      class="form-control w-full shadow-sm p-3 bg-transparent text-gray-800 rounded border border-gray-300 focus:outline-none focus:ring focus:ring-blue-400"
       placeholder="Search posts"
       [(ngModel)]="searchTerm"
       (input)="filterPosts()"
     />
     <div
       *ngIf="searchTerm && filteredPosts.length === 0"
-      class="alert alert-warning text-center"
+      class="alert alert-warning text-center mt-2"
       role="alert"
     >
       No results found
     </div>
     <div
       *ngIf="!searchTerm && filteredPosts.length === 0"
-      class="alert alert-info text-center"
+      class="alert alert-info text-center mt-2"
       role="alert"
     >
       Create a new post
     </div>
-
-    <div
-      class="card p-3 m-3 shadow bg-white rounded w-100"
-      style="max-width: 800px"
-    >
-      <ul>
-        <li *ngFor="let post of filteredPosts" class="">
-          <p class="mb-1 display-4">
+  </div>
+  <div class="mt-4">
+    <div class="grid grid-cols-1 gap-4">
+      <div class="col-span-1" *ngFor="let post of filteredPosts">
+        <div class="bg-white rounded-lg shadow-lg p-4 m-1">
+          <h3 class="mb-2 text-xl font-semibold">
             <a
               [routerLink]="['/blog/post', post.id ?? 0]"
-              class="text-decoration-none text-dark"
+              class="text-gray-800 hover:underline"
             >
               {{ post.title }}
             </a>
-          </p>
-          <p class="mb-1">{{ post.content }}</p>
-          <div class="d-flex justify-content-end mt-2">
+          </h3>
+          <p class="mb-3 text-gray-700">{{ post.content }}</p>
+          <div class="flex justify-end space-x-2">
             <a
               [routerLink]="['/blog/edit', post.id]"
-              class="btn btn-warning btn-sm me-2"
+              class="bg-yellow-500 text-white py-1 px-3 rounded hover:bg-yellow-600 transition duration-300"
               title="Editar Post"
             >
               <i class="fa-solid fa-pen"></i> Edit
             </a>
             <button
               *ngIf="post.id !== undefined"
-              (click)="deletePost(post.id)"
-              class="btn btn-danger btn-sm me-2"
+              (click)="confirmDelete(post.id)"
+              class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-300"
               title="Deletar Post"
             >
               <i class="fa-solid fa-trash"></i> Delete
             </button>
             <button
               (click)="exportAsTxt(post)"
-              class="btn btn-dark btn-sm"
+              class="bg-gray-800 text-white py-1 px-3 rounded hover:bg-gray-700 transition duration-300"
               title="Exportar Post"
             >
               <i class="fa-solid fa-download"></i> Export
             </button>
           </div>
-        </li>
-      </ul>
+        </div>
+      </div>
     </div>
   </div>
 </div>

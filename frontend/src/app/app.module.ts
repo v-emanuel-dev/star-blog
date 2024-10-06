@@ -1,6 +1,6 @@
 import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms'; // Importação necessária
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
@@ -27,7 +27,7 @@ import { AuthService } from './services/auth.service';
     BlogCreateComponent,
     BlogEditComponent,
     UserProfileComponent,
-    BlogDetailComponent
+    BlogDetailComponent,
   ],
   imports: [
     BrowserModule,
@@ -35,6 +35,7 @@ import { AuthService } from './services/auth.service';
     FormsModule,
     HttpClientModule,
     BrowserAnimationsModule,
+    ReactiveFormsModule,
     NgbModule
   ],
   providers: [AuthService, AuthGuard],

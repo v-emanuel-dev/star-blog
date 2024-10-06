@@ -23,8 +23,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.userNameSubscription = this.authService.userName$.subscribe(name => {
       this.userName = name;
-      console.log('Updated Username in Navbar:', this.userName); // Log para verificar
-      console.log('Formatted Welcome Message:', this.formattedUserName); // Log da mensagem formatada
     });
   }
 

@@ -3,11 +3,12 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { saveAs } from 'file-saver';
 import { Post } from '../../models/post.model';
 import { PostService } from '../../services/post.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-blog-list',
   templateUrl: './blog-list.component.html',
-  styleUrls: ['./blog-list.component.css']
+  styleUrls: ['./blog-list.component.css'],
 })
 export class BlogListComponent implements OnInit {
   posts: Post[] = []; // Todos os posts
@@ -15,12 +16,23 @@ export class BlogListComponent implements OnInit {
   searchTerm: string = ''; // Termo de busca
   message: string = ''; // Mensagem para feedback ao usuário
   success: boolean = false; // Status de sucesso ou falha das ações
+  isLoggedIn: boolean = false; // Verifica se o usuário está logado
+  loading: boolean = true; // Indicador de carregamento
+  postsTitle: string = ''; // Adicione esta linha para declarar postsTitle
 
-  constructor(private postService: PostService, private router: Router, private route: ActivatedRoute) {}
+  constructor(
+    private postService: PostService,
+    private authService: AuthService,
+    private router: Router,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
+    console.log('BlogListComponent initialized');
+    this.isLoggedIn = this.authService.isLoggedIn();
     this.getPosts(); // Carrega os posts na inicialização
-    this.route.queryParams.subscribe(params => {
+
+    this.route.queryParams.subscribe((params) => {
       if (params['message']) {
         this.message = params['message'];
         this.success = false;
@@ -29,45 +41,73 @@ export class BlogListComponent implements OnInit {
   }
 
   getPosts(): void {
-    this.postService.getPosts().subscribe((data: Post[]) => {
-      this.posts = data; // Atribui os posts recebidos
-      this.filteredPosts = data; // Inicialmente, todos os posts são exibidos
-    });
+    this.postService.getPosts().subscribe(
+      (data: Post[]) => {
+        console.log(data); // Verifique a estrutura e a visibilidade dos posts
+        this.posts = data;
+
+        if (this.isLoggedIn) {
+          // Se o usuário está logado, mostra todos os posts
+          this.filteredPosts = data;
+        } else {
+          // Se não estiver logado, mostra apenas posts públicos
+          this.filteredPosts = data.filter(
+            (post) => post.visibility === 'public'
+          );
+        }
+
+        // Atualize o título dos posts após carregar
+        this.updatePostsTitle();
+      },
+      (error) => {
+        console.error('Erro ao obter posts:', error);
+        // Trate o erro aqui, se necessário
+      }
+    );
   }
 
-  // Método de busca para filtrar os posts por título e conteúdo
   filterPosts(): void {
-    const searchTermLower = this.searchTerm.toLowerCase(); // Transforma o termo de busca em minúsculas
-    if (this.searchTerm) {
-      this.filteredPosts = this.posts.filter(post =>
-        post.title.toLowerCase().includes(searchTermLower) || // Verifica o título
-        post.content.toLowerCase().includes(searchTermLower) // Verifica o conteúdo
-      );
-    } else {
-      // Se o campo de busca estiver vazio, exibe todos os posts
-      this.filteredPosts = this.posts;
-    }
+    const searchTermLower = this.searchTerm.toLowerCase();
+    this.filteredPosts = this.posts.filter((post) => {
+      const matchesSearchTerm =
+        post.title.toLowerCase().includes(searchTermLower) ||
+        post.content.toLowerCase().includes(searchTermLower);
+      const matchesVisibility = this.isLoggedIn || post.visibility === 'public';
+      return matchesSearchTerm && matchesVisibility; // Retorna apenas posts que correspondem ao termo de busca e à visibilidade
+    });
+
+    // Atualize o título dos posts após filtrar
+    this.updatePostsTitle();
+  }
+
+  updatePostsTitle() {
+    const hasPublicPosts = this.filteredPosts.some(post => post.visibility === 'public');
+    this.postsTitle = hasPublicPosts ? 'Public Posts' : 'Private Posts'; // Atualiza o título baseado na visibilidade
   }
 
   editPost(postId: number): void {
-    this.router.navigate(['/blog/edit', postId]); // Navega para a página de edição
+    this.router.navigate(['/blog/edit', postId]);
   }
 
   deletePost(postId: number): void {
-    this.postService.deletePost(postId).subscribe(() => {
-      this.getPosts(); // Atualiza a lista de posts após a exclusão
-      this.message = 'Post deletado com sucesso!';
-      this.success = true;
-      setTimeout(() => {
-        this.message = '';
-      }, 2000); // Remove a mensagem após 2 segundos
-    }, error => {
-      this.message = 'Falha ao deletar o post.';
-      this.success = false;
+    this.postService.deletePost(postId).subscribe({
+      next: () => {
+        this.getPosts(); // Atualiza a lista de posts após a exclusão
+        this.message = 'Post deletado com sucesso!';
+        this.success = true;
+      },
+      error: () => {
+        this.message = 'Falha ao deletar o post.';
+        this.success = false;
+      },
+      complete: () => {
+        setTimeout(() => {
+          this.message = '';
+        }, 2000);
+      },
     });
   }
 
-  // Exporta o post como um arquivo .txt
   exportAsTxt(post: Post): void {
     const content = `Título: ${post.title}\n\nConteúdo:\n${post.content}`;
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
@@ -81,5 +121,11 @@ export class BlogListComponent implements OnInit {
 
   logNavigation(postId: number): void {
     console.log('Navigating to post ID:', postId);
+  }
+
+  confirmDelete(postId: number): void {
+    if (confirm('Tem certeza que deseja deletar este post?')) {
+      this.deletePost(postId);
+    }
   }
 }

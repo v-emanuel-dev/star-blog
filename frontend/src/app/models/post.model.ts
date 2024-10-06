@@ -1,5 +1,8 @@
 export interface Post {
-  id?: number; // O ID pode ser opcional na criação
+  id?: number;
   title: string;
   content: string;
+  userId: number;
+  visibility: string;
+  userName?: string; // Adicionando o campo userName
 }
