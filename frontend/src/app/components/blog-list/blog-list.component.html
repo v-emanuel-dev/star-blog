@@ -2,6 +2,7 @@
   <h2 class="text-center m-4 display-4">{{ postsTitle }}</h2>
   <div class="flex justify-start mb-4">
     <a
+      *ngIf="isLoggedIn"
       routerLink="/blog/create"
       class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-300"
     >
@@ -50,8 +51,12 @@
               {{ post.title }}
             </a>
           </h3>
-          <p class="mb-3 text-gray-700">{{ post.content }}</p>
-          <div class="flex justify-end space-x-2">
+          <p class="mb-3 lead">{{ post.content }}</p>
+          <p class="mb-3">{{ post.username  }} | {{ post.created_at | date: 'short' }}</p>
+
+          <div
+            *ngIf="isLoggedIn"
+            class="flex justify-end space-x-2">
             <a
               [routerLink]="['/blog/edit', post.id]"
               class="bg-yellow-500 text-white py-1 px-3 rounded hover:bg-yellow-600 transition duration-300"

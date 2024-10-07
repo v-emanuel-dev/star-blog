@@ -51,10 +51,14 @@ export class BlogEditComponent implements OnInit {
   // Método para atualizar o post
   updatePost(): void {
     const updatedPost: Post = {
+      id: 0, // Temporary ID, will be assigned by the server
       title: this.title,
       content: this.content,
-      userId: this.userId,  // Adicione o userId aqui
-      visibility: this.visibility // Adicione a visibilidade (pública ou privada)
+      userId: this.userId,
+      visibility: this.visibility,
+      created_at: new Date().toISOString(),
+      username: '',
+      categoryId: 0
     };
 
     this.postService.updatePost(this.postId, updatedPost).subscribe(() => {

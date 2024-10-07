@@ -15,6 +15,9 @@
 
 <!-- Comments Section -->
 <div class="container my-5">
+  <span *ngFor="let category of categories; let last = last">
+    Categories: {{ category.name }}<span *ngIf="!last">, </span>
+  </span>
   <h1 class="mb-4"><strong>Comments:</strong></h1>
   <!-- Adicionar Comentário -->
   <div class="card my-4">
@@ -27,7 +30,7 @@
         placeholder="Write your comment here..."
         class="form-control mb-2"
       ></textarea>
-      <button (click)="addComment()" class="btn btn-outline-dark">
+      <button (click)="addComment()" class="btn btn-outline-secondary">
         Add Comment
       </button>
     </div>
@@ -35,6 +38,10 @@
   <div *ngFor="let comment of comments" class="card mb-3">
     <div class="card-header">
       <strong>{{ userName }}</strong>
+      <p class="text-muted">{{ comment.created_at | date : "short" }}</p>
+      <p>
+
+      </p>
     </div>
     <div class="card-body">
       <div class="d-flex align-items-center">
@@ -55,7 +62,7 @@
       </div>
 
       <!-- Botões de ações: Editar, Salvar, Cancelar e Deletar -->
-      <div class="d-flex justify-content-end mt-3">
+      <div *ngIf="isLoggedIn" class="d-flex justify-content-end mt-3">
         <!-- Botão de Editar -->
         <button
           *ngIf="editCommentId !== comment.id"

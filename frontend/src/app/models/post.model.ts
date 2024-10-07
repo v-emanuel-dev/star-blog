@@ -4,5 +4,8 @@ export interface Post {
   content: string;
   userId: number;
   visibility: string;
-  userName?: string; // Adicionando o campo userName
+  created_at?: string
+  username: string;
+  categoryId: number;
+  comments?: Comment[]; // Adicione esta linha
 }

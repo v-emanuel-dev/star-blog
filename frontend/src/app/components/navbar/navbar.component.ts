@@ -16,7 +16,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
   constructor(private authService: AuthService, private router: Router) {
     this.userNameSubscription = this.authService.userName$.subscribe(name => {
       this.userName = name; // Atualiza o nome do usuário quando ele muda
-      console.log('Updated Username in Navbar:', this.userName); // Log do nome atualizado no Navbar
     });
   }
 

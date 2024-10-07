@@ -1,18 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { PostService } from '../../services/post.service'; // Ajuste o caminho conforme necessário
 import { CommentService } from '../../services/comment.service'; // Ajuste o caminho conforme necessário
+import { AuthService } from '../../services/auth.service'; // Ajuste o caminho conforme necessário
 import { Comment } from '../../models/comment.model'; // Ajuste o caminho conforme necessário
 import { Post } from '../../models/post.model'; // Ajuste o caminho conforme necessário
-import { AuthService } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
+import { CategoryService } from '../../services/category.service';
 
 @Component({
   selector: 'app-blog-detail',
   templateUrl: './blog-detail.component.html', // Ajuste o caminho conforme necessário
   styleUrls: ['./blog-detail.component.css'], // Ajuste o caminho conforme necessário
 })
-export class BlogDetailComponent implements OnInit {
+export class BlogDetailComponent implements OnInit, OnDestroy {
   postId: number = 0; // Inicializa postId com um valor padrão
   post: Post | null = null; // Propriedade para armazenar o post
   comments: Comment[] = []; // Array para armazenar comentários
@@ -20,17 +21,19 @@ export class BlogDetailComponent implements OnInit {
   editCommentId: number | null = null; // ID do comentário em edição
   editCommentContent: string = ''; // Conteúdo do comentário em edição
   userName: string | undefined;
+  isLoggedIn: boolean = false; // Verifica se o usuário está logado
+  categories: any[] = []; // Propriedade para armazenar as categorias
   private userNameSubscription: Subscription;
 
   constructor(
     private route: ActivatedRoute,
     private postService: PostService,
     private commentService: CommentService,
-    private authService: AuthService
+    private authService: AuthService,
+    private categoriesService: CategoryService
   ) {
     this.userNameSubscription = this.authService.userName$.subscribe((name) => {
       this.userName = name; // Atualiza o nome do usuário quando ele muda
-      console.log('Updated Username in Navbar:', this.userName); // Log do nome atualizado no Navbar
     });
   }
 
@@ -38,29 +41,49 @@ export class BlogDetailComponent implements OnInit {
     const postIdParam = this.route.snapshot.paramMap.get('id'); // Obtém o ID do post da rota
     if (postIdParam) {
       this.postId = +postIdParam; // Converte para número se não for null
+      this.isLoggedIn = this.authService.isLoggedIn(); // Verifica se o usuário está logado
       this.loadPost(); // Carrega o post ao inicializar
+      this.loadComments(); // Carrega os comentários ao inicializar
+      this.loadCategories(); // Carrega as categorias ao inicializar
     }
-    this.loadComments(); // Carrega os comentários ao inicializar
-
-    this.userNameSubscription = this.authService.userName$.subscribe((name) => {
-      this.userName = name;
-    });
   }
 
   // Método para carregar o post
   loadPost(): void {
-    this.postService.getPostById(this.postId).subscribe((post) => {
-      this.post = post; // Atribui o post à propriedade post
-    });
+    this.postService.getPostById(this.postId).subscribe(
+      (post) => {
+        this.post = post; // Atribui o post carregado
+        // Inicializa o array de comentários se não existir
+        this.post.comments = this.post.comments || [];
+      },
+      (error) => {
+        console.error('Erro ao carregar o post:', error);
+      }
+    );
   }
 
   // Método para carregar comentários
   loadComments(): void {
-    this.commentService
-      .getCommentsByPostId(this.postId)
-      .subscribe((comments) => {
-        this.comments = comments; // Atribui os comentários à propriedade comments
-      });
+    this.commentService.getCommentsByPostId(this.postId).subscribe(
+      (comments: Comment[]) => {
+        this.comments = comments;
+      },
+      (error) => {
+        console.error('Erro ao carregar comentários:', error);
+      }
+    );
+  }
+
+  // Método para carregar categorias
+  loadCategories(): void {
+    this.categoriesService.getCategories().subscribe(
+      (categories) => {
+        this.categories = categories; // Atribui as categorias carregadas
+      },
+      (error) => {
+        console.error('Erro ao carregar categorias:', error);
+      }
+    );
   }
 
   // Método para adicionar um novo comentário
@@ -71,7 +94,8 @@ export class BlogDetailComponent implements OnInit {
       postId: this.postId,
       userId: userId,
       content: this.newComment,
-      timestamp: new Date(), // Define o timestamp atual
+      created_at: new Date().toISOString(), // Define o timestamp atual
+      visibility: 'public' // Define a visibilidade padrão
     };
 
     this.commentService.addComment(comment).subscribe((newComment) => {
@@ -84,10 +108,10 @@ export class BlogDetailComponent implements OnInit {
   editComment(comment: Comment): void {
     this.editCommentId = comment.id !== undefined ? comment.id : null;
     this.editCommentContent = comment.content; // Preenche o campo com o conteúdo existente
-    console.log('Editando comentário:', comment);
   }
 
-  saveComment() {
+  // Método para salvar o comentário editado
+  saveComment(): void {
     if (this.editCommentContent && this.editCommentId !== null) {
       this.commentService
         .updateComment(this.editCommentId, { content: this.editCommentContent })
@@ -98,14 +122,10 @@ export class BlogDetailComponent implements OnInit {
               (c) => c.id === this.editCommentId
             );
             if (index !== -1) {
-              // Atualiza o conteúdo do comentário na lista local
               this.comments[index].content = this.editCommentContent; // Usando o conteúdo editado diretamente
-              console.log('Comentário atualizado:', this.comments[index]); // Log do comentário atualizado
             }
-
             // Limpa os campos de edição
-            this.editCommentId = null;
-            this.editCommentContent = '';
+            this.cancelEdit();
           },
           (error) => {
             console.error('Erro ao salvar comentário:', error);
@@ -124,9 +144,13 @@ export class BlogDetailComponent implements OnInit {
     });
   }
 
-  // Adicione este método ao seu componente
-  cancelEdit() {
+  // Método para cancelar a edição
+  cancelEdit(): void {
     this.editCommentId = null; // Reseta o ID do comentário em edição
     this.editCommentContent = ''; // Limpa o conteúdo do campo de edição
+  }
+
+  ngOnDestroy(): void {
+    this.userNameSubscription.unsubscribe(); // Limpa a assinatura ao destruir o componente
   }
 }

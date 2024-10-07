@@ -26,20 +26,35 @@ export class PostService {
     });
   }
 
-  // Method to fetch all posts
   getPosts(): Observable<Post[]> {
     const token = this.getToken();
-    const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : new HttpHeaders();
+    const headers = token
+      ? new HttpHeaders({ Authorization: `Bearer ${token}` })
+      : new HttpHeaders();
 
-    // Fetch all posts
     return this.http.get<Post[]>(this.apiUrl, { headers }).pipe(
-      // Filter posts based on user login status
-      map(posts => {
+      map((posts) => {
+        // Processar comentários nos posts
+        posts.forEach(post => {
+          });
+
+        // Se o usuário estiver logado, retorne todos os posts
         if (this.isLoggedIn()) {
-          // If user is logged in, filter out public posts
-          return posts.filter(post => post.visibility !== 'public');
+          return posts.sort((a, b) => {
+            const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return dateB - dateA; // Ordenação decrescente
+          });
+        } else {
+          // Retornar apenas posts públicos e ordená-los
+          return posts
+            .filter((post) => post.visibility === 'public')
+            .sort((a, b) => {
+              const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+              const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+              return dateB - dateA; // Ordenação decrescente
+            });
         }
-        return posts; // Return all posts if user is not logged in
       })
     );
   }
@@ -47,11 +62,11 @@ export class PostService {
   // Method to fetch a specific post by ID
   getPostById(postId: number): Observable<Post> {
     const token = this.getToken();
-    return this.http.get<Post>(`${this.apiUrl}/${postId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`, // Include token if available
-      },
-    });
+    const headers = token
+      ? new HttpHeaders({ Authorization: `Bearer ${token}` })
+      : new HttpHeaders();
+
+    return this.http.get<Post>(`${this.apiUrl}/${postId}`, { headers });
   }
 
   // Method to fetch private posts for a user

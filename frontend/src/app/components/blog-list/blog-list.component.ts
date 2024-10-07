@@ -4,6 +4,8 @@ import { saveAs } from 'file-saver';
 import { Post } from '../../models/post.model';
 import { PostService } from '../../services/post.service';
 import { AuthService } from '../../services/auth.service';
+import { CategoryService } from '../../services/category.service';
+import { Category } from '../../models/category.model'; // Ajuste o caminho conforme necessário
 
 @Component({
   selector: 'app-blog-list',
@@ -19,18 +21,21 @@ export class BlogListComponent implements OnInit {
   isLoggedIn: boolean = false; // Verifica se o usuário está logado
   loading: boolean = true; // Indicador de carregamento
   postsTitle: string = ''; // Adicione esta linha para declarar postsTitle
+  categories: Category[] = []; // Adicione esta linha para armazenar categorias
 
   constructor(
     private postService: PostService,
     private authService: AuthService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private categoryService: CategoryService // Injete o serviço de categorias
   ) {}
 
   ngOnInit(): void {
-    console.log('BlogListComponent initialized');
     this.isLoggedIn = this.authService.isLoggedIn();
+
     this.getPosts(); // Carrega os posts na inicialização
+    this.getCategories(); // Carregue as categorias
 
     this.route.queryParams.subscribe((params) => {
       if (params['message']) {
@@ -40,21 +45,26 @@ export class BlogListComponent implements OnInit {
     });
   }
 
+  getCategories(): void {
+    this.categoryService.getCategories().subscribe(
+      (data: Category[]) => {
+        this.categories = data; // Armazena as categorias
+      },
+      (error) => {
+        console.error('Erro ao obter categorias:', error);
+      }
+    );
+  }
+
   getPosts(): void {
     this.postService.getPosts().subscribe(
       (data: Post[]) => {
-        console.log(data); // Verifique a estrutura e a visibilidade dos posts
         this.posts = data;
 
-        if (this.isLoggedIn) {
-          // Se o usuário está logado, mostra todos os posts
-          this.filteredPosts = data;
-        } else {
-          // Se não estiver logado, mostra apenas posts públicos
-          this.filteredPosts = data.filter(
-            (post) => post.visibility === 'public'
-          );
-        }
+        // Se o usuário está logado, mostra todos os posts
+        this.filteredPosts = this.isLoggedIn
+          ? data
+          : data.filter((post) => post.visibility === 'public');
 
         // Atualize o título dos posts após carregar
         this.updatePostsTitle();
@@ -72,8 +82,7 @@ export class BlogListComponent implements OnInit {
       const matchesSearchTerm =
         post.title.toLowerCase().includes(searchTermLower) ||
         post.content.toLowerCase().includes(searchTermLower);
-      const matchesVisibility = this.isLoggedIn || post.visibility === 'public';
-      return matchesSearchTerm && matchesVisibility; // Retorna apenas posts que correspondem ao termo de busca e à visibilidade
+      return matchesSearchTerm; // Não filtre pela visibilidade aqui
     });
 
     // Atualize o título dos posts após filtrar
@@ -81,7 +90,9 @@ export class BlogListComponent implements OnInit {
   }
 
   updatePostsTitle() {
-    const hasPublicPosts = this.filteredPosts.some(post => post.visibility === 'public');
+    const hasPublicPosts = this.filteredPosts.some(
+      (post) => post.visibility === 'public'
+    );
     this.postsTitle = hasPublicPosts ? 'Public Posts' : 'Private Posts'; // Atualiza o título baseado na visibilidade
   }
 
@@ -96,7 +107,8 @@ export class BlogListComponent implements OnInit {
         this.message = 'Post deletado com sucesso!';
         this.success = true;
       },
-      error: () => {
+      error: (err) => {
+        console.error('Erro ao deletar post:', err); // Exibe o erro detalhado no console
         this.message = 'Falha ao deletar o post.';
         this.success = false;
       },

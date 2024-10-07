@@ -4,5 +4,6 @@ export interface Comment {
   postId: number; // ID do post ao qual o comentário pertence
   userId: number; // ID do usuário que fez o comentário
   content: string; // Conteúdo do comentário
-  timestamp?: Date; // Timestamp opcional para quando o comentário foi criado
+  visibility: string; // Adicionando a visibilidade
+  created_at: string; // Adicione essa linha
 }

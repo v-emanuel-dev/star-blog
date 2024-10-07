@@ -26,13 +26,22 @@ exports.addComment = (req, res) => {
 exports.getCommentsByPostId = (req, res) => {
   const { postId } = req.params;
 
-  const query = "SELECT * FROM comments WHERE post_id = ?";
+  const query = `
+      SELECT comments.id, comments.content, comments.post_id, comments.user_id, comments.created_at, posts.visibility 
+      FROM comments 
+      JOIN posts ON comments.post_id = posts.id 
+      WHERE post_id = ?
+    `;
+
   db.query(query, [postId], (error, results) => {
     if (error) {
+      console.error("Erro ao buscar comentários:", error);
       return res
         .status(500)
         .json({ message: "Erro ao buscar comentários.", error });
     }
+
+    console.log("Comentários encontrados:", results);
     res.json(results);
   });
 };

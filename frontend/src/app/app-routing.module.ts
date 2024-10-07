@@ -16,7 +16,7 @@ const routes: Routes = [
   { path: 'blog', component: BlogListComponent }, // Rota para listar posts
   { path: 'blog/create', component: BlogCreateComponent, canActivate: [AuthGuard] }, // Rota para criar post
   { path: 'blog/edit/:id', component: BlogEditComponent, canActivate: [AuthGuard] }, // Rota para editar post
-  { path: 'blog/post/:id', component: BlogDetailComponent, canActivate: [AuthGuard] }, // Rota para detalhes do post
+  { path: 'blog/post/:id', component: BlogDetailComponent }, // Rota para detalhes do post
   { path: 'user', component: UserProfileComponent, canActivate: [AuthGuard] } // Rota para perfil do usuário
 ];
 

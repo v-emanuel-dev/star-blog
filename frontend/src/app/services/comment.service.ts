@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { catchError, Observable, tap, throwError } from 'rxjs';
 import { Comment } from '../models/comment.model';
 
 @Injectable({
@@ -16,9 +16,14 @@ export class CommentService {
     return this.http.post<Comment>(this.apiUrl, comment);
   }
 
-  // Obter comentários por post ID
   getCommentsByPostId(postId: number): Observable<Comment[]> {
-    return this.http.get<Comment[]>(`${this.apiUrl}/${postId}`);
+    return this.http.get<Comment[]>(`${this.apiUrl}/${postId}`).pipe(
+      tap((comments) => console.log('Comentários recebidos:', comments)), // Inspeciona os comentários no console
+      catchError((error) => {
+        console.error('Erro ao buscar comentários:', error);
+        return throwError(error);
+      })
+    );
   }
 
   // Atualizar um comentário
