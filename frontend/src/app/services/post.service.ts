@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { map, Observable } from 'rxjs';
+import { catchError, map, Observable, throwError } from 'rxjs';
 import { Post } from '../models/post.model';
 
 @Injectable({
@@ -18,12 +18,13 @@ export class PostService {
 
   // Method to create a post
   createPost(post: Post): Observable<Post> {
-    const token = this.getToken();
-    return this.http.post<Post>(this.apiUrl, post, {
-      headers: {
-        Authorization: `Bearer ${token}`, // Ensure the token is valid and not null
-      },
-    });
+    console.log('Post a ser criado:', post); // Adicione este log para depuração
+    return this.http.post<Post>(this.apiUrl, post).pipe(
+      catchError((error) => {
+        console.error('Erro ao criar post:', error);
+        return throwError(() => new Error('Erro ao criar post.'));
+      })
+    );
   }
 
   getPosts(): Observable<Post[]> {
@@ -35,8 +36,7 @@ export class PostService {
     return this.http.get<Post[]>(this.apiUrl, { headers }).pipe(
       map((posts) => {
         // Processar comentários nos posts
-        posts.forEach(post => {
-          });
+        posts.forEach((post) => {});
 
         // Se o usuário estiver logado, retorne todos os posts
         if (this.isLoggedIn()) {

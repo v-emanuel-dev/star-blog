@@ -20,8 +20,8 @@ export class BlogListComponent implements OnInit {
   success: boolean = false; // Status de sucesso ou falha das ações
   isLoggedIn: boolean = false; // Verifica se o usuário está logado
   loading: boolean = true; // Indicador de carregamento
-  postsTitle: string = ''; // Adicione esta linha para declarar postsTitle
-  categories: Category[] = []; // Adicione esta linha para armazenar categorias
+  postsTitle: string = ''; // Título dos posts
+  categories: Category[] = []; // Armazena categorias
 
   constructor(
     private postService: PostService,
@@ -33,7 +33,6 @@ export class BlogListComponent implements OnInit {
 
   ngOnInit(): void {
     this.isLoggedIn = this.authService.isLoggedIn();
-
     this.getPosts(); // Carrega os posts na inicialização
     this.getCategories(); // Carregue as categorias
 
@@ -60,18 +59,17 @@ export class BlogListComponent implements OnInit {
     this.postService.getPosts().subscribe(
       (data: Post[]) => {
         this.posts = data;
-
-        // Se o usuário está logado, mostra todos os posts
         this.filteredPosts = this.isLoggedIn
           ? data
           : data.filter((post) => post.visibility === 'public');
 
         // Atualize o título dos posts após carregar
         this.updatePostsTitle();
+        this.loading = false; // Finaliza o carregamento
       },
       (error) => {
         console.error('Erro ao obter posts:', error);
-        // Trate o erro aqui, se necessário
+        this.loading = false; // Finaliza o carregamento, mesmo em erro
       }
     );
   }
@@ -89,7 +87,7 @@ export class BlogListComponent implements OnInit {
     this.updatePostsTitle();
   }
 
-  updatePostsTitle() {
+  updatePostsTitle(): void {
     const hasPublicPosts = this.filteredPosts.some(
       (post) => post.visibility === 'public'
     );

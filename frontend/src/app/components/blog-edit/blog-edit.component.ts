@@ -54,7 +54,7 @@ export class BlogEditComponent implements OnInit {
       id: 0, // Temporary ID, will be assigned by the server
       title: this.title,
       content: this.content,
-      userId: this.userId,
+      user_id: this.userId,
       visibility: this.visibility,
       created_at: new Date().toISOString(),
       username: '',

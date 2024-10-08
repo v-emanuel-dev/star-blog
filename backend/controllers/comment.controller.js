@@ -2,23 +2,21 @@ const db = require("../config/db");
 
 // Adicionar um novo comentário
 exports.addComment = (req, res) => {
-  const { postId, userId, content } = req.body;
+  const { content, postId, userId } = req.body; // Incluindo userId
 
-  if (!postId || !userId || !content) {
-    return res
-      .status(400)
-      .send({ message: "Todos os campos são obrigatórios." });
+  if (!content || !postId || !userId) {
+    return res.status(400).json({ message: "Conteúdo, ID do post e ID do usuário são obrigatórios." });
   }
 
-  const query =
-    "INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)";
-  db.query(query, [postId, userId, content], (err, result) => {
+  const sql = "INSERT INTO comments (content, postId, user_id) VALUES (?, ?, ?)"; // Adicionando user_id
+  db.query(sql, [content, postId, userId], (err, result) => {
     if (err) {
-      return res
-        .status(500)
-        .send({ message: "Erro ao adicionar o comentário.", error: err });
+      console.error("Erro ao inserir comentário:", err);
+      return res.status(500).json({ error: err.message });
     }
-    res.status(201).send({ id: result.insertId, postId, userId, content });
+
+    const newComment = { id: result.insertId, content, postId, userId }; // Retorna o novo comentário
+    return res.status(201).json(newComment);
   });
 };
 
@@ -27,11 +25,11 @@ exports.getCommentsByPostId = (req, res) => {
   const { postId } = req.params;
 
   const query = `
-      SELECT comments.id, comments.content, comments.post_id, comments.user_id, comments.created_at, posts.visibility 
-      FROM comments 
-      JOIN posts ON comments.post_id = posts.id 
-      WHERE post_id = ?
-    `;
+    SELECT comments.id, comments.content, comments.postId, comments.user_id, comments.created_at, posts.visibility 
+    FROM comments 
+    JOIN posts ON comments.postId = posts.id 
+    WHERE comments.postId = ?
+  `;
 
   db.query(query, [postId], (error, results) => {
     if (error) {

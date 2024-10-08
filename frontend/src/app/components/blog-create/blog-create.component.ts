@@ -1,26 +1,29 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Post } from '../../models/post.model'; // Adjust the path as needed
-import { PostService } from '../../services/post.service'; // Adjust the path as needed
-import { AuthService } from '../../services/auth.service'; // Adjust the path as needed
+import { Post } from '../../models/post.model';
+import { PostService } from '../../services/post.service';
+import { AuthService } from '../../services/auth.service';
 import { CategoryService } from '../../services/category.service';
-import { Category } from '../../models/category.model'; // Adjust the path as needed
+import { Category } from '../../models/category.model';
 
 @Component({
   selector: 'app-blog-create',
-  templateUrl: './blog-create.component.html', // Adjust the path as needed
-  styleUrls: ['./blog-create.component.css'], // Adjust the path as needed
+  templateUrl: './blog-create.component.html',
+  styleUrls: ['./blog-create.component.css'],
 })
 export class BlogCreateComponent implements OnInit {
-  title: string = ''; // Store the post title
-  content: string = ''; // Store the post content
-  message: string = ''; // Message to be displayed
-  success: boolean = false; // Indicates success or failure
-  visibility: string = 'public'; // Default value
-  userId: number = 0; // Initialize with 0 as default value
-  categories: Category[] = []; // Category array with type annotation
-  newCategoryName: string = ''; // New category name
-  selectedCategoryId: number | null = null; // Selected category ID
+  title: string = '';
+  content: string = '';
+  message: string = '';
+  success: boolean = false;
+  visibility: string = 'public';
+  user_id: number = 0;
+  postId: number | null = null;
+  categories: Category[] = [];
+  categoryId: number | null = null;
+  newCategoryName: string = '';
+  selectedCategoryId: number | null = null;
+  currentPostId: number | null = null;
 
   constructor(
     private postService: PostService,
@@ -31,30 +34,36 @@ export class BlogCreateComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.getCategories();
+    this.route.params.subscribe((params) => {
+      this.currentPostId = +params['postId']; // Converte o postId para número
+      console.log('Post ID atual:', this.currentPostId);
+
+      // Chame loadCategories apenas se currentPostId não for null
+      if (this.currentPostId !== null) {
+        this.loadCategories(this.currentPostId); // Passa o currentPostId como argumento
+      } else {
+        console.error('currentPostId é null. Não é possível carregar categorias.');
+      }
+    });
+
     this.getUserId();
     this.setVisibility();
     this.handleQueryParams();
   }
 
-  // Fetch logged-in user's ID from localStorage
   private getUserId(): void {
     const storedUserId = localStorage.getItem('userId');
     if (storedUserId) {
-      this.userId = parseInt(storedUserId, 10); // Convert from string to number
+      this.user_id = parseInt(storedUserId, 10);
     } else {
-      this.router.navigate(['/login']); // Redirect to login if user ID is invalid
+      this.router.navigate(['/login']);
     }
   }
 
-  // Set visibility based on user authentication status
   private setVisibility(): void {
-    if (!this.authService.isLoggedIn()) {
-      this.visibility = 'public'; // Only public if not logged in
-    }
+    this.visibility = this.authService.isLoggedIn() ? 'private' : 'public';
   }
 
-  // Handle query parameters if necessary
   private handleQueryParams(): void {
     this.route.queryParams.subscribe((params) => {
       if (params['message']) {
@@ -65,131 +74,115 @@ export class BlogCreateComponent implements OnInit {
 
   // Create a new post
   createPost(): void {
-    if (!this.isPostValid()) {
-      return; // Return early if validation fails
+    if (!this.title.trim() || !this.content.trim()) {
+      this.message = 'Title and content are required.';
+      this.success = false;
+      return;
+    }
+
+    if (!this.selectedCategoryId) {
+      this.message = 'Category is required.';
+      this.success = false;
+      return;
     }
 
     const newPost: Post = {
-      id: 0, // Temporary ID, will be assigned by the server
-      title: this.title,
-      content: this.content,
-      userId: this.userId,
+      id: 0,
+      title: this.title.trim(),
+      content: this.content.trim(),
+      user_id: this.user_id,
       visibility: this.visibility,
-      created_at: new Date().toISOString(),
-      username: '',
-      categoryId: 0
+      categoryId: this.selectedCategoryId,
     };
 
+    console.log('Criando post com dados:', newPost); // Log para depuração
+
     this.postService.createPost(newPost).subscribe({
-      next: () => this.onPostCreationSuccess(),
+      next: (response) => {
+        console.log('Post criado com sucesso:', response);
+        this.message = 'Post created successfully!';
+        this.success = true;
+        this.router.navigate(['/blog']);
+      },
       error: (error) => this.onPostCreationError(error),
     });
   }
 
-  // Validate post fields
-  private isPostValid(): boolean {
-    if (!this.title.trim() || !this.content.trim() || this.title.length < 3) {
-      this.message = 'Title and content cannot be empty, and title must be at least 3 characters!';
-      return false;
-    }
-    return true; // Post is valid
-  }
-
-  // Handle successful post creation
-  private onPostCreationSuccess(): void {
-    this.message = 'Post created successfully!';
-    this.success = true;
-    setTimeout(() => {
-      this.router.navigate(['/blog']); // Navigate to the blog list after creation
-    }, 1500);
-  }
-
-  // Handle post creation error
   private onPostCreationError(error: any): void {
     console.error('Error creating post:', error);
     this.message = error?.error?.message || 'Failed to create post.';
   }
 
-  // Get categories
-  getCategories(): void {
+  loadCategories(postId: number): void {
     this.categoryService.getCategories().subscribe(
-      (data: Category[]) => this.categories = data,
+      (data: Category[]) => {
+        this.categories = data; // Armazena as categorias
+      },
       (error) => {
-        console.error('Error fetching categories:', error);
-        this.message = 'Failed to load categories.';
+        console.error('Erro ao obter categorias:', error);
       }
     );
   }
 
-  // Add a new category
   addCategory(): void {
     if (this.newCategoryName.trim()) {
-      this.categoryService.createCategory(this.newCategoryName).subscribe({
-        next: () => this.onCategoryAddSuccess(),
-        error: (error) => this.onCategoryAddError(error),
+      const category: Omit<Category, 'id'> = {
+        name: this.newCategoryName,
+        postId: this.currentPostId, // Certifique-se de que postId esteja associado corretamente
+      };
+
+      this.categoryService.createCategory(category).subscribe({
+        next: () => {
+          // Passa o currentPostId ao chamar loadCategories
+          if (this.currentPostId !== null) {
+            this.loadCategories(this.currentPostId);
+          } else {
+            console.error('currentPostId is null. Cannot load categories.');
+          }
+          this.newCategoryName = ''; // Limpa o campo após a adição
+        },
+        error: (error) => {
+          console.error('Erro ao criar categoria:', error);
+        },
+      });
+    } else {
+      console.error('O nome da categoria não pode estar vazio');
+    }
+  }
+
+  editCategory(category: Category): void {
+    this.newCategoryName = category.name;
+    this.selectedCategoryId = category.id !== undefined ? category.id : null;
+  }
+
+  deleteCategory(categoryId: number): void {
+    if (confirm('Are you sure you want to delete this category?')) {
+      this.categoryService.deleteCategory(categoryId).subscribe({
+        next: () => {
+          // Verifica se currentPostId não é null antes de chamar loadCategories
+          if (this.currentPostId !== null) {
+            this.loadCategories(this.currentPostId); // Passa o postId para recarregar as categorias
+          } else {
+            console.error('currentPostId is null. Cannot load categories after deletion.');
+          }
+
+          this.message = 'Category deleted successfully!';
+          this.success = true;
+        },
+        error: (error) => {
+          console.error('Error deleting category:', error);
+          this.message = 'Failed to delete category.';
+        },
       });
     }
   }
 
-  // Handle successful category addition
-  private onCategoryAddSuccess(): void {
-    this.getCategories(); // Refresh categories
-    this.newCategoryName = ''; // Clear input
-    this.message = 'Category added successfully!';
-    this.success = true;
-  }
-
-  // Handle category addition error
   private onCategoryAddError(error: any): void {
     console.error('Error adding category:', error);
     this.message = 'Failed to add category.';
   }
 
-  // Edit a category
-  editCategory(category: Category): void {
-    const updatedName = prompt('Enter new category name:', category.name);
-    if (updatedName) {
-      this.categoryService.updateCategory(category.id, { id: category.id, name: updatedName }).subscribe({
-        next: (updatedCategory) => this.onCategoryEditSuccess(category.id, updatedCategory),
-        error: (error) => this.onCategoryEditError(error),
-      });
-    }
-  }
-
-  // Handle successful category update
-  private onCategoryEditSuccess(id: number, updatedCategory: Category): void {
-    const index = this.categories.findIndex((c) => c.id === id);
-    if (index !== -1) {
-      this.categories[index] = updatedCategory; // Replace with the updated category
-    }
-    this.message = 'Category updated successfully!';
-    this.getCategories(); // Refresh categories after update
-  }
-
-  // Handle category update error
-  private onCategoryEditError(error: any): void {
-    console.error('Error updating category:', error);
-    this.message = 'Failed to update category.';
-  }
-
-  // Delete a category
-  deleteCategory(id: number): void {
-    this.categoryService.deleteCategory(id).subscribe({
-      next: () => this.onCategoryDeleteSuccess(),
-      error: (error) => this.onCategoryDeleteError(error),
-    });
-  }
-
-  // Handle successful category deletion
-  private onCategoryDeleteSuccess(): void {
-    this.getCategories(); // Refresh categories
-    this.message = 'Category deleted successfully!';
-    this.success = true;
-  }
-
-  // Handle category deletion error
-  private onCategoryDeleteError(error: any): void {
-    console.error('Error deleting category:', error);
-    this.message = 'Failed to delete category.';
+  onCategoryChange(categoryId: number): void {
+    console.log('Categoria selecionada:', categoryId);
   }
 }

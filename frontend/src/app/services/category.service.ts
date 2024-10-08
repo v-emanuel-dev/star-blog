@@ -1,29 +1,34 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { Category } from '../models/category.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class CategoryService {
-  private apiUrl = 'http://localhost:3000/api/categories';
+  private apiUrl = 'http://localhost:3000/api/categories'; // Ajuste conforme sua API
 
   constructor(private http: HttpClient) {}
 
-  getCategories(): Observable<any> {
-    return this.http.get(this.apiUrl);
+  getCategories(): Observable<Category[]> { // Ensure this method is defined correctly
+    return this.http.get<Category[]>(this.apiUrl); // Fetch categories from the API
   }
 
-  createCategory(name: string): Observable<any> {
-    return this.http.post(this.apiUrl, { name });
+  getCategoriesByPostId(postId: number): Observable<Category[]> {
+    return this.http.get<Category[]>(`${this.apiUrl}?postId=${postId}`);
   }
 
-  updateCategory(categoryId: number, updatedCategory: Category): Observable<Category> {
-    return this.http.put<Category>(`${this.apiUrl}/${categoryId}`, updatedCategory);
+  createCategory(category: Category): Observable<Category> {
+    return this.http.post<Category>(this.apiUrl, category); // Ajuste a URL conforme necessário
   }
 
-  deleteCategory(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${id}`);
+  // Atualizar a assinatura do método updateCategory
+  updateCategory(id: number, category: Category): Observable<Category> {
+    return this.http.put<Category>(`${this.apiUrl}/${id}`, category);
+  }
+
+  deleteCategory(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }
