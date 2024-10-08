@@ -1,5 +1,3 @@
-![Auth App Screenshot](https://github.com/v-emanuel-dev/blog/blob/main/frontend/src/assets/img/blog-screenshot.png)
-
 # Blog App
 
 A **full-stack Blog application** that enables users to register, log in, and create, read, update, and delete posts. This application is built using **Angular** for the frontend, **Node.js** with **JWT** for secure authentication in the backend, and **MySQL** for data storage.
