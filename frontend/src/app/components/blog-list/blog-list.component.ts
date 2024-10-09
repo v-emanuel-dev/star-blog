@@ -22,6 +22,8 @@ export class BlogListComponent implements OnInit {
   loading: boolean = true; // Indicador de carregamento
   postsTitle: string = ''; // Título dos posts
   categories: Category[] = []; // Armazena categorias
+  isModalOpen: boolean = false;
+  currentPostId: number | null = null;
 
   constructor(
     private postService: PostService,
@@ -133,9 +135,46 @@ export class BlogListComponent implements OnInit {
     console.log('Navigating to post ID:', postId);
   }
 
+  // Método para abrir o modal
+  openModal(postId: number): void {
+    this.currentPostId = postId; // Armazena o ID do post a ser deletado
+    this.isModalOpen = true; // Abre o modal
+  }
+
+  // Método para fechar o modal
+  closeModal(): void {
+    this.isModalOpen = false; // Fecha o modal
+    this.currentPostId = null; // Limpa o ID atual
+  }
+
+  // Método de confirmação de deleção
   confirmDelete(postId: number): void {
-    if (confirm('Tem certeza que deseja deletar este post?')) {
-      this.deletePost(postId);
+    this.openModal(postId); // Abre o modal com o ID do post
+  }
+
+  // Método para deletar o post
+  deletePostModal(postId: number): void {
+    if (postId) {
+      this.postService.deletePost(postId).subscribe({
+        next: () => {
+          this.getPosts(); // Atualiza a lista de posts após a exclusão
+          this.message = 'Post deletado com sucesso!';
+          this.success = true;
+          this.closeModal(); // Fecha o modal após a deleção
+        },
+        error: (err) => {
+          console.error('Erro ao deletar post:', err); // Exibe o erro detalhado no console
+          this.message = 'Falha ao deletar o post.';
+          this.success = false;
+        },
+        complete: () => {
+          setTimeout(() => {
+            this.message = ''; // Limpa a mensagem após um tempo
+          }, 2000);
+        },
+      });
+    } else {
+      console.error('ID do post não é válido:', postId);
     }
   }
 }
