@@ -16,23 +16,33 @@ exports.getAllCategories = (req, res) => {
 
 // Get categories by post ID
 // Exemplo de controlador de categorias
+// controllers/categoryController.js
+// controllers/categoryController.js
 exports.getCategoriesByPostId = (req, res) => {
-  const postId = req.params.postId;
+  console.log("Endpoint /api/categories chamado"); // Adicione este log
 
-  const query = 'SELECT * FROM categories WHERE postId = ?';
-  db.query(query, [postId], (error, results) => {
-    if (error) {
-      console.error("Error fetching categories:", error);
-      return res.status(500).json({ message: "Server error" });
+  const postId = req.query.postId; // Obtém o postId da query string
+  console.log(`postId recebido: ${postId}`); // Adicione este log para ver o postId
+
+  const query = `
+    SELECT categories.id, categories.name
+    FROM categories
+    JOIN post_categories ON categories.id = post_categories.categoryId
+    WHERE post_categories.postId = ?
+  `;
+
+  db.query(query, [postId], (err, results) => {
+    if (err) {
+      console.error("Erro ao buscar categorias:", err);
+      return res.status(500).json({ error: err.message });
     }
     
-    if (results.length > 0) {
-      res.status(200).json(results);
-    } else {
-      res.status(404).json({ message: "No categories found for this post." });
-    }
+    console.log("Categorias retornadas:", results); // Adicione este log
+    res.json(results); // Retorna as categorias associadas ao postId
   });
 };
+
+
 
 exports.createCategoryForPost = (req, res) => {
   const { categoryName, postId } = req.body;
@@ -83,16 +93,17 @@ exports.createCategory = (req, res) => {
 
   db.query(query, params, (error, results) => {
       if (error) {
-        console.error("Database connection failed: ", error.message); // Corrigido: use 'error' ao invés de 'err'
-        return res.status(500).json({ message: "Database connection failed", error: error.message });
+          console.error("Database connection failed: ", error.message);
+          return res.status(500).json({ message: "Database connection failed", error: error.message });
       }
-      console.log("Category created successfully with ID:", results.insertId); // Log de sucesso
+      console.log("Category created successfully with ID:", results.insertId);
       res.status(201).json({
           message: "Category created successfully",
           categoryId: results.insertId,
       });
   });
 };
+
 
 
 // Update a category

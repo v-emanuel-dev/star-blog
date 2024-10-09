@@ -142,24 +142,25 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
   // Métodos para gerenciar categorias
   addCategory(): void {
     if (this.newCategoryName.trim()) {
-      const category: Omit<Category, 'id'> = {
-        name: this.newCategoryName,
-        postId: this.postId, // Inclui o postId aqui
-      };
+        const category: Omit<Category, 'id'> = {
+            name: this.newCategoryName,
+            postId: this.postId, // Inclui o postId aqui
+        };
 
-      this.categoryService.createCategory(category).subscribe({
-        next: () => {
-          this.loadCategories(this.postId); // Recarrega a lista de categorias após a adição
-          this.newCategoryName = ''; // Limpa o campo de entrada após adicionar
-        },
-        error: (error) => {
-          console.error('Erro ao criar categoria:', error);
-        },
-      });
+        this.categoryService.createCategory(category).subscribe({
+            next: () => {
+                this.loadCategories(this.postId); // Recarrega a lista de categorias após a adição
+                this.newCategoryName = ''; // Limpa o campo de entrada após adicionar
+            },
+            error: (error) => {
+                console.error('Erro ao criar categoria:', error);
+            },
+        });
     } else {
-      console.error('O nome da categoria não pode estar vazio');
+        console.error('O nome da categoria não pode estar vazio');
     }
-  }
+}
+
 
   editCategory(category: Category): void {
     this.editCategoryId = category.id ?? null; // Use o operador nullish coalescing
