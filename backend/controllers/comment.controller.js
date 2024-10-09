@@ -38,8 +38,6 @@ exports.getCommentsByPostId = (req, res) => {
         .status(500)
         .json({ message: "Erro ao buscar comentários.", error });
     }
-
-    console.log("Comentários encontrados:", results);
     res.json(results);
   });
 };

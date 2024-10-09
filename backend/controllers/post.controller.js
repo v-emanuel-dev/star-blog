@@ -1,15 +1,6 @@
 // Importando a conexão com o banco de dados
 const db = require("../config/db");
 
-
-db.connect((err) => {
-  if (err) {
-    console.error('Erro ao conectar ao banco de dados:', err);
-  } else {
-    console.log('Conectado ao banco de dados com sucesso!');
-  }
-});
-
 // Função para listar todos os posts, incluindo públicos e os do usuário logado
 exports.getAllPosts = (req, res) => {
   const userId = req.userId; // O ID do usuário vem do token JWT decodificado
@@ -78,92 +69,74 @@ exports.getAllPosts = (req, res) => {
 
 // Função para obter um post específico por ID
 // Função para obter um post pelo ID
-exports.getPostById = (req, res) => {
-  const userId = req.userId || null; // O ID do usuário, caso logado, do token JWT, ou null
-  console.log("User ID:", userId); // Log do User ID
+// controllers/postController.js
 
-  // Query para selecionar o post e verificar a visibilidade
+exports.getPostById = (req, res) => {
+  const postId = req.params.id;
+
+  // Consulta para buscar o post e suas categorias
   const query = `
-    SELECT posts.*, users.username 
+    SELECT 
+      posts.*, 
+      categories.name AS category_name 
     FROM posts 
-    JOIN users ON posts.user_id = users.id
-    WHERE posts.id = ? AND (posts.visibility = 'public' OR (posts.visibility = 'private' AND posts.user_id = ?))
+    LEFT JOIN post_categories ON posts.id = post_categories.postId 
+    LEFT JOIN categories ON post_categories.categoryId = categories.id 
+    WHERE posts.id = ?
   `;
 
-  const params = [req.params.id, userId];
-  console.log("Query params:", params); // Log dos parâmetros da consulta
-
-  db.query(query, params, (err, results) => {
+  db.query(query, [postId], (err, results) => {
     if (err) {
+      console.error("Erro ao buscar post:", err);
       return res.status(500).json({ error: err.message });
     }
-    console.log("Query results:", results); // Log dos resultados da consulta
     if (results.length === 0) {
-      return res
-        .status(404)
-        .json({
-          error: "Post não encontrado ou você não tem permissão para visualizá-lo",
-        });
+      return res.status(404).json({ message: "Post não encontrado." });
     }
-    res.json(results[0]); // Retorna o post encontrado
+
+    // Organizar os dados do post para incluir as categorias
+    const post = {
+      ...results[0],
+      categories: results.map(row => row.category_name).filter(Boolean) // Filtra apenas categorias existentes
+    };
+
+    res.status(200).json(post);
   });
 };
 
-
 // Função para criar um novo post
+// controllers/postController.js
+
 exports.createPost = (req, res) => {
   const { title, content, user_id, visibility, categoryId } = req.body;
 
-  // Log dos dados recebidos
-  console.log('Dados recebidos para criação do post:', { title, content, user_id, visibility, categoryId });
-
-  // Verificar se todos os dados necessários estão presentes
   if (!title || !content || !user_id || !categoryId) {
-    console.log('Dados ausentes na requisição:', { title, content, user_id, visibility, categoryId });
     return res.status(400).json({ message: 'Title, content, user ID, and category are required.' });
   }
 
-  // Verificar se user_id é um número
-  if (isNaN(user_id)) {
-    console.log('User ID inválido:', user_id);
-    return res.status(400).json({ message: 'User ID must be a valid number.' });
-  }
-
-  // Verificar se visibility está no conjunto permitido
-  const allowedVisibilities = ['public', 'private'];
-  if (!allowedVisibilities.includes(visibility)) {
-    console.log('Visibilidade inválida:', visibility);
-    return res.status(400).json({ message: 'Visibility must be either public or private.' });
-  }
-
-  // Inserir o post na base de dados com o ID da categoria
-  const query = 'INSERT INTO posts (title, content, user_id, visibility, category_id) VALUES (?, ?, ?, ?, ?)';
-  const values = [title, content, user_id, visibility, categoryId];
-  
-  // Log dos valores que serão inseridos
-  console.log('Valores para inserção no banco de dados:', values);
+  const query = 'INSERT INTO posts (title, content, user_id, visibility) VALUES (?, ?, ?, ?)';
+  const values = [title, content, user_id, visibility];
 
   db.query(query, values, (error, result) => {
     if (error) {
-      console.error('Erro ao criar post:', error); // Log no servidor
-      return res.status(500).json({ message: 'Error creating post' }); // Mensagem genérica
+      console.error('Erro ao criar post:', error);
+      return res.status(500).json({ message: 'Error creating post' });
     }
 
-    const postId = result.insertId; // ID do post criado
-    console.log('Post criado com sucesso:', postId);
+    const postId = result.insertId;
 
-    // Responder ao cliente com os dados do post
-    res.status(201).json({
-      message: 'Post created successfully!',
-      post: {
-        postId,
-        title,
-        content,
-        user_id,
-        visibility,
-        categoryId,
-        created_at: new Date().toISOString() // Data de criação
+    // Associar a categoria ao post na tabela `post_categories`
+    const categoryQuery = 'INSERT INTO post_categories (postId, categoryId) VALUES (?, ?)';
+    db.query(categoryQuery, [postId, categoryId], (error) => {
+      if (error) {
+        console.error('Erro ao associar categoria ao post:', error);
+        return res.status(500).json({ message: 'Post created, but error associating category.' });
       }
+
+      res.status(201).json({
+        message: 'Post created successfully!',
+        post: { postId, title, content, user_id, visibility, categoryId }
+      });
     });
   });
 };

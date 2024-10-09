@@ -78,8 +78,7 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
   loadCategories(postId: number): void {
     this.categoryService.getCategoriesByPostId(postId).subscribe(
       (data: Category[]) => {
-        // Filtra as categorias com base no postId, caso não estejam filtradas no backend
-        this.categories = data.filter(category => category.postId === postId);
+        this.categories = data;
       },
       (error) => {
         console.error('Erro ao obter categorias:', error);

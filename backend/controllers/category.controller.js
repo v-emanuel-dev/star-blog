@@ -3,14 +3,12 @@ const db = require("../config/db");
 // Get all categories
 exports.getAllCategories = (req, res) => {
   const sql = "SELECT * FROM categories";
-  console.log('Executando consulta para buscar todas as categorias.');
 
   db.query(sql, (err, results) => {
     if (err) {
       console.error("Error retrieving categories:", err);
       return res.status(500).json({ error: err.message });
     }
-    console.log('Categorias recuperadas com sucesso:', results);
     res.status(200).json(results);
   });
 };
@@ -69,7 +67,6 @@ exports.createCategoryForPost = (req, res) => {
   });
 };
 
-
 // Create a new category
 exports.createCategory = (req, res) => {
   const { name, postId } = req.body; // Incluindo postId
@@ -86,8 +83,8 @@ exports.createCategory = (req, res) => {
 
   db.query(query, params, (error, results) => {
       if (error) {
-        console.error("Database connection failed: ", err.message);
-        return res.status(500).json({ message: "Database connection failed", error: err.message });
+        console.error("Database connection failed: ", error.message); // Corrigido: use 'error' ao invés de 'err'
+        return res.status(500).json({ message: "Database connection failed", error: error.message });
       }
       console.log("Category created successfully with ID:", results.insertId); // Log de sucesso
       res.status(201).json({
