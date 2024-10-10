@@ -8,7 +8,25 @@
     >
       {{ message }}
     </div>
+    <div *ngIf="profilePicture">
+      <img [src]="profilePicture" alt="Profile Picture" class="rounded-full h-32 w-32 mx-auto mb-4" />
+    </div>
+    <div *ngIf="!profilePicture">
+      <p>No profile picture available.</p>
+    </div>
+
     <form #userForm="ngForm" (ngSubmit)="updateUser(userForm)" class="m-4">
+      <div class="mb-4">
+        <label for="profileImage" class="block text-gray-700">Profile Image</label>
+        <div class="relative mt-1">
+          <input type="file" id="profileImage" (change)="onImageSelected($event)" class="absolute inset-0 opacity-0 cursor-pointer" />
+          <button type="button" class="w-full p-2 border border-gray-300 rounded bg-sky-500/75 text-white hover:bg-sky-600 focus:outline-none focus:ring focus:ring-sky-200">
+            Select File
+          </button>
+        </div>
+      </div>
+
+
       <div class="mb-4">
         <label for="username" class="block text-gray-700">Username</label>
         <input

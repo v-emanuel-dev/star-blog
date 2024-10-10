@@ -1,6 +1,8 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
+const multer = require('multer');
+const path = require('path');
 
 // Registro de usuário
 exports.register = (req, res) => {
@@ -61,21 +63,39 @@ exports.login = (req, res) => {
   });
 };
 
+// Configuração do multer
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+const upload = multer({ storage });
+
 exports.updateUser = (req, res) => {
   const { username, email, password } = req.body;
-  const userId = req.userId; // Obtenha o ID do usuário do middleware
+  const userId = req.userId;
+  const profilePicture = req.file ? req.file.path : null;
 
-  // Se a senha for enviada, atualize-a, caso contrário, ignore
   let updateQuery = 'UPDATE users SET username = ?, email = ?';
-  const queryParams = [username, email, userId];
+  const queryParams = [username, email];
+
+  if (profilePicture) {
+    updateQuery += ', profilePicture = ?';
+    queryParams.push(profilePicture);
+  }
 
   if (password) {
     const hashedPassword = bcrypt.hashSync(password, 10);
     updateQuery += ', password = ?';
-    queryParams.splice(2, 0, hashedPassword); // Insere a senha antes do userId
+    queryParams.push(hashedPassword);
   }
 
   updateQuery += ' WHERE id = ?';
+  queryParams.push(userId);
 
   db.query(updateQuery, queryParams, (err, results) => {
     if (err) {
@@ -87,4 +107,5 @@ exports.updateUser = (req, res) => {
     res.status(200).json({ message: 'User information updated successfully' });
   });
 };
+
 

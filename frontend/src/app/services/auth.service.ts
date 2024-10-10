@@ -4,37 +4,48 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private baseUrl = 'http://localhost:3000/api/auth';
-  private userNameSubject = new BehaviorSubject<string | undefined>(this.getUserName());
-  private currentUserIdSubject = new BehaviorSubject<number | null>(this.getLoggedUserId()); // Adicionando a BehaviorSubject para o ID do usuário
-  userName$: Observable<string | undefined> = this.userNameSubject.asObservable();
+  private userNameSubject = new BehaviorSubject<string | undefined>(
+    this.getUserName()
+  );
+  private currentUserIdSubject = new BehaviorSubject<number | null>(
+    this.getLoggedUserId()
+  ); // Adicionando a BehaviorSubject para o ID do usuário
+  userName$: Observable<string | undefined> =
+    this.userNameSubject.asObservable();
   userId$: Observable<number | null> = this.currentUserIdSubject.asObservable(); // Para expor o ID do usuário como um Observable
 
   constructor(private http: HttpClient, private router: Router) {}
 
   login(email: string, password: string) {
-    return this.http.post<any>(`${this.baseUrl}/login`, { email, password }).pipe(
-      tap(response => {
-        console.log('Login Response:', response); // Log da resposta do login
-        localStorage.setItem('accessToken', response.accessToken);
-        console.log('Extracted Username:', response.username); // Log do username extraído
-        localStorage.setItem('userName', response.username);
-        localStorage.setItem('email', response.email); // Armazenando o email
-        localStorage.setItem('userId', response.userId); // Armazenando o userId
+    return this.http
+      .post<any>(`${this.baseUrl}/login`, { email, password })
+      .pipe(
+        tap((response) => {
+          console.log('Login Response:', response); // Log da resposta do login
+          localStorage.setItem('accessToken', response.accessToken);
+          console.log('Extracted Username:', response.username); // Log do username extraído
+          localStorage.setItem('userName', response.username);
+          localStorage.setItem('email', response.email); // Armazenando o email
+          localStorage.setItem('userId', response.userId); // Armazenando o userId
 
-        // Atualiza o subject com o nome do usuário e ID do usuário
-        this.userNameSubject.next(response.username);
-        this.currentUserIdSubject.next(response.userId); // Atualizando o ID do usuário logado
-        console.log('Username stored in localStorage:', response.username); // Log do nome do usuário armazenado
-      })
-    );
+          // Atualiza o subject com o nome do usuário e ID do usuário
+          this.userNameSubject.next(response.username);
+          this.currentUserIdSubject.next(response.userId); // Atualizando o ID do usuário logado
+          console.log('Username stored in localStorage:', response.username); // Log do nome do usuário armazenado
+        })
+      );
   }
 
   register(email: string, username: string, password: string): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/register`, { email, username, password });
+    return this.http.post<any>(`${this.baseUrl}/register`, {
+      email,
+      username,
+      password,
+    });
   }
 
   getUserName(): string {
@@ -61,17 +72,27 @@ export class AuthService {
 
   // Outros métodos (login, logout, updateUser, etc.)
 
-  updateUser(userId: string, username: string, email: string, password: string | null, headers: HttpHeaders): Observable<any> {
-    // Cria o objeto body com os campos obrigatórios
-    const body: any = { username, email };
+  updateUser(
+    userId: string,
+    username: string,
+    email: string,
+    password: string | null,
+    selectedImage: File | null,
+    headers: HttpHeaders
+  ): Observable<any> {
+    const formData = new FormData();
+    formData.append('username', username);
+    formData.append('email', email);
 
-    // Se a senha for preenchida, adicione ao corpo da requisição
     if (password) {
-      body.password = password;
+      formData.append('password', password);
     }
 
-    // Envia a requisição de atualização do usuário
-    return this.http.put(`${this.baseUrl}/update`, body, { headers });
+    if (selectedImage) {
+      formData.append('profilePicture', selectedImage);
+    }
+
+    return this.http.put(`${this.baseUrl}/update`, formData, { headers });
   }
 
   isLoggedIn(): boolean {

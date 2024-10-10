@@ -1,5 +1,6 @@
 export interface User {
   id: number;
+  username: string;
   email: string;
-  password: string; // Se não precisar expor a senha, remova essa propriedade
+  profilePicture: string;
 }

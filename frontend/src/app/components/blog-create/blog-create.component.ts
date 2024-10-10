@@ -14,7 +14,6 @@ import { Category } from '../../models/category.model';
 export class BlogCreateComponent implements OnInit {
   title: string = '';
   content: string = '';
-  message: string = '';
   success: boolean = false;
   visibility: string = 'public';
   user_id: number = 0;
@@ -24,6 +23,7 @@ export class BlogCreateComponent implements OnInit {
   newCategoryName: string = '';
   selectedCategoryId: number | null = null;
   currentPostId: number | null = null;
+  message: string | null = null; // Permite que message seja uma string ou null
 
   constructor(
     private postService: PostService,
