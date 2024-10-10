@@ -13,22 +13,22 @@ exports.getAllCategories = (req, res) => {
   });
 };
 
-
-// Get categories by post ID
-// Exemplo de controlador de categorias
-// controllers/categoryController.js
-// controllers/categoryController.js
 exports.getCategoriesByPostId = (req, res) => {
-  console.log("Endpoint /api/categories chamado"); // Adicione este log
+  const postId = Number(req.params.postId || req.query.postId); // Verifica se vem da rota ou da query
+  console.log("postId convertido:", postId);
 
-  const postId = req.query.postId; // Obtém o postId da query string
-  console.log(`postId recebido: ${postId}`); // Adicione este log para ver o postId
+  if (isNaN(postId)) {
+    return res.status(400).json({ error: "postId deve ser um número" });
+  }
 
   const query = `
-    SELECT categories.id, categories.name
-    FROM categories
-    JOIN post_categories ON categories.id = post_categories.categoryId
-    WHERE post_categories.postId = ?
+    SELECT c.* 
+    FROM categories c 
+    WHERE c.id IN (
+      SELECT pc.categoryId 
+      FROM post_categories pc 
+      WHERE pc.postId = ? 
+    );
   `;
 
   db.query(query, [postId], (err, results) => {
@@ -36,44 +36,9 @@ exports.getCategoriesByPostId = (req, res) => {
       console.error("Erro ao buscar categorias:", err);
       return res.status(500).json({ error: err.message });
     }
-    
-    console.log("Categorias retornadas:", results); // Adicione este log
-    res.json(results); // Retorna as categorias associadas ao postId
-  });
-};
 
-
-
-exports.createCategoryForPost = (req, res) => {
-  const { categoryName, postId } = req.body;
-
-  // Log dos dados recebidos
-  console.log('Dados recebidos para associação de categoria ao post:', { categoryName, postId });
-
-  // Verificar se os dados necessários estão presentes
-  if (!categoryName || !postId) {
-    console.log('Dados ausentes na requisição:', { categoryName, postId });
-    return res.status(400).json({ message: 'Category name and post ID are required.' });
-  }
-
-  // Query para associar a categoria ao post
-  const categoryQuery = 'INSERT INTO categories (name, postId) VALUES (?, ?)';
-  const categoryValues = [categoryName, postId];
-
-  console.log('Valores para inserção de categoria:', categoryValues);
-
-  db.query(categoryQuery, categoryValues, (error) => {
-    if (error) {
-      console.error('Erro ao associar categoria ao post:', error);
-      return res.status(500).json({ message: 'Post created, but error associating category.' });
-    }
-
-    console.log('Categoria associada ao post com sucesso:', { postId, categoryName });
-
-    // Responder ao cliente após garantir que a categoria foi associada
-    res.status(201).json({
-      message: 'Category associated with post successfully.',
-    });
+    console.log("Categorias obtidas:", results);
+    res.status(200).json(results);
   });
 };
 
@@ -83,28 +48,47 @@ exports.createCategory = (req, res) => {
   console.log("Data received for creating category:", req.body); // Log dos dados recebidos
 
   if (!name) {
-      console.error("Category name is required."); // Log de erro
-      return res.status(400).json({ message: "Category name is required" });
+    console.error("Category name is required."); // Log de erro
+    return res.status(400).json({ message: "Category name is required" });
   }
 
-  // Verifica se o postId é necessário
-  const query = "INSERT INTO categories (name" + (postId ? ", postId" : "") + ") VALUES (?, ?)";
-  const params = postId ? [name, postId] : [name]; // Adiciona o postId se necessário
+  // Inserir a nova categoria na tabela categories
+  const query = "INSERT INTO categories (name) VALUES (?)";
+  const params = [name];
 
   db.query(query, params, (error, results) => {
-      if (error) {
-          console.error("Database connection failed: ", error.message);
-          return res.status(500).json({ message: "Database connection failed", error: error.message });
-      }
-      console.log("Category created successfully with ID:", results.insertId);
-      res.status(201).json({
+    if (error) {
+      console.error("Database connection failed: ", error.message);
+      return res
+        .status(500)
+        .json({ message: "Database connection failed", error: error.message });
+    }
+
+    const categoryId = results.insertId; // ID da nova categoria
+
+    // Agora insira a associação na tabela post_categories
+    if (postId) {
+      const associationQuery = "INSERT INTO post_categories (postId, categoryId) VALUES (?, ?)";
+      db.query(associationQuery, [postId, categoryId], (assocError) => {
+        if (assocError) {
+          console.error("Error creating association:", assocError.message);
+          return res.status(500).json({ message: "Failed to associate category", error: assocError.message });
+        }
+        console.log("Category created successfully with ID:", categoryId);
+        res.status(201).json({
           message: "Category created successfully",
-          categoryId: results.insertId,
+          categoryId: categoryId,
+        });
       });
+    } else {
+      console.log("Category created successfully with ID:", categoryId);
+      res.status(201).json({
+        message: "Category created successfully",
+        categoryId: categoryId,
+      });
+    }
   });
 };
-
-
 
 // Update a category
 exports.updateCategory = (req, res) => {

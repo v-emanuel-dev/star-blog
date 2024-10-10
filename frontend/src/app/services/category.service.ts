@@ -11,8 +11,8 @@ export class CategoryService {
 
   constructor(private http: HttpClient) {}
 
-  getCategories(): Observable<Category[]> { // Ensure this method is defined correctly
-    return this.http.get<Category[]>(this.apiUrl); // Fetch categories from the API
+  getAllCategories(): Observable<Category[]> {
+    return this.http.get<Category[]>(`${this.apiUrl}/all`); // Usando a nova rota
   }
 
   getCategoriesByPostId(postId: number): Observable<Category[]> {

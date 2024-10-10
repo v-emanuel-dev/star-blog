@@ -36,7 +36,6 @@ export class BlogListComponent implements OnInit {
   ngOnInit(): void {
     this.isLoggedIn = this.authService.isLoggedIn();
     this.getPosts(); // Carrega os posts na inicialização
-    this.getCategories(); // Carregue as categorias
 
     this.route.queryParams.subscribe((params) => {
       if (params['message']) {
@@ -44,17 +43,6 @@ export class BlogListComponent implements OnInit {
         this.success = false;
       }
     });
-  }
-
-  getCategories(): void {
-    this.categoryService.getCategories().subscribe(
-      (data: Category[]) => {
-        this.categories = data; // Armazena as categorias
-      },
-      (error) => {
-        console.error('Erro ao obter categorias:', error);
-      }
-    );
   }
 
   getPosts(): void {

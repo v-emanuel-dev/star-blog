@@ -114,7 +114,7 @@ export class BlogCreateComponent implements OnInit {
   }
 
   loadCategories(postId: number): void {
-    this.categoryService.getCategories().subscribe(
+    this.categoryService.getAllCategories().subscribe(
       (data: Category[]) => {
         this.categories = data; // Armazena as categorias
       },
