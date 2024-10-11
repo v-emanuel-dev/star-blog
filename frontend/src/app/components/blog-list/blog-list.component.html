@@ -104,17 +104,15 @@
           <p class="mb-3">
             {{ post.username }} | {{ post.created_at | date : "short" }}
           </p>
-
-          <!-- Lista de categorias -->
-          <div class="categories-list mt-3">
+          <div class="categories-list mt-4 flex flex-wrap">
             <span
               *ngFor="let category of post.categories; let last = last"
-              class="badge rounded-pill text-bg-warning me-2"
+              class="badge rounded-full bg-warning me-4 flex items-center shadow-md custom-pill"
             >
-              {{ category.name }}
+              <span class="text-black">{{ category.name }}</span>
+
             </span>
           </div>
-
           <div *ngIf="isLoggedIn" class="flex justify-end space-x-2">
             <a
               [routerLink]="['/blog/edit', post.id]"
