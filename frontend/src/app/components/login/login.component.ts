@@ -12,6 +12,7 @@ export class LoginComponent {
   returnUrl: string | null = null; // URL to return after login, if needed
   success: boolean = false; // Indicates if the message is a success or error
   message: string | null = null; // Mensagem a ser exibida
+  loading = false; // Adicione esta variável na sua classe
 
   constructor(
     private authService: AuthService, // Injecting AuthService for authentication
@@ -31,20 +32,27 @@ export class LoginComponent {
   }
 
   login() {
-    // Method to handle login
+    // Inicie o loading
+    this.loading = true;
+
+    // Método para lidar com login
     this.authService.login(this.email, this.password).subscribe(response => {
-      // On successful login
-      localStorage.setItem('token', response.accessToken); // Store the token in local storage
-      this.message = 'Login successful! Redirecting...'; // Success message
-      this.success = true; // Indicate success
+      // No login bem-sucedido
+      localStorage.setItem('token', response.accessToken); // Armazena o token no local storage
+      this.message = 'Login successful! Redirecting...'; // Mensagem de sucesso
+      this.success = true; // Indica sucesso
+
       setTimeout(() => {
-        this.router.navigate(['/blog']); // Redirect to the dashboard after 2 seconds
-      }, 1500); // Wait for 2 seconds before redirecting
+        this.router.navigate(['/blog']); // Redireciona para o dashboard após 2 segundos
+        this.loading = false; // Pare o loading após o redirecionamento
+      }, 1500); // Aguarda 2 segundos antes de redirecionar
+
     }, error => {
-      // On login failure
-      console.error('Login failed:', error); // Log the error for debugging
-      this.message = 'Login failed! Check your credentials.'; // Error message
-      this.success = false; // Indicate failure
+      // Em caso de falha no login
+      console.error('Login failed:', error); // Registra o erro para depuração
+      this.message = 'Login failed! Check your credentials.'; // Mensagem de erro
+      this.success = false; // Indica falha
+      this.loading = false; // Pare o loading em caso de erro
     });
   }
 

@@ -14,13 +14,13 @@ import { Category } from '../../models/category.model'; // Ajuste o caminho conf
 })
 export class BlogListComponent implements OnInit {
   posts: Post[] = []; // Todos os posts
+  postId: number = 0;
   filteredPosts: Post[] = []; // Posts filtrados pela busca
   searchTerm: string = ''; // Termo de busca
   success: boolean = false; // Status de sucesso ou falha das ações
   isLoggedIn: boolean = false; // Verifica se o usuário está logado
   loading: boolean = true; // Indicador de carregamento
   postsTitle: string = ''; // Título dos posts
-  categories: Category[] = []; // Armazena categorias
   isModalOpen: boolean = false;
   currentPostId: number | null = null;
   message: string | null = null; // Mensagem a ser exibida
@@ -34,8 +34,8 @@ export class BlogListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.isLoggedIn = this.authService.isLoggedIn();
     this.getPosts(); // Carrega os posts na inicialização
+    this.isLoggedIn = this.authService.isLoggedIn();
 
     this.route.queryParams.subscribe((params) => {
       if (params['message']) {
@@ -53,6 +53,23 @@ export class BlogListComponent implements OnInit {
         // Simula um atraso de 2 segundos para visualizar a animação de loading
         setTimeout(() => {
           this.posts = data;
+
+          // Carregar categorias para cada post (usando categoryIds)
+          this.posts.forEach((post) => {
+            if (post.id !== undefined) {
+              this.categoryService.getCategoriesByPostId(post.id).subscribe(
+                (categories: Category[]) => {
+                  post.categories = categories; // Armazena categorias diretamente no post
+                },
+                (error) => {
+                  console.error(`Erro ao obter categorias para o post ${post.id}:`, error);
+                }
+              );
+            } else {
+              console.warn(`post.id está indefinido para um post:`, post);
+            }
+          });
+
           this.filteredPosts = this.isLoggedIn
             ? data
             : data.filter((post) => post.visibility === 'public');
@@ -121,10 +138,6 @@ export class BlogListComponent implements OnInit {
     setTimeout(() => {
       this.message = '';
     }, 2000);
-  }
-
-  logNavigation(postId: number): void {
-    console.log('Navigating to post ID:', postId);
   }
 
   // Método para abrir o modal

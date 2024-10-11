@@ -38,14 +38,16 @@
     </span>
   </div>
   <!-- Animação de carregamento -->
-  <div *ngIf="loading" class="flex justify-center items-center mt-5">
+  <div
+    *ngIf="loading"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-75"
+  >
     <button
       type="button"
       class="bg-gray-200 text-black font-bold py-2 px-4 rounded flex items-center"
       disabled
     >
       <svg class="animate-spin h-5 w-5 mr-3 text-gray-500" viewBox="0 0 24 24">
-        <!-- Caminho do SVG para o spinner -->
         <circle
           class="opacity-25"
           cx="12"
@@ -102,6 +104,16 @@
           <p class="mb-3">
             {{ post.username }} | {{ post.created_at | date : "short" }}
           </p>
+
+          <!-- Lista de categorias -->
+          <div class="categories-list mt-3">
+            <span
+              *ngFor="let category of post.categories; let last = last"
+              class="badge rounded-pill text-bg-warning me-2"
+            >
+              {{ category.name }}
+            </span>
+          </div>
 
           <div *ngIf="isLoggedIn" class="flex justify-end space-x-2">
             <a

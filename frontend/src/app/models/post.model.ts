@@ -1,3 +1,5 @@
+import { Category } from "./category.model";
+
 export interface Post {
   id?: number;
   title: string;
@@ -10,4 +12,5 @@ export interface Post {
   comments?: Comment[]; // Adicione esta linha
   category_name?: string; // Adicione esta linha
   categoryIds?: number[]; // Use `categoryIds` se você precisar de um array
+  categories?: Category[]; // Adiciona a nova propriedade
 }

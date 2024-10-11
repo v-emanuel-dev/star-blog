@@ -1,5 +1,8 @@
 <div class="container d-flex justify-content-center">
-  <div class="card p-3 m-5 shadow bg-white rounded w-100" style="max-width: 450px;">
+  <div
+    class="card p-3 m-5 shadow bg-white rounded w-100"
+    style="max-width: 450px"
+  >
     <div class="card-body">
       <h2 class="text-center m-4 display-4">Login</h2>
       <div
@@ -29,6 +32,37 @@
             />
           </svg>
         </span>
+      </div>
+      <!-- Animação de carregamento -->
+      <div
+        *ngIf="loading"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-75"
+      >
+        <button
+          type="button"
+          class="bg-gray-200 text-black font-bold py-2 px-4 rounded flex items-center"
+          disabled
+        >
+          <svg
+            class="animate-spin h-5 w-5 mr-3 text-gray-500"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8v-8H4z"
+            ></path>
+          </svg>
+          Processing...
+        </button>
       </div>
       <form (ngSubmit)="login()" class="mx-4">
         <div class="mb-3">
