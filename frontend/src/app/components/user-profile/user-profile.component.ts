@@ -103,6 +103,9 @@ export class UserProfileComponent implements OnInit {
           this.success = true;
           this.loadUserData();
           this.selectedImage = null;
+          setTimeout(() => {
+            this.router.navigate(['/blog']); // Redireciona para o dashboard após 2 segundos
+          }, 1500);
         },
         (error) => {
           console.error('Error updating user', error);

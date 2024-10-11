@@ -1,7 +1,7 @@
 <div class="container d-flex justify-content-center">
   <div class="card p-3 m-5 shadow bg-white rounded w-100">
     <form (ngSubmit)="createPost()" class="m-4">
-      <h2 class="text-center mb-4 display-4">New Post</h2>
+      <h2 class="text-center mb-4 display-4">Create Post</h2>
       <div
         *ngIf="message"
         [ngClass]="{
@@ -11,7 +11,6 @@
         class="mb-4 px-4 py-3 rounded relative"
         role="alert"
       >
-        <strong class="font-bold">{{ success ? "Sucesso!" : "Erro!" }}</strong>
         <span class="block sm:inline">{{ message }}</span>
         <span
           class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer"
@@ -64,6 +63,7 @@
           <option value="private">Private</option>
         </select>
       </div>
+      <h2 class="mb-3">Select Categories:</h2>
       <button
         *ngFor="let category of categories"
         type="button"
@@ -78,7 +78,7 @@
       >
         {{ category.name }}
       </button>
-      <div class="d-flex justify-content-between">
+      <div class="d-flex justify-content-between mt-3">
         <a routerLink="/blog" class="btn btn-secondary">Back</a>
         <button type="submit" class="btn btn-primary">Create Post</button>
       </div>

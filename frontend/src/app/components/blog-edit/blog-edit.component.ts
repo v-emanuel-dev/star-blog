@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Post } from '../../models/post.model';
 import { PostService } from '../../services/post.service';
-import { AuthService } from '../../services/auth.service'; // Importe o AuthService
+import { AuthService } from '../../services/auth.service';
 import { Category } from '../../models/category.model';
 import { CategoryService } from '../../services/category.service';
 
@@ -12,19 +12,18 @@ import { CategoryService } from '../../services/category.service';
   styleUrls: ['./blog-edit.component.css'],
 })
 export class BlogEditComponent implements OnInit {
-  postId!: number; // Para armazenar o ID do post sendo editado
-  title: string = ''; // Campo para armazenar o título do post
-  content: string = ''; // Campo para armazenar o conteúdo do post
-  userId!: number; // Para armazenar o ID do usuário logado
-  visibility: 'public' | 'private' = 'public'; // Inicializa como público
-  message: string | null = null; // Mensagem a ser exibida
-  success: boolean = false; // Status de sucesso ou falha das ações
-  selectedCategoryId: number | null = null;
-  selectedCategoryIds: number[] = []; // Inicializa como um array vazio
+  postId!: number;
+  title: string = '';
+  content: string = '';
+  userId!: number;
+  visibility: 'public' | 'private' = 'public';
+  message: string | null = null;
+  success: boolean = false;
+  selectedCategoryIds: number[] = [];
   categories: Category[] = [];
   newCategoryName: string = '';
   currentPostId: number | null = null;
-  categoryId: number | null = null;
+  post: Post;
 
   constructor(
     private postService: PostService,
@@ -32,46 +31,47 @@ export class BlogEditComponent implements OnInit {
     private router: Router,
     private authService: AuthService,
     private categoryService: CategoryService
-  ) {}
+  ) {
+    this.post = {
+      id: 0,
+      title: '',
+      content: '',
+      categories: [],
+      user_id: 0,
+      visibility: ''
+    };
+  }
 
   ngOnInit(): void {
     this.route.params.subscribe((params) => {
-      this.currentPostId = +params['postId']; // Converte o postId para número
+      this.currentPostId = +params['postId'];
       console.log('Post ID atual:', this.currentPostId);
 
-      // Chame loadCategories apenas se currentPostId não for null
-      if (this.currentPostId !== null) {
-        this.loadCategories(this.currentPostId); // Passa o currentPostId como argumento
-      } else {
-        console.error(
-          'currentPostId é null. Não é possível carregar categorias.'
-        );
-      }
+      // Chame loadCategories independentemente do postId
+      this.loadCategories();
     });
 
-    // Obtém o ID do post a partir dos parâmetros da rota
     this.postId = +this.route.snapshot.paramMap.get('id')!;
     this.loadPost();
     this.userId = this.authService.getLoggedUserId() ?? 0;
   }
 
-  // Método para carregar o post
   loadPost(): void {
     this.postService.getPostById(this.postId).subscribe({
       next: (post: Post) => {
         this.title = post.title;
         this.content = post.content;
         this.visibility = post.visibility as 'public' | 'private';
+        this.selectedCategoryIds = post.categoryIds || [];
       },
       error: () => {
         this.message = 'Failed to load post.';
         this.success = false;
-        this.router.navigate(['/blog']); // Redireciona se falhar ao carregar
+        this.router.navigate(['/blog']);
       },
     });
   }
 
-  // Método para atualizar o post
   updatePost(): void {
     const updatedPost: Post = {
       id: this.postId,
@@ -81,7 +81,7 @@ export class BlogEditComponent implements OnInit {
       visibility: this.visibility,
       created_at: new Date().toISOString(),
       username: '',
-      categoryIds: this.selectedCategoryIds, // Agora usa um array de IDs de categorias
+      categoryIds: this.selectedCategoryIds,
     };
 
     this.postService.updatePost(this.postId, updatedPost).subscribe(
@@ -100,10 +100,12 @@ export class BlogEditComponent implements OnInit {
     );
   }
 
-  loadCategories(postId: number): void {
+  // Atualizado para usar getAllCategories como no BlogCreateComponent
+  loadCategories(): void {
     this.categoryService.getAllCategories().subscribe(
       (data: Category[]) => {
-        this.categories = data; // Armazena as categorias
+        this.categories = data;
+        console.log('Categorias carregadas:', this.categories);
       },
       (error) => {
         console.error('Erro ao obter categorias:', error);
@@ -115,17 +117,13 @@ export class BlogEditComponent implements OnInit {
     if (this.newCategoryName.trim()) {
       const category: Omit<Category, 'id'> = {
         name: this.newCategoryName,
-        postId: this.currentPostId, // Certifique-se de que postId esteja associado corretamente
+        postId: this.currentPostId,
       };
 
       this.categoryService.createCategory(category).subscribe({
         next: () => {
-          if (this.currentPostId !== null) {
-            this.loadCategories(this.currentPostId);
-          } else {
-            console.error('currentPostId is null. Cannot load categories.');
-          }
-          this.newCategoryName = ''; // Limpa o campo após a adição
+          this.loadCategories();
+          this.newCategoryName = '';
         },
         error: (error) => {
           console.error('Erro ao criar categoria:', error);
@@ -138,21 +136,14 @@ export class BlogEditComponent implements OnInit {
 
   editCategory(category: Category): void {
     this.newCategoryName = category.name;
-    this.selectedCategoryId = category.id !== undefined ? category.id : null;
+    this.selectedCategoryIds = category.id !== undefined ? [category.id] : [];
   }
 
   deleteCategory(categoryId: number): void {
     if (confirm('Are you sure you want to delete this category?')) {
       this.categoryService.deleteCategory(categoryId).subscribe({
         next: () => {
-          if (this.currentPostId !== null) {
-            this.loadCategories(this.currentPostId); // Passa o postId para recarregar as categorias
-          } else {
-            console.error(
-              'currentPostId is null. Cannot load categories after deletion.'
-            );
-          }
-
+          this.loadCategories();
           this.message = 'Category deleted successfully!';
           this.success = true;
         },
@@ -165,19 +156,16 @@ export class BlogEditComponent implements OnInit {
   }
 
   onCategoryChange(event: Event, categoryId: number): void {
-    event.preventDefault(); // Previne o comportamento padrão
+    event.preventDefault();
 
     const isChecked = this.selectedCategoryIds.includes(categoryId);
 
     if (isChecked) {
-      // Remove o ID se o botão for clicado novamente
       this.selectedCategoryIds = this.selectedCategoryIds.filter(id => id !== categoryId);
     } else {
-      // Adiciona o ID se o botão for clicado
       this.selectedCategoryIds.push(categoryId);
     }
 
     console.log('Categorias selecionadas:', this.selectedCategoryIds);
   }
-
 }

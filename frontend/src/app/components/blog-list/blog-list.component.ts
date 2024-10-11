@@ -76,7 +76,7 @@ export class BlogListComponent implements OnInit {
 
           this.updatePostsTitle();
           this.loading = false; // Finaliza o carregamento após o atraso
-        }, 2000); // Tempo em milissegundos (2 segundos)
+        }, 1000); // Tempo em milissegundos (2 segundos)
       },
       (error) => {
         console.error('Erro ao obter posts:', error);
@@ -86,17 +86,38 @@ export class BlogListComponent implements OnInit {
   }
 
   filterPosts(): void {
-    const searchTermLower = this.searchTerm.toLowerCase();
+    const searchTermLower = this.searchTerm.toLowerCase().trim();
+    console.log('Search Term:', searchTermLower); // Log do termo de busca
     this.filteredPosts = this.posts.filter((post) => {
-      const matchesSearchTerm =
-        post.title.toLowerCase().includes(searchTermLower) ||
-        post.content.toLowerCase().includes(searchTermLower);
-      return matchesSearchTerm; // Não filtre pela visibilidade aqui
+      console.log('Post:', post); // Log do post atual
+
+      const matchesTitle = post.title.toLowerCase().includes(searchTermLower);
+      console.log('Matches Title:', matchesTitle); // Log para correspondência de título
+
+      const matchesContent = post.content.toLowerCase().includes(searchTermLower);
+      console.log('Matches Content:', matchesContent); // Log para correspondência de conteúdo
+
+      const matchesCategory = post.categories && Array.isArray(post.categories)
+        ? post.categories.some(category => {
+            console.log('Category:', category); // Log para cada categoria
+            const matchesCategoryName = category.name.toLowerCase().includes(searchTermLower);
+            console.log('Matches Category Name:', matchesCategoryName); // Log para correspondência de categoria
+            return matchesCategoryName;
+          })
+        : false;
+
+      const finalMatchResult = matchesTitle || matchesContent || matchesCategory;
+      console.log('Final Match Result:', finalMatchResult); // Log do resultado final
+      return finalMatchResult;
     });
 
-    // Atualize o título dos posts após filtrar
-    this.updatePostsTitle();
+    console.log('Filtered Posts:', this.filteredPosts); // Log para posts filtrados
+    this.updatePostsTitle(); // Atualiza o título dos posts após filtrar
   }
+
+
+
+
 
   updatePostsTitle(): void {
     const hasPublicPosts = this.filteredPosts.some(
