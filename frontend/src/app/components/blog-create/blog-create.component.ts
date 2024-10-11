@@ -177,11 +177,6 @@ export class BlogCreateComponent implements OnInit {
     }
   }
 
-  private onCategoryAddError(error: any): void {
-    console.error('Error adding category:', error);
-    this.message = 'Failed to add category.';
-  }
-
   onCategoryChange(categoryId: number): void {
     console.log('Categoria selecionada:', categoryId);
   }

@@ -9,4 +9,5 @@ export interface Post {
   categoryId?: number | null; // Opcional, se a categoria não estiver definida
   comments?: Comment[]; // Adicione esta linha
   category_name?: string; // Adicione esta linha
+  categoryIds?: number[]; // Use `categoryIds` se você precisar de um array
 }

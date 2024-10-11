@@ -1,46 +1,103 @@
 <div class="container d-flex justify-content-center">
-  <div class="card p-3 m-5 shadow bg-white rounded w-100" style="max-width: 450px;">
-  <h2 class="text-center m-4 display-4">Edit Post</h2>
-  <div
-    *ngIf="message"
-    [ngClass]="{ 'text-green-600': success, 'text-red-600': !success }"
-    class="mb-4 text-center"
-  >
-    {{ message }}
-  </div>
-  <form (ngSubmit)="updatePost()" class="m-4">
-    <div class="mb-6">
-      <label for="title" class="block text-gray-800 text-lg font-semibold mb-2"
-        >Title:</label
+  <div class="card p-3 m-5 shadow bg-white rounded w-100">
+    <form (ngSubmit)="updatePost()" class="m-4">
+      <h2 class="text-center mb-4 display-4">New Post</h2>
+      <div
+        *ngIf="message"
+        [ngClass]="{ 'text-success': success, 'text-danger': !success }"
+        class="mb-4 text-center"
       >
-      <input
-        type="text"
-        [(ngModel)]="title"
-        name="title"
-        required
-        class="mt-1 block w-full border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:ring focus:ring-blue-300"
-        placeholder="Enter the title of your post"
-      />
+        {{ message }}
+      </div>
+      <div class="mb-3">
+        <label for="title" class="form-label">Title:</label>
+        <input
+          type="text"
+          [(ngModel)]="title"
+          name="title"
+          required
+          class="form-control"
+          placeholder="Enter the title of your post"
+        />
+      </div>
+      <div class="mb-3">
+        <label for="content" class="form-label">Content:</label>
+        <textarea
+          [(ngModel)]="content"
+          name="content"
+          required
+          class="form-control"
+          rows="5"
+          placeholder="Write your post content here..."
+        ></textarea>
+      </div>
+      <div class="mb-3">
+        <label for="visibility" class="form-label">Visibility:</label>
+        <select
+          [(ngModel)]="visibility"
+          name="visibility"
+          required
+          class="form-control"
+        >
+          <option value="public">Public</option>
+          <option value="private">Private</option>
+        </select>
+      </div>
+      <button
+      *ngFor="let category of categories"
+      type="button"
+      (click)="onCategoryChange($event, category.id!)"
+      [ngClass]="{'bg-blue-600 text-white': selectedCategoryIds.includes(category.id!), 'bg-gray-200 text-gray-800': !selectedCategoryIds.includes(category.id!)}"
+      class="m-1 px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
+      {{ category.name }}
+    </button>
+      <div class="d-flex justify-content-between">
+        <a routerLink="/blog" class="btn btn-secondary">Back</a>
+        <button type="submit" class="btn btn-primary">Create Post</button>
+      </div>
+    </form>
+    <div *ngIf="categories.length > 0" class="container">
+      <h2 class="mb-3">Categories List:</h2>
+
+      <ul class="list-group">
+        <li
+          *ngFor="let category of categories"
+          class="list-group-item d-flex justify-content-between align-items-center"
+        >
+          {{ category.name }}
+          <div>
+            <button
+              class="btn btn-outline-warning btn-sm me-2"
+              (click)="editCategory(category)"
+            >
+              Edit
+            </button>
+            <button
+              *ngIf="category.id !== undefined"
+              class="btn btn-outline-danger btn-sm"
+              (click)="deleteCategory(category.id)"
+            >
+              Delete
+            </button>
+          </div>
+        </li>
+      </ul>
+      <form (submit)="addCategory()" class="mt-4">
+        <div class="mb-3">
+          <input
+            type="text"
+            [(ngModel)]="newCategoryName"
+            name="newCategoryName"
+            placeholder="New category"
+            required
+            class="form-control"
+          />
+        </div>
+        <button type="submit" class="btn btn-outline-success">
+          Add Category
+        </button>
+      </form>
     </div>
-    <div class="mb-6">
-      <label
-        for="content"
-        class="block text-gray-800 text-lg font-semibold mb-2"
-        >Content:</label
-      >
-      <textarea
-        [(ngModel)]="content"
-        name="content"
-        required
-        class="mt-1 block w-full border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:ring focus:ring-blue-300"
-        rows="5"
-        placeholder="Edit your post content here..."
-      ></textarea>
-    </div>
-    <div class="flex justify-between">
-      <a routerLink="/blog" class="btn btn-warning me-2"> Back </a>
-      <button type="submit" class="btn btn-primary me-2">Update Post</button>
-    </div>
-  </form>
   </div>
 </div>

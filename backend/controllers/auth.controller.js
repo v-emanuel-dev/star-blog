@@ -1,8 +1,6 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
-const multer = require('multer');
-const path = require('path');
 
 // Registro de usuário
 exports.register = (req, res) => {
@@ -62,50 +60,3 @@ exports.login = (req, res) => {
     res.status(200).json({ accessToken: token, username: user.username || 'Usuário', email: user.email, userId: user.id });
   });
 };
-
-// Configuração do multer
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
-const upload = multer({ storage });
-
-exports.updateUser = (req, res) => {
-  const { username, email, password } = req.body;
-  const userId = req.userId;
-  const profilePicture = req.file ? req.file.path : null;
-
-  let updateQuery = 'UPDATE users SET username = ?, email = ?';
-  const queryParams = [username, email];
-
-  if (profilePicture) {
-    updateQuery += ', profilePicture = ?';
-    queryParams.push(profilePicture);
-  }
-
-  if (password) {
-    const hashedPassword = bcrypt.hashSync(password, 10);
-    updateQuery += ', password = ?';
-    queryParams.push(hashedPassword);
-  }
-
-  updateQuery += ' WHERE id = ?';
-  queryParams.push(userId);
-
-  db.query(updateQuery, queryParams, (err, results) => {
-    if (err) {
-      return res.status(500).json({ message: 'Database error', error: err });
-    }
-    if (results.affectedRows === 0) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    res.status(200).json({ message: 'User information updated successfully' });
-  });
-};
-
-

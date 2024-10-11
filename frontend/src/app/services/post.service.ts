@@ -2,6 +2,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { Post } from '../models/post.model';
+import { AuthService } from './auth.service'; // Importe o AuthService
 
 @Injectable({
   providedIn: 'root',
@@ -9,17 +10,19 @@ import { Post } from '../models/post.model';
 export class PostService {
   private apiUrl = 'http://localhost:3000/api/posts';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private authService: AuthService) {} // Injete AuthService
 
-  // Method to obtain the token
+  // Método para obter o token
   private getToken(): string | null {
-    return localStorage.getItem('accessToken'); // Ensure you retrieve the correct token
+    return localStorage.getItem('accessToken'); // Certifique-se de recuperar o token correto
   }
 
-  // Method to create a post
+  // Método para criar um post
   createPost(post: Post): Observable<Post> {
     console.log('Post a ser criado:', post); // Adicione este log para depuração
-    return this.http.post<Post>(this.apiUrl, post).pipe(
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${this.getToken()}`);
+
+    return this.http.post<Post>(this.apiUrl, post, { headers }).pipe(
       catchError((error) => {
         console.error('Erro ao criar post:', error);
         return throwError(() => new Error('Erro ao criar post.'));
@@ -59,7 +62,7 @@ export class PostService {
     );
   }
 
-  // Method to fetch a specific post by ID
+  // Método para buscar um post específico pelo ID
   getPostById(postId: number): Observable<Post> {
     const token = this.getToken();
     const headers = token
@@ -69,38 +72,38 @@ export class PostService {
     return this.http.get<Post>(`${this.apiUrl}/${postId}`, { headers });
   }
 
-  // Method to fetch private posts for a user
+  // Método para buscar posts privados de um usuário
   getPrivatePosts(userId: number): Observable<Post[]> {
     const token = this.getToken();
     return this.http.get<Post[]>(`${this.apiUrl}/user/${userId}`, {
       headers: {
-        Authorization: `Bearer ${token}`, // Include token
+        Authorization: `Bearer ${token}`, // Inclua o token
       },
     });
   }
 
-  // Method to update a post
+  // Método para atualizar um post
   updatePost(postId: number, post: Post): Observable<Post> {
-    const token = this.getToken();
+    const token = this.getToken(); // Certifique-se de que o token está sendo obtido corretamente
     return this.http.put<Post>(`${this.apiUrl}/${postId}`, post, {
       headers: {
-        Authorization: `Bearer ${token}`, // Include token
+        Authorization: `Bearer ${token}`, // Inclui o token no cabeçalho
       },
     });
   }
 
-  // Method to delete a post
+  // Método para deletar um post
   deletePost(postId: number): Observable<void> {
     const token = this.getToken();
     return this.http.delete<void>(`${this.apiUrl}/${postId}`, {
       headers: {
-        Authorization: `Bearer ${token}`, // Include token
+        Authorization: `Bearer ${token}`, // Inclua o token
       },
     });
   }
 
-  // Helper method to check if user is logged in
+  // Método auxiliar para verificar se o usuário está logado
   isLoggedIn(): boolean {
-    return localStorage.getItem('accessToken') !== null; // Check for access token
+    return localStorage.getItem('accessToken') !== null; // Verifique se há token de acesso
   }
 }

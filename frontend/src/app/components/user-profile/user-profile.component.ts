@@ -21,7 +21,6 @@ export class UserProfileComponent implements OnInit {
   selectedImagePreview: string | null = null;
   profilePicture: string | null = null;
   defaultProfilePicture: string = 'assets/img/default-profile.png'; // Caminho da imagem padrão
-  selectedImageName: string | null = null; // Adicione esta linha
 
   constructor(
     private authService: AuthService,
@@ -31,23 +30,18 @@ export class UserProfileComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadUserData();
-    this.clearImageFields(); // Chama a função para limpar os campos de imagem
   }
 
   loadUserData(): void {
-    const userId = this.authService.getUserId(); // Obtém o ID do usuário
-    console.log('User ID:', userId); // Log do userId
+    const userId = this.authService.getUserId();
 
     if (userId !== null) {
       this.userService.getUserById(userId).subscribe(
         (user) => {
           this.username = user.username || '';
           this.email = user.email || '';
-          this.profilePicture = user.profilePicture
-            ? `http://localhost:3000/${user.profilePicture}`
-            : this.defaultProfilePicture; // Usa imagem padrão se não houver imagem de perfil
-          console.log('User data loaded:', user); // Log dos dados do usuário
-          console.log('Profile Picture URL:', this.profilePicture); // Log do URL da imagem de perfil
+          this.profilePicture =
+            user.profilePicture || this.defaultProfilePicture;
         },
         (error) => {
           console.error('Erro ao carregar os dados do usuário', error);
@@ -58,25 +52,16 @@ export class UserProfileComponent implements OnInit {
     }
   }
 
-  clearImageFields(): void {
-    this.selectedImage = null; // Limpa a imagem selecionada
-    this.selectedImagePreview = null; // Limpa a pré-visualização da imagem
-  }
-
   onImageSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (file) {
       this.selectedImage = file;
 
-      // Previsualização da imagem
       const reader = new FileReader();
       reader.onload = () => {
         this.selectedImagePreview = reader.result as string;
       };
       reader.readAsDataURL(file);
-
-      // Armazena o nome do arquivo
-      this.selectedImageName = file.name; // Adicione esta linha
     }
   }
 
@@ -93,7 +78,7 @@ export class UserProfileComponent implements OnInit {
       return;
     }
 
-    const userId = localStorage.getItem('userId'); // Isso retornará uma string ou null
+    const userId = localStorage.getItem('userId');
     const token = this.authService.getToken();
     const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
 
@@ -116,13 +101,8 @@ export class UserProfileComponent implements OnInit {
         (response) => {
           this.message = 'User updated successfully';
           this.success = true;
-          localStorage.setItem('email', this.email ?? '');
-          localStorage.setItem('userName', this.username);
-
-          this.password = '';
-          this.confirmPassword = '';
-          this.selectedImage = null; // Limpa a imagem selecionada após a atualização
-          this.loadUserData(); // Recarrega os dados do usuário
+          this.loadUserData();
+          this.selectedImage = null;
         },
         (error) => {
           console.error('Error updating user', error);
@@ -131,5 +111,4 @@ export class UserProfileComponent implements OnInit {
         }
       );
   }
-
 }

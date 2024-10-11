@@ -147,7 +147,7 @@ exports.createPost = (req, res) => {
 
 // Função para atualizar um post existente
 exports.updatePost = (req, res) => {
-  const { title, content, visibility } = req.body;
+  const { title, content, visibility, categoryIds } = req.body;
   const postId = req.params.id;
 
   // Verificação para garantir que o usuário que está atualizando é o dono do post
@@ -155,23 +155,60 @@ exports.updatePost = (req, res) => {
     "SELECT user_id FROM posts WHERE id = ?",
     [postId],
     (err, results) => {
-      if (err) return res.status(500).json({ error: err.message });
+      if (err) {
+        console.error('Erro ao buscar usuário:', err);
+        return res.status(500).json({ error: err.message });
+      }
 
       if (results.length === 0 || results[0].user_id !== req.userId) {
         return res.status(403).json({ error: "Access denied" });
       }
 
+      // Atualizar o post
       db.query(
         "UPDATE posts SET title = ?, content = ?, visibility = ? WHERE id = ?",
         [title, content, visibility, postId],
         (err) => {
-          if (err) return res.status(500).json({ error: err.message });
-          res.status(204).send();
+          if (err) {
+            console.error('Erro ao atualizar o post:', err);
+            return res.status(500).json({ error: err.message });
+          }
+
+          // Limpar associações antigas e adicionar novas categorias
+          db.query(
+            "DELETE FROM post_categories WHERE postId = ?",
+            [postId],
+            (err) => {
+              if (err) {
+                console.error('Erro ao deletar categorias do post:', err);
+                return res.status(500).json({ error: err.message });
+              }
+
+              // Adicionar novas associações
+              if (categoryIds && categoryIds.length > 0) {
+                const values = categoryIds.map((categoryId) => [postId, categoryId]);
+                db.query(
+                  "INSERT INTO post_categories (postId, categoryId) VALUES ?",
+                  [values],
+                  (err) => {
+                    if (err) {
+                      console.error('Erro ao inserir novas categorias:', err);
+                      return res.status(500).json({ error: err.message });
+                    }
+                    res.status(204).send();
+                  }
+                );
+              } else {
+                res.status(204).send();
+              }
+            }
+          );
         }
       );
     }
   );
 };
+
 
 // Função para deletar um post por ID
 exports.deletePost = (req, res) => {
