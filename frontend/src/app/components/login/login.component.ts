@@ -10,8 +10,8 @@ export class LoginComponent {
   email: string = ''; // Email input field
   password: string = ''; // Password input field
   returnUrl: string | null = null; // URL to return after login, if needed
-  message: string = ''; // Message to be displayed to the user
   success: boolean = false; // Indicates if the message is a success or error
+  message: string | null = null; // Mensagem a ser exibida
 
   constructor(
     private authService: AuthService, // Injecting AuthService for authentication

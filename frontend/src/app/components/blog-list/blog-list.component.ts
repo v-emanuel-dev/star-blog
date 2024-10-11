@@ -16,7 +16,6 @@ export class BlogListComponent implements OnInit {
   posts: Post[] = []; // Todos os posts
   filteredPosts: Post[] = []; // Posts filtrados pela busca
   searchTerm: string = ''; // Termo de busca
-  message: string = ''; // Mensagem para feedback ao usuário
   success: boolean = false; // Status de sucesso ou falha das ações
   isLoggedIn: boolean = false; // Verifica se o usuário está logado
   loading: boolean = true; // Indicador de carregamento
@@ -24,6 +23,7 @@ export class BlogListComponent implements OnInit {
   categories: Category[] = []; // Armazena categorias
   isModalOpen: boolean = false;
   currentPostId: number | null = null;
+  message: string | null = null; // Mensagem a ser exibida
 
   constructor(
     private postService: PostService,
@@ -46,20 +46,24 @@ export class BlogListComponent implements OnInit {
   }
 
   getPosts(): void {
+    this.loading = true; // Ativa o carregamento
+
     this.postService.getPosts().subscribe(
       (data: Post[]) => {
-        this.posts = data;
-        this.filteredPosts = this.isLoggedIn
-          ? data
-          : data.filter((post) => post.visibility === 'public');
+        // Simula um atraso de 2 segundos para visualizar a animação de loading
+        setTimeout(() => {
+          this.posts = data;
+          this.filteredPosts = this.isLoggedIn
+            ? data
+            : data.filter((post) => post.visibility === 'public');
 
-        // Atualize o título dos posts após carregar
-        this.updatePostsTitle();
-        this.loading = false; // Finaliza o carregamento
+          this.updatePostsTitle();
+          this.loading = false; // Finaliza o carregamento após o atraso
+        }, 2000); // Tempo em milissegundos (2 segundos)
       },
       (error) => {
         console.error('Erro ao obter posts:', error);
-        this.loading = false; // Finaliza o carregamento, mesmo em erro
+        this.loading = false; // Finaliza o carregamento mesmo em caso de erro
       }
     );
   }

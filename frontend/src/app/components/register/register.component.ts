@@ -13,7 +13,7 @@ export class RegisterComponent {
   username: string = '';
   password: string = '';
   confirmPassword: string = '';
-  message: string = '';
+  message: string | null = null; // Mensagem a ser exibida
   success: boolean = false;
   loading: boolean = false; // Loading state
 

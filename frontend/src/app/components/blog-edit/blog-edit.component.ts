@@ -17,8 +17,8 @@ export class BlogEditComponent implements OnInit {
   content: string = ''; // Campo para armazenar o conteúdo do post
   userId!: number; // Para armazenar o ID do usuário logado
   visibility: 'public' | 'private' = 'public'; // Inicializa como público
-  message: string = ''; // Para armazenar a mensagem a ser exibida
-  success: boolean = false; // Para indicar sucesso ou falha
+  message: string | null = null; // Mensagem a ser exibida
+  success: boolean = false; // Status de sucesso ou falha das ações
   selectedCategoryId: number | null = null;
   selectedCategoryIds: number[] = []; // Inicializa como um array vazio
   categories: Category[] = [];
