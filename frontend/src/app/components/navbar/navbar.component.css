@@ -1,3 +1,13 @@
 a {
   cursor: pointer; /* Faz todos os links terem cursor pointer */
 }
+
+.hover\:bg-gray-700:hover {
+  background-color: rgba(75, 85, 99, 1);
+  transition: background-color 0.3s ease;
+}
+
+.hover\:bg-gray-200:hover {
+  background-color: rgba(229, 231, 235, 1);
+  transition: background-color 0.3s ease;
+}

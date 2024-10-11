@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
+import { UserService } from '../../services/user.service';
 
 @Component({
   selector: 'app-navbar',
@@ -10,19 +11,36 @@ import { Subscription } from 'rxjs';
 })
 export class NavbarComponent implements OnInit, OnDestroy {
   userName: string | undefined;
-  isMenuOpen = false; // State to manage mobile menu visibility
+  isMenuOpen = false;
+  isDropdownOpen = false;
+  profilePicture: string | null = null;
+  defaultProfilePicture: string = 'assets/img/default-profile.png'; // Caminho da imagem padrão
   private userNameSubscription: Subscription;
+  profileImageUrl: string | null = null;
+  private profileImageSubscription: Subscription | undefined;
 
-  constructor(private authService: AuthService, private router: Router) {
+  constructor(private authService: AuthService, private router: Router, private userService: UserService
+  ) {
     this.userNameSubscription = this.authService.userName$.subscribe(name => {
       this.userName = name; // Atualiza o nome do usuário quando ele muda
     });
   }
 
   ngOnInit(): void {
-    this.userNameSubscription = this.authService.userName$.subscribe(name => {
-      this.userName = name;
+    this.loadProfilePicture();
+    this.profileImageUrl = this.authService.getProfileImageUrl();
+
+    this.profileImageSubscription = this.authService.profileImageUrl$.subscribe(
+      (url) => {
+        this.profileImageUrl = url;
+      }
+    );
+
+    this.userService.profilePicture$.subscribe((newPicture) => {
+      this.profilePicture = newPicture;
     });
+
+    document.addEventListener('click', this.closeDropdown.bind(this));
   }
 
   isLoggedIn(): boolean {
@@ -35,8 +53,23 @@ export class NavbarComponent implements OnInit, OnDestroy {
     });
   }
 
-  logout() {
+  logout(): void {
     this.authService.logout();
+    this.profileImageUrl = null; // Limpa a URL da imagem ao fazer logout.
+  }
+
+  loadProfilePicture(): void {
+    const userId = this.authService.getUserId();
+    if (userId) {
+      this.userService.getUserById(userId).subscribe(
+        (user) => {
+          this.profilePicture = user.profilePicture || this.defaultProfilePicture;
+        },
+        (error) => {
+          console.error('Erro ao carregar a imagem do perfil', error);
+        }
+      );
+    }
   }
 
   goToLoginWithMessage() {
@@ -54,7 +87,19 @@ export class NavbarComponent implements OnInit, OnDestroy {
     return 'Usuário';
   }
 
+  closeDropdown(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    const userMenuButton = document.getElementById('user-menu-button');
+
+    // Verifica se o clique foi fora do botão e do dropdown
+    if (userMenuButton && !userMenuButton.contains(target) && this.isDropdownOpen) {
+      this.isDropdownOpen = false; // Fecha o dropdown
+    }
+  }
+
   ngOnDestroy() {
-    this.userNameSubscription.unsubscribe(); // Limpa a assinatura quando o componente é destruído
+    this.profileImageSubscription?.unsubscribe();
+    this.userNameSubscription.unsubscribe();
+    document.removeEventListener('click', this.closeDropdown.bind(this));
   }
 }

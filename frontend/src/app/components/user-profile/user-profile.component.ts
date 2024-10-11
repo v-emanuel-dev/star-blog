@@ -30,6 +30,9 @@ export class UserProfileComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadUserData();
+    this.userService.profilePictureSubject.subscribe(picture => {
+      this.profilePicture = picture; // Atualiza a imagem do perfil quando receber novas atualizações
+    });
   }
 
   loadUserData(): void {
@@ -102,6 +105,13 @@ export class UserProfileComponent implements OnInit {
           this.message = 'User updated successfully';
           this.success = true;
           this.loadUserData();
+
+          // Notifica a navbar sobre a atualização da imagem do perfil
+          if (this.selectedImage) {
+            const imageUrl = URL.createObjectURL(this.selectedImage);
+            this.userService.updateProfilePicture(imageUrl); // Passa a URL da nova imagem
+          }
+
           this.selectedImage = null;
           setTimeout(() => {
             this.router.navigate(['/blog']); // Redireciona para o dashboard após 2 segundos

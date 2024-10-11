@@ -6,6 +6,7 @@ import { PostService } from '../../services/post.service';
 import { AuthService } from '../../services/auth.service';
 import { CategoryService } from '../../services/category.service';
 import { Category } from '../../models/category.model'; // Ajuste o caminho conforme necessário
+import { catchError, forkJoin, of } from 'rxjs';
 
 @Component({
   selector: 'app-blog-list',
@@ -24,6 +25,7 @@ export class BlogListComponent implements OnInit {
   isModalOpen: boolean = false;
   currentPostId: number | null = null;
   message: string | null = null; // Mensagem a ser exibida
+  isLoadingCategories: boolean = true;
 
   constructor(
     private postService: PostService,
@@ -34,6 +36,7 @@ export class BlogListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.loadPostsAndCategories();
     this.getPosts(); // Carrega os posts na inicialização
     this.isLoggedIn = this.authService.isLoggedIn();
 
@@ -41,6 +44,51 @@ export class BlogListComponent implements OnInit {
       if (params['message']) {
         this.message = params['message'];
         this.success = false;
+      }
+    });
+  }
+
+  loadPostsAndCategories() {
+    this.isLoadingCategories = true;
+
+    // Carrega os posts primeiro
+    this.postService.getPosts().subscribe({
+      next: (posts) => {
+        this.posts = posts;
+
+        // Cria uma lista de observables para buscar as categorias de cada post
+        const categoryRequests = this.posts.map(post => {
+          if (post.id !== undefined) {
+            return this.categoryService.getCategoriesByPostId(post.id).pipe(
+              catchError((error) => {
+                console.error(`Erro ao carregar categorias do post ${post.id}:`, error);
+                return of([]); // Retorna um array vazio em caso de erro
+              })
+            );
+          } else {
+            // Retorna um observable de array vazio se o post.id for indefinido
+            return of([]);
+          }
+        });
+
+        // Aguarda todas as requisições de categorias usando forkJoin
+        forkJoin(categoryRequests).subscribe({
+          next: (categoriesArray) => {
+            // Associa as categorias a cada post pelo índice
+            categoriesArray.forEach((categories, index) => {
+              this.posts[index].categories = categories;
+            });
+            this.isLoadingCategories = false; // Define como false após o carregamento
+          },
+          error: (error) => {
+            console.error('Erro ao carregar as categorias:', error);
+            this.isLoadingCategories = false; // Garante que o carregamento termine mesmo em caso de erro
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Erro ao carregar os posts:', error);
+        this.isLoadingCategories = false;
       }
     });
   }
@@ -56,17 +104,16 @@ export class BlogListComponent implements OnInit {
 
           // Carregar categorias para cada post (usando categoryIds)
           this.posts.forEach((post) => {
+            post.categories = []; // Inicializa como array vazio
             if (post.id !== undefined) {
               this.categoryService.getCategoriesByPostId(post.id).subscribe(
                 (categories: Category[]) => {
-                  post.categories = categories; // Armazena categorias diretamente no post
+                  post.categories = categories; // Atualiza com as categorias obtidas
                 },
                 (error) => {
                   console.error(`Erro ao obter categorias para o post ${post.id}:`, error);
                 }
               );
-            } else {
-              console.warn(`post.id está indefinido para um post:`, post);
             }
           });
 
@@ -114,10 +161,6 @@ export class BlogListComponent implements OnInit {
     console.log('Filtered Posts:', this.filteredPosts); // Log para posts filtrados
     this.updatePostsTitle(); // Atualiza o título dos posts após filtrar
   }
-
-
-
-
 
   updatePostsTitle(): void {
     const hasPublicPosts = this.filteredPosts.some(

@@ -8,15 +8,26 @@ import { BehaviorSubject, Observable, tap } from 'rxjs';
 })
 export class AuthService {
   private baseUrl = 'http://localhost:3000/api/auth';
+
+  private profileImageUrl: string | null = null;
+
   private userNameSubject = new BehaviorSubject<string | undefined>(
     this.getUserName()
   );
+
   private currentUserIdSubject = new BehaviorSubject<number | null>(
     this.getLoggedUserId()
   ); // Adicionando a BehaviorSubject para o ID do usuário
+
   userName$: Observable<string | undefined> =
     this.userNameSubject.asObservable();
   userId$: Observable<number | null> = this.currentUserIdSubject.asObservable(); // Para expor o ID do usuário como um Observable
+
+  private userLoggedInSubject = new BehaviorSubject<boolean>(false);
+  userLoggedIn$ = this.userLoggedInSubject.asObservable();
+
+  private profileImageUrlSubject = new BehaviorSubject<string | null>(null);
+  profileImageUrl$ = this.profileImageUrlSubject.asObservable();
 
   constructor(private http: HttpClient, private router: Router) {}
 
@@ -35,6 +46,10 @@ export class AuthService {
           // Atualiza o subject com o nome do usuário e ID do usuário
           this.userNameSubject.next(response.username);
           this.currentUserIdSubject.next(response.userId); // Atualizando o ID do usuário logado
+
+          // Notifica que o usuário está logado
+          this.userLoggedInSubject.next(true);
+
           console.log('Username stored in localStorage:', response.username); // Log do nome do usuário armazenado
         })
       );
@@ -70,44 +85,30 @@ export class AuthService {
     return this.currentUserIdSubject.value; // Retorna o ID do usuário logado ou null se não estiver logado
   }
 
-  // Outros métodos (login, logout, updateUser, etc.)
-
-  updateUser(
-    userId: string,
-    username: string,
-    email: string,
-    password: string | null,
-    selectedImage: File | null,
-    headers: HttpHeaders
-  ): Observable<any> {
-    const formData = new FormData();
-    formData.append('username', username);
-    formData.append('email', email);
-
-    if (password) {
-      formData.append('password', password);
-    }
-
-    if (selectedImage) {
-      formData.append('profilePicture', selectedImage);
-    }
-
-    return this.http.put(`${this.baseUrl}/update`, formData, { headers });
-  }
-
   isLoggedIn(): boolean {
     return localStorage.getItem('accessToken') !== null; // Corrigido para verificar 'accessToken'
   }
 
+  setProfileImageUrl(url: string): void {
+    this.profileImageUrlSubject.next(url);
+  }
+
+  getProfileImageUrl(): string | null {
+    return this.profileImageUrlSubject.value;
+  }
+
   logout() {
     // Removendo os dados do localStorage
+    this.profileImageUrlSubject.next(null); // Limpa a URL da imagem ao fazer logout.
+    this.profileImageUrl = null;
     localStorage.removeItem('accessToken');
     localStorage.removeItem('token');
     localStorage.removeItem('userName');
     localStorage.removeItem('userId');
     localStorage.removeItem('email');
+    localStorage.removeItem('profileImage');
 
-    // Emitindo undefined para limpar a exibição do nome de usuário
+    this.userLoggedInSubject.next(false);
     this.userNameSubject.next(undefined);
     this.currentUserIdSubject.next(null); // Limpando o ID do usuário
 

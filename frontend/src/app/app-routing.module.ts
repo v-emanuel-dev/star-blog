@@ -10,7 +10,7 @@ import { BlogDetailComponent } from './components/blog-detail/blog-detail.compon
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 
 const routes: Routes = [
-  { path: '', redirectTo: '/login', pathMatch: 'full' },
+  { path: '', redirectTo: '/blog', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'blog', component: BlogListComponent }, // Rota para listar posts
