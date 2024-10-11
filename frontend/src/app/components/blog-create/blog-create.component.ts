@@ -19,9 +19,8 @@ export class BlogCreateComponent implements OnInit {
   user_id: number = 0;
   postId: number | null = null;
   categories: Category[] = [];
-  categoryId: number | null = null;
   newCategoryName: string = '';
-  selectedCategoryId: number | null = null;
+  selectedCategoryIds: number[] = []; // Inicializa como um array vazio
   currentPostId: number | null = null;
   message: string | null = null; // Permite que message seja uma string ou null
 
@@ -80,8 +79,8 @@ export class BlogCreateComponent implements OnInit {
       return;
     }
 
-    if (!this.selectedCategoryId) {
-      this.message = 'Category is required.';
+    if (this.selectedCategoryIds.length === 0) {
+      this.message = 'At least one category is required.';
       this.success = false;
       return;
     }
@@ -92,7 +91,7 @@ export class BlogCreateComponent implements OnInit {
       content: this.content.trim(),
       user_id: this.user_id,
       visibility: this.visibility,
-      categoryId: this.selectedCategoryId,
+      categoryIds: this.selectedCategoryIds, // Agora usa um array de IDs de categorias
     };
 
     console.log('Criando post com dados:', newPost); // Log para depuração
@@ -151,8 +150,8 @@ export class BlogCreateComponent implements OnInit {
   }
 
   editCategory(category: Category): void {
-    this.newCategoryName = category.name;
-    this.selectedCategoryId = category.id !== undefined ? category.id : null;
+    //this.newCategoryName = category.name;
+    //this.selectedCategoryIds = category.id !== undefined ? category.id : null;
   }
 
   deleteCategory(categoryId: number): void {
@@ -177,7 +176,19 @@ export class BlogCreateComponent implements OnInit {
     }
   }
 
-  onCategoryChange(categoryId: number): void {
-    console.log('Categoria selecionada:', categoryId);
+  onCategoryChange(event: Event, categoryId: number): void {
+    event.preventDefault(); // Previne o comportamento padrão
+
+    const isChecked = this.selectedCategoryIds.includes(categoryId);
+
+    if (isChecked) {
+      // Remove o ID se o botão for clicado novamente
+      this.selectedCategoryIds = this.selectedCategoryIds.filter(id => id !== categoryId);
+    } else {
+      // Adiciona o ID se o botão for clicado
+      this.selectedCategoryIds.push(categoryId);
+    }
+
+    console.log('Categorias selecionadas:', this.selectedCategoryIds);
   }
 }

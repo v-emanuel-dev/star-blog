@@ -111,12 +111,14 @@ exports.getPostById = (req, res) => {
 // controllers/postController.js
 
 exports.createPost = (req, res) => {
-  const { title, content, user_id, visibility, categoryId } = req.body;
+  const { title, content, user_id, visibility, categoryIds } = req.body; // Mudança para categoryIds
 
-  if (!title || !content || !user_id || !categoryId) {
-    return res.status(400).json({ message: 'Title, content, user ID, and category are required.' });
+  // Verifica se os campos obrigatórios estão preenchidos
+  if (!title || !content || !user_id || !categoryIds || categoryIds.length === 0) {
+    return res.status(400).json({ message: 'Title, content, user ID, and at least one category are required.' });
   }
 
+  // Insere o novo post na tabela posts
   const query = 'INSERT INTO posts (title, content, user_id, visibility) VALUES (?, ?, ?, ?)';
   const values = [title, content, user_id, visibility];
 
@@ -128,22 +130,35 @@ exports.createPost = (req, res) => {
 
     const postId = result.insertId;
 
-    // Associar a categoria ao post na tabela `post_categories`
-    const categoryQuery = 'INSERT INTO post_categories (postId, categoryId) VALUES (?, ?)';
-    db.query(categoryQuery, [postId, categoryId], (error) => {
-      if (error) {
-        console.error('Erro ao associar categoria ao post:', error);
-        return res.status(500).json({ message: 'Post created, but error associating category.' });
-      }
-
-      res.status(201).json({
-        message: 'Post created successfully!',
-        post: { postId, title, content, user_id, visibility, categoryId }
+    // Prepara a query para associar múltiplas categorias ao post
+    const categoryQueries = categoryIds.map(categoryId => {
+      return new Promise((resolve, reject) => {
+        const categoryQuery = 'INSERT INTO post_categories (postId, categoryId) VALUES (?, ?)';
+        db.query(categoryQuery, [postId, categoryId], (error) => {
+          if (error) {
+            console.error('Erro ao associar categoria ao post:', error);
+            reject(new Error('Error associating category'));
+          } else {
+            resolve();
+          }
+        });
       });
     });
+
+    // Executa todas as queries para associar categorias
+    Promise.all(categoryQueries)
+      .then(() => {
+        res.status(201).json({
+          message: 'Post created successfully!',
+          post: { postId, title, content, user_id, visibility, categoryIds }
+        });
+      })
+      .catch(err => {
+        console.error(err);
+        res.status(500).json({ message: 'Post created, but error associating categories.' });
+      });
   });
 };
-
 
 // Função para atualizar um post existente
 exports.updatePost = (req, res) => {

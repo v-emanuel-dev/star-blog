@@ -43,22 +43,15 @@
           <option value="private">Private</option>
         </select>
       </div>
-      <div class="mb-3">
-        <label for="category">Select Category:</label>
-        <select
-  [(ngModel)]="selectedCategoryId"
-  (ngModelChange)="onCategoryChange($event)"
-  name="category"
-  required
-  class="form-control"
->
-  <option value="" disabled selected>Select a category</option>
-  <option *ngFor="let category of categories" [value]="category.id">
-    {{ category.name }}
-  </option>
-</select>
-
-      </div>
+      <button
+      *ngFor="let category of categories"
+      type="button"
+      (click)="onCategoryChange($event, category.id!)"
+      [ngClass]="{'bg-blue-600 text-white': selectedCategoryIds.includes(category.id!), 'bg-gray-200 text-gray-800': !selectedCategoryIds.includes(category.id!)}"
+      class="m-1 px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
+      {{ category.name }}
+    </button>
       <div class="d-flex justify-content-between">
         <a routerLink="/blog" class="btn btn-secondary">Back</a>
         <button type="submit" class="btn btn-primary">Create Post</button>

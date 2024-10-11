@@ -179,4 +179,5 @@ export class BlogEditComponent implements OnInit {
 
     console.log('Categorias selecionadas:', this.selectedCategoryIds);
   }
+
 }
