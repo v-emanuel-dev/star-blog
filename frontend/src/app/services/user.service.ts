@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
-import { User } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root',
@@ -9,7 +8,8 @@ import { User } from '../models/user.model';
 export class UserService {
   private apiUrl = 'http://localhost:3000/api/users';
 
-  public profilePictureSubject: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
+  public profilePictureSubject: BehaviorSubject<string | null> =
+    new BehaviorSubject<string | null>(null);
   public profilePicture$ = this.profilePictureSubject.asObservable();
 
   constructor(private http: HttpClient) {}
@@ -18,12 +18,9 @@ export class UserService {
     this.profilePictureSubject.next(picture);
   }
 
-  // user.service.ts
-  // user.service.ts
-getUserById(userId: number) {
-  return this.http.get<any>(`${this.apiUrl}/users/${userId}`);
-}
-
+  getUserById(userId: number) {
+    return this.http.get<any>(`${this.apiUrl}/users/${userId}`);
+  }
 
   updateUser(
     userId: string,

@@ -36,10 +36,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
       }
     );
 
-    this.userService.profilePicture$.subscribe((newPicture) => {
-      this.profilePicture = newPicture;
-    });
-
     document.addEventListener('click', this.closeDropdown.bind(this));
   }
 
@@ -51,11 +47,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.authService.login(email, password).subscribe(() => {
       this.router.navigate(['/blog']);
     });
-  }
-
-  logout(): void {
-    this.authService.logout();
-    this.profileImageUrl = null; // Limpa a URL da imagem ao fazer logout.
   }
 
   loadProfilePicture(): void {
@@ -95,6 +86,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
     if (userMenuButton && !userMenuButton.contains(target) && this.isDropdownOpen) {
       this.isDropdownOpen = false; // Fecha o dropdown
     }
+  }
+
+  logout(): void {
+    this.authService.logout();
   }
 
   ngOnDestroy() {

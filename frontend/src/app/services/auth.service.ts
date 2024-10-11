@@ -100,13 +100,11 @@ export class AuthService {
   logout() {
     // Removendo os dados do localStorage
     this.profileImageUrlSubject.next(null); // Limpa a URL da imagem ao fazer logout.
-    this.profileImageUrl = null;
     localStorage.removeItem('accessToken');
     localStorage.removeItem('token');
     localStorage.removeItem('userName');
     localStorage.removeItem('userId');
     localStorage.removeItem('email');
-    localStorage.removeItem('profileImage');
 
     this.userLoggedInSubject.next(false);
     this.userNameSubject.next(undefined);
