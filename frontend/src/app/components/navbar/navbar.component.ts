@@ -1,8 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { Subscription, timer } from 'rxjs';
-import { UserService } from '../../services/user.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-navbar',
@@ -19,28 +18,21 @@ export class NavbarComponent implements OnInit, OnDestroy {
   private userNameSubscription: Subscription;
   private profileImageSubscription: Subscription | undefined;
 
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {
+  constructor(private authService: AuthService, private router: Router) {
     this.userNameSubscription = this.authService.userName$.subscribe((name) => {
       this.userName = name || null;
       this.loadProfilePicture();
     });
 
-    this.profileImageSubscription = this.authService.profileImageUrl$.subscribe(
-      (url) => {
-        this.profileImageUrl = url;
-      }
-    );
+    this.profileImageSubscription = this.authService.profileImageUrl$.subscribe((url) => {
+      this.profileImageUrl = url || this.defaultProfilePicture; // Definindo uma imagem padrão
+    });
   }
 
   ngOnInit(): void {
     this.loadUserInfo();
-    this.revalidateProfilePicture();
     this.userName = this.authService.getUserName();
-    this.profileImageUrl = this.authService.getProfileImageUrl(); // Tenta revalidar ao inicializar
-
+    this.loadProfilePicture(); // Sempre tentar carregar a imagem de perfil ao inicializar
     document.addEventListener('click', this.closeDropdown.bind(this));
   }
 
@@ -49,21 +41,16 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.profileImageUrl = this.authService.getProfileImageUrl() || this.defaultProfilePicture;
   }
 
-  private revalidateProfilePicture(): void {
-    timer(10).subscribe(() => {
-      const storedProfilePicture = localStorage.getItem('profilePicture');
-      if (storedProfilePicture) {
-        this.profileImageUrl = storedProfilePicture;
-        console.log('Revalidated profile image URL:', this.profileImageUrl);
-      }
-    });
-  }
-
   private loadProfilePicture(): void {
     const storedProfilePicture = localStorage.getItem('profilePicture');
-    this.profileImageUrl = storedProfilePicture ? storedProfilePicture : this.defaultProfilePicture;
+    // Se não houver imagem armazenada, usa a imagem padrão
+    this.profileImageUrl = storedProfilePicture ? this.sanitizeUrl(storedProfilePicture) : this.defaultProfilePicture;
+    console.log('Loaded profile image URL:', this.profileImageUrl);
   }
 
+  sanitizeUrl(url: string): string {
+    return url.replace('http://localhost:3000/', ''); // Remova o prefixo indesejado
+  }
 
   isLoggedIn(): boolean {
     return this.authService.isLoggedIn();

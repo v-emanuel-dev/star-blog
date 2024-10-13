@@ -49,7 +49,14 @@ export class UserProfileComponent implements OnInit {
   getProfilePicture(): string | null {
     const profilePicture = localStorage.getItem('profilePicture');
     console.log('Getting profile picture from localStorage:', profilePicture);
-    return profilePicture;
+
+    if (profilePicture) {
+      // Remove qualquer prefixo indesejado de 'http://localhost:3000/'
+      const sanitizedProfilePicture = profilePicture.replace('http://localhost:3000/', '');
+      return sanitizedProfilePicture;
+    }
+
+    return null;
   }
 
   sanitizeUrl(url: string): SafeUrl {

@@ -24,6 +24,8 @@ export class BlogEditComponent implements OnInit {
   newCategoryName: string = '';
   currentPostId: number | null = null;
   post: Post;
+  isModalOpen = false;
+  currentCategoryId: number | null = null;
 
   constructor(
     private postService: PostService,
@@ -38,7 +40,7 @@ export class BlogEditComponent implements OnInit {
       content: '',
       categories: [],
       user_id: 0,
-      visibility: ''
+      visibility: '',
     };
   }
 
@@ -140,19 +142,49 @@ export class BlogEditComponent implements OnInit {
   }
 
   deleteCategory(categoryId: number): void {
-    if (confirm('Are you sure you want to delete this category?')) {
-      this.categoryService.deleteCategory(categoryId).subscribe({
-        next: () => {
-          this.loadCategories();
-          this.message = 'Category deleted successfully!';
-          this.success = true;
-        },
-        error: (error) => {
-          console.error('Error deleting category:', error);
-          this.message = 'Failed to delete category.';
-        },
-      });
+    if (categoryId) {
+      this.openModal(categoryId); // Abre o modal de confirmação para deletar a categoria
+    } else {
+      console.error('ID da categoria não é válido:', categoryId);
     }
+  }
+
+  // Método de confirmação de deleção da categoria
+  deleteCategoryModal(categoryId: number): void {
+    this.categoryService.deleteCategory(categoryId).subscribe({
+      next: () => {
+        this.loadCategories(); // Atualiza a lista de categorias após a exclusão
+        this.message = 'Categoria deletada com sucesso!';
+        this.success = true;
+        this.closeModal(); // Fecha o modal após a deleção
+      },
+      error: (error) => {
+        console.error('Erro ao deletar categoria:', error); // Exibe o erro detalhado no console
+        this.message = 'Falha ao deletar a categoria.';
+        this.success = false;
+      },
+      complete: () => {
+        setTimeout(() => {
+          this.message = ''; // Limpa a mensagem após um tempo
+        }, 2000);
+      },
+    });
+  }
+
+  confirmDelete(categoryId: number): void {
+    this.openModal(categoryId); // Abre o modal com o ID da categoria
+  }
+
+  // Método para abrir o modal
+  openModal(categoryId: number): void {
+    this.currentCategoryId = categoryId; // Armazena o ID da categoria a ser deletada
+    this.isModalOpen = true; // Abre o modal
+  }
+
+  // Método para fechar o modal
+  closeModal(): void {
+    this.isModalOpen = false; // Fecha o modal
+    this.currentCategoryId = null; // Limpa o ID atual
   }
 
   onCategoryChange(event: Event, categoryId: number): void {
@@ -161,7 +193,9 @@ export class BlogEditComponent implements OnInit {
     const isChecked = this.selectedCategoryIds.includes(categoryId);
 
     if (isChecked) {
-      this.selectedCategoryIds = this.selectedCategoryIds.filter(id => id !== categoryId);
+      this.selectedCategoryIds = this.selectedCategoryIds.filter(
+        (id) => id !== categoryId
+      );
     } else {
       this.selectedCategoryIds.push(categoryId);
     }
