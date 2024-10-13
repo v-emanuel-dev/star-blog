@@ -113,8 +113,12 @@ exports.getPostById = (req, res) => {
 exports.createPost = (req, res) => {
   const { title, content, user_id, visibility, categoryIds } = req.body; // Mudança para categoryIds
 
+  // Logando a requisição recebida
+  console.log('Received request to create post:', { title, content, user_id, visibility, categoryIds });
+
   // Verifica se os campos obrigatórios estão preenchidos
   if (!title || !content || !user_id || !categoryIds || categoryIds.length === 0) {
+    console.warn('Validation error: Title, content, user ID, and at least one category are required.');
     return res.status(400).json({ message: 'Title, content, user ID, and at least one category are required.' });
   }
 
@@ -124,11 +128,12 @@ exports.createPost = (req, res) => {
 
   db.query(query, values, (error, result) => {
     if (error) {
-      console.error('Erro ao criar post:', error);
+      console.error('Error creating post:', error);
       return res.status(500).json({ message: 'Error creating post' });
     }
 
     const postId = result.insertId;
+    console.log('Post created successfully with ID:', postId);
 
     // Prepara a query para associar múltiplas categorias ao post
     const categoryQueries = categoryIds.map(categoryId => {
@@ -136,26 +141,25 @@ exports.createPost = (req, res) => {
         const categoryQuery = 'INSERT INTO post_categories (postId, categoryId) VALUES (?, ?)';
         db.query(categoryQuery, [postId, categoryId], (error) => {
           if (error) {
-            console.error('Erro ao associar categoria ao post:', error);
+            console.error('Error associating category to post:', error);
             reject(new Error('Error associating category'));
           } else {
+            console.log(`Category with ID ${categoryId} associated with post ID ${postId}`);
             resolve();
           }
         });
       });
     });
 
-    // Executa todas as queries para associar categorias
+    // Executa todas as associações de categorias
     Promise.all(categoryQueries)
       .then(() => {
-        res.status(201).json({
-          message: 'Post created successfully!',
-          post: { postId, title, content, user_id, visibility, categoryIds }
-        });
+        console.log('All categories associated successfully');
+        return res.status(201).json({ message: 'Post created successfully', postId });
       })
-      .catch(err => {
-        console.error(err);
-        res.status(500).json({ message: 'Post created, but error associating categories.' });
+      .catch((error) => {
+        console.error('Error during category association:', error);
+        return res.status(500).json({ message: 'Error associating categories' });
       });
   });
 };

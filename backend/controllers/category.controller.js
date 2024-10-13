@@ -15,7 +15,6 @@ exports.getAllCategories = (req, res) => {
 
 exports.getCategoriesByPostId = (req, res) => {
   const postId = Number(req.params.postId || req.query.postId); // Verifica se vem da rota ou da query
-  console.log("postId convertido:", postId);
 
   if (isNaN(postId)) {
     return res.status(400).json({ error: "postId deve ser um número" });

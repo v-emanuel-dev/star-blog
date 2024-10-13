@@ -7,12 +7,13 @@ passport.use(new GoogleStrategy({
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   callbackURL: "http://localhost:3000/api/auth/google/callback",
 }, (accessToken, refreshToken, profile, done) => {
-  console.log('Google profile:', profile); // Log para verificar o perfil do Google
+  console.log('Google profile received:', profile); // Log para verificar o perfil do Google
   
   const email = profile.emails[0].value;
   const username = profile.displayName.replace(/\s+/g, '').toLowerCase(); // Ajuste do nome de usuário
   const profilePicture = profile.photos[0]?.value || null;
 
+  console.log('Searching for user by email:', email); // Log da busca do usuário
   User.findByEmail(email, (err, user) => {
     if (err) {
       console.error('Error finding user by email:', err);
@@ -43,10 +44,12 @@ passport.use(new GoogleStrategy({
 }));
 
 passport.serializeUser((user, done) => {
+  console.log('Serializing user with ID:', user.id); // Log para serialização
   done(null, user.id); // Serializa apenas o ID do usuário
 });
 
 passport.deserializeUser((id, done) => {
+  console.log('Deserializing user with ID:', id); // Log para deserialização
   User.findById(id, (err, user) => {
     if (err) {
       console.error('Error deserializing user:', err);

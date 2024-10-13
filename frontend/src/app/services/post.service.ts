@@ -14,13 +14,16 @@ export class PostService {
 
   // Método para obter o token
   private getToken(): string | null {
-    return localStorage.getItem('accessToken'); // Certifique-se de recuperar o token correto
+    return localStorage.getItem('token'); // Certifique-se de recuperar o token correto
   }
 
   // Método para criar um post
   createPost(post: Post): Observable<Post> {
     console.log('Post a ser criado:', post); // Adicione este log para depuração
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${this.getToken()}`);
+    const headers = new HttpHeaders().set(
+      'Authorization',
+      `Bearer ${this.getToken()}`
+    );
 
     return this.http.post<Post>(this.apiUrl, post, { headers }).pipe(
       catchError((error) => {
@@ -104,6 +107,6 @@ export class PostService {
 
   // Método auxiliar para verificar se o usuário está logado
   isLoggedIn(): boolean {
-    return localStorage.getItem('accessToken') !== null; // Verifique se há token de acesso
+    return localStorage.getItem('token') !== null; // Verifique se há token de acesso
   }
 }

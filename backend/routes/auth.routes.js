@@ -4,6 +4,10 @@ const authController = require('../controllers/auth.controller');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
 
+// Middlewares de autenticação
+const authenticateToken = require('../middlewares/auth-google.middleware');
+const { verifyToken } = require('../middlewares/auth.middleware'); // Supondo que o segundo middleware esteja no mesmo arquivo
+
 // Register a new user
 router.post('/register', authController.register);
 
@@ -45,4 +49,20 @@ router.get(
   }
 );
 
-module.exports = router; // Exporting the router
+// Rota protegida que requer autenticação
+router.post('/protected-route', authenticateToken, (req, res) => {
+  // Esta rota está protegida, então a autenticação foi bem-sucedida
+  res.json({ message: "You are authorized to access this route.", user: req.user });
+});
+
+// Rota que utiliza verifyToken
+router.get('/another-protected-route', verifyToken, (req, res) => {
+  if (req.userId) {
+    // O usuário está autenticado
+    res.json({ message: "You are authorized.", userId: req.userId });
+  } else {
+    res.status(403).send('Access forbidden: no token provided.');
+  }
+});
+
+module.exports = router; // Exportando o router

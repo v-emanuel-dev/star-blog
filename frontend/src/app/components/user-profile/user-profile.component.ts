@@ -32,35 +32,9 @@ export class UserProfileComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const profilePicture = this.userService.getProfilePicture();
-    console.log('Revalidated profile image URL:', profilePicture);
-    this.profileImageUrl = this.sanitizeUrl(
-      profilePicture || 'path/to/default/image'
-    );
-
-    // Assinatura para ouvir mudanças na imagem do perfil
-    this.userService.profilePictureSubject.subscribe((picture) => {
-      if (picture) {
-        this.profileImageUrl = this.sanitizeUrl(picture);
-        localStorage.setItem('profilePicture', picture);
-        console.log('Profile Picture saved to localStorage:', picture);
-      } else {
-        console.warn('Profile picture URL is not valid:', picture);
-      }
-    });
-
-    this.loadProfilePicture(); // Carrega a imagem do perfil do localStorage
+    // Carrega a imagem de perfil inicialmente do localStorage
+    this.loadProfilePicture();
     this.loadUserData();
-
-    // Assinatura para ouvir mudanças na imagem do perfil
-    this.userService.profilePictureSubject.subscribe((picture) => {
-      if (picture && picture.startsWith('http')) {
-        localStorage.setItem('profilePicture', picture);
-        console.log('Profile Picture saved to localStorage:', picture);
-      } else {
-        console.warn('Profile picture URL is not valid:', picture);
-      }
-    });
   }
 
   loadProfilePicture(): void {
@@ -93,14 +67,15 @@ export class UserProfileComponent implements OnInit {
           this.email = user.email || '';
           console.log('User data loaded:', user);
 
-          // Verifica e carrega a imagem de perfil
-          this.profilePicture = user.profilePicture
-            ? this.sanitizeUrl(user.profilePicture)
-            : this.sanitizeUrl(this.defaultProfilePicture);
+          // Verifica e carrega a imagem de perfil, mas só substitui se diferente da atual
+          if (user.profilePicture && user.profilePicture !== localStorage.getItem('profilePicture')) {
+            this.profilePicture = this.sanitizeUrl(user.profilePicture);
+            localStorage.setItem('profilePicture', user.profilePicture);
+            console.log('Profile Picture updated and saved to localStorage:', user.profilePicture);
+          }
 
-          // Salva a imagem de perfil no localStorage
-          localStorage.setItem('profilePicture', user.profilePicture || '');
-          console.log('Profile Picture saved to localStorage:', user.profilePicture);
+          // Garante que a imagem de perfil esteja setada, seja do usuário ou a padrão
+          this.profilePicture = this.profilePicture || this.sanitizeUrl(this.defaultProfilePicture);
         },
         (error) => {
           console.error('Error loading user data', error);
@@ -110,7 +85,6 @@ export class UserProfileComponent implements OnInit {
       console.error('User ID not found or user is not logged in');
     }
   }
-
 
   onImageSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];

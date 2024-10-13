@@ -40,6 +40,7 @@ export class BlogListComponent implements OnInit {
     this.getPosts(); // Carrega os posts na inicialização
     this.isLoggedIn = this.authService.isLoggedIn();
 
+    // Verifica se há mensagens de erro nos parâmetros de consulta
     this.route.queryParams.subscribe((params) => {
       if (params['message']) {
         this.message = params['message'];
@@ -48,125 +49,130 @@ export class BlogListComponent implements OnInit {
     });
   }
 
-  loadPostsAndCategories() {
+  loadPostsAndCategories(): void {
     this.isLoadingCategories = true;
 
-    // Carrega os posts primeiro
     this.postService.getPosts().subscribe({
       next: (posts) => {
         this.posts = posts;
 
         // Cria uma lista de observables para buscar as categorias de cada post
-        const categoryRequests = this.posts.map(post => {
+        const categoryRequests = this.posts.map((post) => {
           if (post.id !== undefined) {
             return this.categoryService.getCategoriesByPostId(post.id).pipe(
               catchError((error) => {
-                console.error(`Erro ao carregar categorias do post ${post.id}:`, error);
+                console.error(
+                  `Erro ao carregar categorias do post ${post.id}:`,
+                  error
+                );
                 return of([]); // Retorna um array vazio em caso de erro
               })
             );
           } else {
-            // Retorna um observable de array vazio se o post.id for indefinido
             return of([]);
           }
         });
 
-        // Aguarda todas as requisições de categorias usando forkJoin
+        // Usa forkJoin para esperar todas as requisições de categorias
         forkJoin(categoryRequests).subscribe({
           next: (categoriesArray) => {
-            // Associa as categorias a cada post pelo índice
             categoriesArray.forEach((categories, index) => {
               this.posts[index].categories = categories;
             });
-            this.isLoadingCategories = false; // Define como false após o carregamento
+            this.isLoadingCategories = false;
+            this.updatePostsTitle(); // Atualiza o título após carregar categorias
           },
           error: (error) => {
             console.error('Erro ao carregar as categorias:', error);
-            this.isLoadingCategories = false; // Garante que o carregamento termine mesmo em caso de erro
-          }
+            this.isLoadingCategories = false;
+          },
         });
       },
       error: (error) => {
         console.error('Erro ao carregar os posts:', error);
         this.isLoadingCategories = false;
-      }
+      },
     });
   }
 
   getPosts(): void {
     this.loading = true; // Ativa o carregamento
 
-    this.postService.getPosts().subscribe(
-      (data: Post[]) => {
-        // Simula um atraso de 2 segundos para visualizar a animação de loading
+    this.postService.getPosts().subscribe({
+      next: (data: Post[]) => {
         setTimeout(() => {
           this.posts = data;
 
-          // Carregar categorias para cada post (usando categoryIds)
-          this.posts.forEach((post) => {
-            post.categories = []; // Inicializa como array vazio
-            if (post.id !== undefined) {
-              this.categoryService.getCategoriesByPostId(post.id).subscribe(
-                (categories: Category[]) => {
-                  post.categories = categories; // Atualiza com as categorias obtidas
-                },
-                (error) => {
-                  console.error(`Erro ao obter categorias para o post ${post.id}:`, error);
-                }
-              );
-            }
+          // Carrega categorias para cada post
+          const categoryRequests = this.posts.map((post) =>
+            post.id !== undefined
+              ? this.categoryService.getCategoriesByPostId(post.id).pipe(
+                  catchError((error) => {
+                    console.error(
+                      `Erro ao obter categorias para o post ${post.id}:`,
+                      error
+                    );
+                    return of([]);
+                  })
+                )
+              : of([])
+          );
+
+          forkJoin(categoryRequests).subscribe({
+            next: (categoriesArray) => {
+              // Associa categorias a cada post
+              categoriesArray.forEach((categories, index) => {
+                this.posts[index].categories = categories;
+              });
+
+              // Define os posts filtrados uma única vez com base na visibilidade e no login
+              this.filteredPosts = this.isLoggedIn
+                ? this.posts
+                : this.posts.filter((post) => post.visibility === 'public');
+
+              this.updatePostsTitle(); // Atualiza o título após carregar e filtrar os posts
+              this.loading = false;
+            },
+            error: (error) => {
+              console.error('Erro ao carregar categorias:', error);
+              this.loading = false;
+            },
           });
-
-          this.filteredPosts = this.isLoggedIn
-            ? data
-            : data.filter((post) => post.visibility === 'public');
-
-          this.updatePostsTitle();
-          this.loading = false; // Finaliza o carregamento após o atraso
-        }, 1000); // Tempo em milissegundos (2 segundos)
+        }, 1000); // Simula um atraso de 1 segundo
       },
-      (error) => {
+      error: (error) => {
         console.error('Erro ao obter posts:', error);
-        this.loading = false; // Finaliza o carregamento mesmo em caso de erro
-      }
-    );
+        this.loading = false;
+      },
+    });
   }
 
   filterPosts(): void {
     const searchTermLower = this.searchTerm.toLowerCase().trim();
-    console.log('Search Term:', searchTermLower); // Log do termo de busca
     this.filteredPosts = this.posts.filter((post) => {
-      console.log('Post:', post); // Log do post atual
-
       const matchesTitle = post.title.toLowerCase().includes(searchTermLower);
-      console.log('Matches Title:', matchesTitle); // Log para correspondência de título
+      const matchesContent = post.content
+        .toLowerCase()
+        .includes(searchTermLower);
 
-      const matchesContent = post.content.toLowerCase().includes(searchTermLower);
-      console.log('Matches Content:', matchesContent); // Log para correspondência de conteúdo
+      const matchesCategory =
+        post.categories && Array.isArray(post.categories)
+          ? post.categories.some((category) =>
+              category.name.toLowerCase().includes(searchTermLower)
+            )
+          : false;
 
-      const matchesCategory = post.categories && Array.isArray(post.categories)
-        ? post.categories.some(category => {
-            console.log('Category:', category); // Log para cada categoria
-            const matchesCategoryName = category.name.toLowerCase().includes(searchTermLower);
-            console.log('Matches Category Name:', matchesCategoryName); // Log para correspondência de categoria
-            return matchesCategoryName;
-          })
-        : false;
-
-      const finalMatchResult = matchesTitle || matchesContent || matchesCategory;
-      console.log('Final Match Result:', finalMatchResult); // Log do resultado final
-      return finalMatchResult;
+      return matchesTitle || matchesContent || matchesCategory;
     });
 
-    console.log('Filtered Posts:', this.filteredPosts); // Log para posts filtrados
-    this.updatePostsTitle(); // Atualiza o título dos posts após filtrar
+    this.updatePostsTitle(); // Atualiza o título após filtrar os posts
   }
 
   updatePostsTitle(): void {
-    const hasPublicPosts = this.filteredPosts.some(
-      (post) => post.visibility === 'public'
+    const hasPrivatePosts = this.filteredPosts.some(
+      (post) => post.visibility === 'private'
     );
-    this.postsTitle = hasPublicPosts ? 'Public Posts' : 'Private Posts'; // Atualiza o título baseado na visibilidade
+    this.postsTitle = hasPrivatePosts ? 'Private Posts' : 'Public Posts';
   }
 
   editPost(postId: number): void {

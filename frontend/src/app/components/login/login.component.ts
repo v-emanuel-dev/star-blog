@@ -15,6 +15,7 @@ export class LoginComponent {
   message: string | null = null; // Mensagem a ser exibida
   loading = false; // Adicione esta variável na sua classe
   profileImageUrl: string | null = null;
+  googleLoginInProgress: boolean = false;
 
   constructor(
     private authService: AuthService,
@@ -42,24 +43,27 @@ export class LoginComponent {
   login() {
     this.loading = true;
 
-    // Chama o serviço de login passando o email e a senha.
+    // Verifica se o login pelo Google está em progresso e não exibe a mensagem de erro.
+    if (this.googleLoginInProgress) {
+      return;
+    }
+
     this.authService.login(this.email, this.password).subscribe(
       (response) => {
         localStorage.setItem('token', response.accessToken);
         this.message = 'Login successful! Redirecting...';
         this.success = true;
 
-        const userId = response.userId; // Certifique-se de que você tenha o ID do usuário na resposta.
+        const userId = response.userId;
 
         // Carregar a imagem do perfil após o login.
         this.userService.getUserById(userId).subscribe(
           (user) => {
-            // Define a URL da imagem de perfil no AuthService para propagar a mudança.
             if (user.profilePicture) {
               this.authService.setProfileImageUrl(user.profilePicture);
             }
             this.loading = false;
-            this.router.navigate(['/blog']); // Redireciona para a página do blog após o login.
+            this.router.navigate(['/blog']);
           },
           (error) => {
             console.error('Error fetching user data:', error);
@@ -68,15 +72,18 @@ export class LoginComponent {
         );
       },
       (error) => {
-        console.error('Login failed:', error);
-        this.message = 'Login failed! Check your credentials.';
-        this.success = false;
+        if (!this.googleLoginInProgress) {
+          console.error('Login failed:', error);
+          this.message = 'Login failed! Check your credentials.';
+          this.success = false;
+        }
         this.loading = false;
       }
     );
   }
 
   loginWithGoogle() {
+    this.googleLoginInProgress = true;
     this.loading = true;
     window.open('http://localhost:3000/api/auth/google', '_self');
   }
