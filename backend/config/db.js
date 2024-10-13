@@ -1,10 +1,13 @@
-const mysql2 = require('mysql2'); // Adicione esta linha para importar o mysql2
+const mysql2 = require('mysql2');
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 const db = mysql2.createConnection({
-  host: 'localhost',
-  user: 'root',        // Substitua pelo seu nome de usuário do MySQL
-  password: 'root',      // Substitua pela sua senha do MySQL
-  database: 'blog_db'       // Substitua pelo nome do seu banco de dados
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
 });
 
 db.connect((err) => {

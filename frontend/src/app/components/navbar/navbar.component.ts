@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { Subscription } from 'rxjs';
+import { Subscription, timer } from 'rxjs';
 import { UserService } from '../../services/user.service';
 
 @Component({
@@ -10,57 +10,78 @@ import { UserService } from '../../services/user.service';
   styleUrls: ['./navbar.component.css'],
 })
 export class NavbarComponent implements OnInit, OnDestroy {
-  userName: string | undefined;
+  userName: string | null = null;
   isMenuOpen = false;
   isDropdownOpen = false;
-  profilePicture: string | null = null;
-  defaultProfilePicture: string = 'assets/img/default-profile.png'; // Caminho da imagem padrão
-  private userNameSubscription: Subscription;
   profileImageUrl: string | null = null;
+  defaultProfilePicture: string = 'assets/img/default-profile.png';
+
+  private userNameSubscription: Subscription;
   private profileImageSubscription: Subscription | undefined;
 
-  constructor(private authService: AuthService, private router: Router, private userService: UserService
+  constructor(
+    private authService: AuthService,
+    private router: Router
   ) {
-    this.userNameSubscription = this.authService.userName$.subscribe(name => {
-      this.userName = name; // Atualiza o nome do usuário quando ele muda
+    this.userNameSubscription = this.authService.userName$.subscribe((name) => {
+      this.userName = name || null;
+      this.loadProfilePicture();
     });
-  }
-
-  ngOnInit(): void {
-    this.loadProfilePicture();
-    this.profileImageUrl = this.authService.getProfileImageUrl();
 
     this.profileImageSubscription = this.authService.profileImageUrl$.subscribe(
       (url) => {
         this.profileImageUrl = url;
       }
     );
+  }
+
+  ngOnInit(): void {
+    this.loadUserInfo();
+    this.revalidateProfilePicture();
+    this.userName = this.authService.getUserName();
+    this.profileImageUrl = this.authService.getProfileImageUrl(); // Tenta revalidar ao inicializar
 
     document.addEventListener('click', this.closeDropdown.bind(this));
   }
+
+  private loadUserInfo(): void {
+    this.userName = this.authService.getUserName();
+    this.profileImageUrl = this.authService.getProfileImageUrl() || this.defaultProfilePicture;
+  }
+
+  private revalidateProfilePicture(): void {
+    timer(10).subscribe(() => {
+      const storedProfilePicture = localStorage.getItem('profilePicture');
+      if (storedProfilePicture) {
+        this.profileImageUrl = storedProfilePicture;
+        console.log('Revalidated profile image URL:', this.profileImageUrl);
+      }
+    });
+  }
+
+  private loadProfilePicture(): void {
+    const storedProfilePicture = localStorage.getItem('profilePicture');
+    this.profileImageUrl = storedProfilePicture ? storedProfilePicture : this.defaultProfilePicture;
+  }
+
 
   isLoggedIn(): boolean {
     return this.authService.isLoggedIn();
   }
 
   login(email: string, password: string) {
-    this.authService.login(email, password).subscribe(() => {
-      this.router.navigate(['/blog']);
+    console.log('Attempting login with email:', email); // Log do email usado para login
+    this.authService.login(email, password).subscribe({
+      next: (response) => {
+        // Isso deve incluir a resposta do backend
+        console.log('Login successful, response:', response); // Log da resposta do login
+        this.loadUserInfo(); // Carregar informações do usuário após o login
+        this.router.navigate(['/blog']);
+      },
+      error: (error) => {
+        console.error('Login failed:', error); // Log de erro no login
+      }
     });
-  }
-
-  loadProfilePicture(): void {
-    const userId = this.authService.getUserId();
-    if (userId) {
-      this.userService.getUserById(userId).subscribe(
-        (user) => {
-          this.profilePicture = user.profilePicture || this.defaultProfilePicture;
-        },
-        (error) => {
-          console.error('Erro ao carregar a imagem do perfil', error);
-        }
-      );
-    }
   }
 
   goToLoginWithMessage() {
@@ -71,30 +92,22 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
   }
 
-  get formattedUserName(): string {
-    if (this.userName) {
-      return this.userName.charAt(0).toUpperCase() + this.userName.slice(1).toLowerCase();
-    }
-    return 'Usuário';
+  ngOnDestroy() {
+    this.userNameSubscription.unsubscribe();
+    this.profileImageSubscription?.unsubscribe();
+    document.removeEventListener('click', this.closeDropdown.bind(this));
   }
 
   closeDropdown(event: MouseEvent) {
     const target = event.target as HTMLElement;
     const userMenuButton = document.getElementById('user-menu-button');
 
-    // Verifica se o clique foi fora do botão e do dropdown
     if (userMenuButton && !userMenuButton.contains(target) && this.isDropdownOpen) {
-      this.isDropdownOpen = false; // Fecha o dropdown
+      this.isDropdownOpen = false;
     }
   }
 
   logout(): void {
     this.authService.logout();
-  }
-
-  ngOnDestroy() {
-    this.profileImageSubscription?.unsubscribe();
-    this.userNameSubscription.unsubscribe();
-    document.removeEventListener('click', this.closeDropdown.bind(this));
   }
 }

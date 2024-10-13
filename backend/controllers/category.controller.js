@@ -36,8 +36,6 @@ exports.getCategoriesByPostId = (req, res) => {
       console.error("Erro ao buscar categorias:", err);
       return res.status(500).json({ error: err.message });
     }
-
-    console.log("Categorias obtidas:", results);
     res.status(200).json(results);
   });
 };

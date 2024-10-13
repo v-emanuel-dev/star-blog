@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -15,7 +15,8 @@ export class UserService {
   constructor(private http: HttpClient) {}
 
   updateProfilePicture(picture: string | null) {
-    this.profilePictureSubject.next(picture);
+    console.log('Updating profile picture in UserService:', picture);
+    this.profilePictureSubject.next(this.cleanUrl(picture)); // Limpa a URL antes de emitir
   }
 
   getUserById(userId: number) {
@@ -42,8 +43,53 @@ export class UserService {
       formData.append('profilePicture', selectedImage);
     }
 
+    console.log('Sending update user request with data:', {
+      userId,
+      username,
+      email,
+      password,
+      selectedImage,
+    });
+
     return this.http.put(`${this.apiUrl}/update/${userId}`, formData, {
       headers,
     });
+  }
+
+  getUserId(): string | null {
+    return localStorage.getItem('userId');
+  }
+
+  getEmail(): string | null {
+    return localStorage.getItem('email');
+  }
+
+  getUsername(): string | null {
+    return localStorage.getItem('username');
+  }
+
+  getProfilePicture(): string | null {
+    return this.cleanUrl(localStorage.getItem('profilePicture')); // Limpa a URL ao retornar
+  }
+
+  getAllUserInfo(): {
+    userId: string | null;
+    email: string | null;
+    username: string | null;
+    profilePicture: string | null;
+  } {
+    return {
+      userId: this.getUserId(),
+      email: this.getEmail(),
+      username: this.getUsername(),
+      profilePicture: this.getProfilePicture(),
+    };
+  }
+
+  cleanUrl(url: string | null): string | null {
+    if (!url) return null;
+    // Remove o prefixo 'http://localhost:3000/' se existir
+    const prefix = 'http://localhost:3000/';
+    return url.startsWith(prefix) ? url.replace(prefix, '') : url;
   }
 }

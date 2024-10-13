@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { UserService } from '../../services/user.service';
-import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-login', // Selector for the component
@@ -22,7 +21,6 @@ export class LoginComponent {
     private route: ActivatedRoute,
     private router: Router,
     private userService: UserService,
-    private changeDetectorRef: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -78,6 +76,10 @@ export class LoginComponent {
     );
   }
 
+  loginWithGoogle() {
+    this.loading = true;
+    window.open('http://localhost:3000/api/auth/google', '_self');
+  }
 
   logout() {
     this.authService.logout(); // Limpa informações no AuthService.

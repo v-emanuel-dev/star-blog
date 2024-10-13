@@ -88,11 +88,22 @@
             placeholder="Enter your password"
           />
         </div>
+        <button
+          class="bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow inline-flex items-center justify-center w-full mb-2"
+          (click)="loginWithGoogle()"
+        >
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/24px-Google_%22G%22_logo.svg.png"
+            alt="Google Logo"
+            class="google-logo w-4 h-4 mr-2"
+          />
+          <span>Continue with Google</span>
+        </button>
         <button type="submit" class="btn btn-primary w-100">Sign in</button>
       </form>
       <p class="mt-4 text-center text-muted">
         Don't have an account?
-        <a routerLink="/register" class="text-primary">Register</a>
+        <a routerLink="/register" class="text-primary">Sign up </a>
       </p>
     </div>
   </div>

@@ -64,7 +64,7 @@ export class AuthService {
   }
 
   getUserName(): string {
-    return localStorage.getItem('userName') || 'Usuário';
+    return localStorage.getItem('username') || 'Usuário';
   }
 
   getUserId(): number | null {
@@ -86,7 +86,7 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return localStorage.getItem('accessToken') !== null; // Corrigido para verificar 'accessToken'
+    return localStorage.getItem('token') !== null; // Corrigido para verificar 'accessToken'
   }
 
   setProfileImageUrl(url: string): void {
@@ -102,9 +102,11 @@ export class AuthService {
     this.profileImageUrlSubject.next(null); // Limpa a URL da imagem ao fazer logout.
     localStorage.removeItem('accessToken');
     localStorage.removeItem('token');
+    localStorage.removeItem('username');
     localStorage.removeItem('userName');
     localStorage.removeItem('userId');
     localStorage.removeItem('email');
+    localStorage.removeItem('profilePicture');
 
     this.userLoggedInSubject.next(false);
     this.userNameSubject.next(undefined);
