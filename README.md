@@ -1,14 +1,16 @@
-# Blog App
+# Star Blog App
 
 A **full-stack Blog application** that enables users to register, log in, and create, read, update, and delete posts. This application is built using **Angular** for the frontend, **Node.js** with **JWT** for secure authentication in the backend, and **MySQL** for data storage.
 
 ## Features
 
-- **User Authentication**: Secure user registration and login with JWT tokens.
+- **User Authentication**: Secure user registration and login with JWT tokens, including integration with Google using OAuth 2.0 for easy access and profile information retrieval.
 - **User Dashboard**: Personalized user experience with easy access to create and manage posts.
-- **Responsive Design**: Mobile-friendly interface designed with **Tailwind CSS and Bootstrap** for a seamless user experience.
+- **Responsive Design**: Mobile-friendly interface designed with **Tailwind CSS** and **Bootstrap** for a seamless user experience.
 - **CRUD Operations**: Users can create, read, update, and delete their blog posts.
 - **Easy Navigation**: Intuitive layout that enhances user experience.
+- **Comments**: Support for adding comments to posts, even for non-authenticated users.
+- **Profile Management**: Users can update their profile information, including uploading a profile picture.
 
 ## Tech Stack
 
