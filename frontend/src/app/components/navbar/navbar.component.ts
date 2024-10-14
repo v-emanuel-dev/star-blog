@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
+import { WebSocketService } from '../../services/websocket.service';
 
 @Component({
   selector: 'app-navbar',
@@ -14,11 +15,14 @@ export class NavbarComponent implements OnInit, OnDestroy {
   isDropdownOpen = false;
   profileImageUrl: string | null = null;
   defaultProfilePicture: string = 'assets/img/default-profile.png';
+  notifications: any[] = [];
+  unreadNotificationsCount: number = 0;
+  isNotificationsOpen: boolean = false;
 
   private userNameSubscription: Subscription;
   private profileImageSubscription: Subscription | undefined;
 
-  constructor(private authService: AuthService, private router: Router) {
+  constructor(private authService: AuthService, private router: Router, private webSocketService: WebSocketService) {
     this.userNameSubscription = this.authService.userName$.subscribe((name) => {
       this.userName = name || null;
       this.loadProfilePicture();
@@ -30,10 +34,28 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Inscrever-se para receber notificações do WebSocket
+    this.webSocketService.notifications$.subscribe((notifications) => {
+      console.log('Notificações recebidas no Navbar:', notifications);
+      this.notifications = notifications;
+      this.unreadNotificationsCount = this.notifications.length;
+      console.log('Número de notificações não lidas:', this.unreadNotificationsCount);
+    });
+
     this.loadUserInfo();
     this.userName = this.authService.getUserName();
-    this.loadProfilePicture(); // Sempre tentar carregar a imagem de perfil ao inicializar
-    document.addEventListener('click', this.closeDropdown.bind(this));
+    this.loadProfilePicture();
+    document.addEventListener('click', this.closeDropdowns.bind(this));
+  }
+
+  hasNotifications(): boolean {
+    return this.unreadNotificationsCount > 0;
+  }
+
+  markNotificationAsRead(index: number): void {
+    this.notifications.splice(index, 1);
+    this.unreadNotificationsCount = this.notifications.length;
+    // Aqui, você pode enviar uma atualização para o backend, se necessário, para marcar a notificação como lida.
   }
 
   private loadUserInfo(): void {
@@ -82,14 +104,32 @@ export class NavbarComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.userNameSubscription.unsubscribe();
     this.profileImageSubscription?.unsubscribe();
-    document.removeEventListener('click', this.closeDropdown.bind(this));
+    document.removeEventListener('click', this.closeDropdowns.bind(this));
   }
 
-  closeDropdown(event: MouseEvent) {
+  toggleNotifications() {
+    this.isNotificationsOpen = !this.isNotificationsOpen;
+    console.log('toggleNotifications: Notificações abertas:', this.isNotificationsOpen); // Verificar se o estado está sendo alterado
+  }
+
+  markAsRead(index: number) {
+    this.notifications.splice(index, 1);
+    this.unreadNotificationsCount = this.notifications.length;
+    this.isNotificationsOpen = false; // Fecha as notificações ao marcar como lida
+    this.notifications[index].read = true;
+  }
+
+  closeDropdowns(event: MouseEvent) {
     const target = event.target as HTMLElement;
+    const notificationButton = document.querySelector('.fa-bell');
     const userMenuButton = document.getElementById('user-menu-button');
 
-    if (userMenuButton && !userMenuButton.contains(target) && this.isDropdownOpen) {
+    if (
+      notificationButton && !notificationButton.contains(target) &&
+      userMenuButton && !userMenuButton.contains(target) &&
+      !target.closest('.notifications') // Verifica se o clique ocorreu fora das notificações
+    ) {
+      this.isNotificationsOpen = false;
       this.isDropdownOpen = false;
     }
   }
