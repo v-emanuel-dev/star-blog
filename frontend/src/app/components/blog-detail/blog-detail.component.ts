@@ -106,21 +106,32 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
   }
 
   addComment(): void {
-    const userId = parseInt(localStorage.getItem('userId') || '0', 10);
+    // Obtém o userId do localStorage e converte para número
+    const userId = parseInt(localStorage.getItem('userId') || '0', 10) || null;
+
+    console.log('userId obtido:', userId); // Log para verificar o userId
 
     const comment: Comment = {
       postId: this.postId,
-      userId: userId, // Incluindo userId aqui
+      userId: userId, // Incluindo userId ou null aqui
       content: this.newComment,
       created_at: new Date().toISOString(),
       visibility: 'public',
       timestamp: '',
     };
 
-    this.commentService.addComment(comment).subscribe((newComment) => {
-      this.comments.push(newComment);
-      this.newComment = '';
-    });
+    console.log('Comentário a ser adicionado:', comment); // Log para verificar os detalhes do comentário
+
+    this.commentService.addComment(comment).subscribe(
+      (newComment) => {
+        console.log('Novo comentário adicionado:', newComment); // Log para confirmar a adição do comentário
+        this.comments.push(newComment);
+        this.newComment = '';
+      },
+      (error) => {
+        console.error('Erro ao adicionar comentário:', error); // Log para erros ao adicionar o comentário
+      }
+    );
   }
 
   editComment(comment: Comment): void {

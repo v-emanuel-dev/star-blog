@@ -10,12 +10,29 @@ const userRoutes = require('./routes/user.routes');
 const passport = require('./config/passport');
 const cors = require('cors');
 require('dotenv').config();
+const http = require('http');
+const { initSocket } = require('./socket'); // Importando a função de inicialização do Socket.io
 
 const app = express();
+const server = http.createServer(app);
 
+// Inicializa o Socket.io
+initSocket(server);
+
+// Configurar evento de conexão do Socket.IO
+const io = require('./socket').getSocket();
+io.on('connection', (socket) => {
+  console.log('Novo cliente conectado', socket.id);
+
+  socket.on('disconnect', () => {
+    console.log('Cliente desconectado', socket.id);
+  });
+});
+
+// Outras configurações de CORS
 app.use(cors({
   origin: 'http://localhost:4200',
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  methods: ["GET", "POST"],
   credentials: true,
 }));
 
@@ -24,7 +41,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Configuração do middleware de sessão
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'your_secret_key', // Use uma variável de ambiente para o segredo
+  secret: process.env.SESSION_SECRET || 'your_secret_key',
   resave: false,
   saveUninitialized: true,
   cookie: { secure: false } // Defina como true se estiver usando HTTPS
@@ -44,6 +61,7 @@ app.use('/api/posts', postRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/users', userRoutes);
 
-app.listen(PORT, () => {
+// Iniciar o servidor
+server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

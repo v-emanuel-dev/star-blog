@@ -1,24 +1,64 @@
 const db = require("../config/db");
 
-// Adicionar um novo comentário
-exports.addComment = (req, res) => {
-  const { content, postId, userId } = req.body; // Incluindo userId
+// Função para criar um novo post
+exports.createPost = (req, res) => {
+  const { title, content, user_id, visibility, categoryIds } = req.body;
 
-  if (!content || !postId || !userId) {
-    return res.status(400).json({ message: "Conteúdo, ID do post e ID do usuário são obrigatórios." });
+  // Logando a requisição recebida
+  console.log('Received request to create post:', { title, content, user_id, visibility, categoryIds });
+
+  // Verifica se os campos obrigatórios estão preenchidos
+  if (!title || !content || !user_id || !categoryIds || categoryIds.length === 0) {
+    console.warn('Validation error: Title, content, user ID, and at least one category are required.');
+    return res.status(400).json({ message: 'Title, content, user ID, and at least one category are required.' });
   }
 
-  const sql = "INSERT INTO comments (content, postId, user_id) VALUES (?, ?, ?)"; // Adicionando user_id
-  db.query(sql, [content, postId, userId], (err, result) => {
-    if (err) {
-      console.error("Erro ao inserir comentário:", err);
-      return res.status(500).json({ error: err.message });
+  // Insere o novo post na tabela posts
+  const query = 'INSERT INTO posts (title, content, user_id, visibility) VALUES (?, ?, ?, ?)';
+  const values = [title, content, user_id, visibility];
+
+  db.query(query, values, (error, result) => {
+    if (error) {
+      console.error('Error creating post:', error);
+      return res.status(500).json({ message: 'Error creating post' });
     }
 
-    const newComment = { id: result.insertId, content, postId, userId }; // Retorna o novo comentário
-    return res.status(201).json(newComment);
+    const postId = result.insertId;
+    console.log('Post created successfully with ID:', postId);
+
+    // Prepara a query para associar múltiplas categorias ao post
+    const categoryQueries = categoryIds.map(categoryId => {
+      return 'INSERT INTO post_categories (postId, categoryId) VALUES (?, ?)';
+    });
+
+    let index = 0;
+
+    const insertCategory = () => {
+      if (index >= categoryQueries.length) {
+        return res.status(201).json({ message: 'Post created successfully', postId });
+      }
+
+      const categoryQuery = categoryQueries[index];
+      const categoryValue = [postId, categoryIds[index]];
+
+      db.query(categoryQuery, categoryValue, (error) => {
+        if (error) {
+          console.error('Error associating category to post:', error);
+          return res.status(500).json({ message: 'Error associating category' });
+        }
+
+        console.log(`Category with ID ${categoryIds[index]} associated with post ID ${postId}`);
+        index++;
+        insertCategory(); // Chama novamente para o próximo
+      });
+    };
+
+    insertCategory(); // Inicia a inserção das categorias
   });
 };
+
+// Outras funções (getAllPosts, getPostById, updatePost, deletePost) permanecem inalteradas
+
 
 // Obter comentários por post
 exports.getCommentsByPostId = (req, res) => {

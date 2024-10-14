@@ -16,6 +16,7 @@ import { NavbarComponent } from './components/navbar/navbar.component';
 import { RegisterComponent } from './components/register/register.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { AuthService } from './services/auth.service';
+import { NotificationsComponent } from './components/notifications/notifications.component';
 
 @NgModule({
   declarations: [
@@ -28,6 +29,7 @@ import { AuthService } from './services/auth.service';
     BlogEditComponent,
     UserProfileComponent,
     BlogDetailComponent,
+    NotificationsComponent,
   ],
   imports: [
     BrowserModule,
