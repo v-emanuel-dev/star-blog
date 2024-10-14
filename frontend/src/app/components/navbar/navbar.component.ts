@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
 import { WebSocketService } from '../../services/websocket.service';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-navbar',
@@ -18,34 +19,72 @@ export class NavbarComponent implements OnInit, OnDestroy {
   notifications: any[] = [];
   unreadNotificationsCount: number = 0;
   isNotificationsOpen: boolean = false;
+  userId: number | null = null; // Inicialize com null ou um valor padrão
 
   private userNameSubscription: Subscription;
   private profileImageSubscription: Subscription | undefined;
+  private notificationsSubscription: Subscription | undefined; // Adicionando subscription para notificações
 
-  constructor(private authService: AuthService, private router: Router, private webSocketService: WebSocketService) {
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private webSocketService: WebSocketService,
+    private http: HttpClient
+  ) {
     this.userNameSubscription = this.authService.userName$.subscribe((name) => {
       this.userName = name || null;
       this.loadProfilePicture();
     });
 
-    this.profileImageSubscription = this.authService.profileImageUrl$.subscribe((url) => {
-      this.profileImageUrl = url || this.defaultProfilePicture; // Definindo uma imagem padrão
-    });
+    this.profileImageSubscription = this.authService.profileImageUrl$.subscribe(
+      (url) => {
+        this.profileImageUrl = url || this.defaultProfilePicture; // Definindo uma imagem padrão
+      }
+    );
   }
 
   ngOnInit(): void {
+    const userIdFromStorage = localStorage.getItem('userId');
+    this.userId = userIdFromStorage ? Number(userIdFromStorage) : null;
+
+    // Fetch notifications apenas se o userId estiver disponível
+    if (this.userId) {
+      this.fetchNotifications();
+    }
     // Inscrever-se para receber notificações do WebSocket
-    this.webSocketService.notifications$.subscribe((notifications) => {
-      console.log('Notificações recebidas no Navbar:', notifications);
-      this.notifications = notifications;
-      this.unreadNotificationsCount = this.notifications.length;
-      console.log('Número de notificações não lidas:', this.unreadNotificationsCount);
-    });
+    this.notificationsSubscription =
+      this.webSocketService.notifications$.subscribe((notifications) => {
+        console.log('Notificações recebidas no Navbar:', notifications);
+        this.notifications = notifications;
+        this.unreadNotificationsCount = this.notifications.length;
+        console.log(
+          'Número de notificações não lidas:',
+          this.unreadNotificationsCount
+        );
+      });
 
     this.loadUserInfo();
     this.userName = this.authService.getUserName();
     this.loadProfilePicture();
     document.addEventListener('click', this.closeDropdowns.bind(this));
+  }
+
+  fetchNotifications() {
+    if (!this.userId) return; // Verifica se userId está disponível
+
+    this.http
+      .get(`http://localhost:3000/api/users/${this.userId}/notifications`)
+      .subscribe(
+        (data: any) => {
+          this.notifications = data;
+          this.unreadNotificationsCount = this.notifications.filter(
+            (n) => !n.read
+          ).length; // Atualiza a contagem de notificações não lidas
+        },
+        (error: HttpErrorResponse) => {
+          console.error('Erro ao buscar notificações:', error);
+        }
+      );
   }
 
   hasNotifications(): boolean {
@@ -60,13 +99,16 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   private loadUserInfo(): void {
     this.userName = this.authService.getUserName();
-    this.profileImageUrl = this.authService.getProfileImageUrl() || this.defaultProfilePicture;
+    this.profileImageUrl =
+      this.authService.getProfileImageUrl() || this.defaultProfilePicture;
   }
 
   private loadProfilePicture(): void {
     const storedProfilePicture = localStorage.getItem('profilePicture');
     // Se não houver imagem armazenada, usa a imagem padrão
-    this.profileImageUrl = storedProfilePicture ? this.sanitizeUrl(storedProfilePicture) : this.defaultProfilePicture;
+    this.profileImageUrl = storedProfilePicture
+      ? this.sanitizeUrl(storedProfilePicture)
+      : this.defaultProfilePicture;
     console.log('Loaded profile image URL:', this.profileImageUrl);
   }
 
@@ -89,7 +131,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Login failed:', error); // Log de erro no login
-      }
+      },
     });
   }
 
@@ -97,7 +139,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
     if (this.isLoggedIn()) {
       this.router.navigate(['/blog']);
     } else {
-      this.router.navigate(['/login'], { queryParams: { message: 'Please log in to proceed' } });
+      this.router.navigate(['/login'], {
+        queryParams: { message: 'Please log in to proceed' },
+      });
     }
   }
 
@@ -109,7 +153,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   toggleNotifications() {
     this.isNotificationsOpen = !this.isNotificationsOpen;
-    console.log('toggleNotifications: Notificações abertas:', this.isNotificationsOpen); // Verificar se o estado está sendo alterado
+    console.log(
+      'toggleNotifications: Notificações abertas:',
+      this.isNotificationsOpen
+    ); // Verificar se o estado está sendo alterado
   }
 
   markAsRead(index: number) {
@@ -125,8 +172,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
     const userMenuButton = document.getElementById('user-menu-button');
 
     if (
-      notificationButton && !notificationButton.contains(target) &&
-      userMenuButton && !userMenuButton.contains(target) &&
+      notificationButton &&
+      !notificationButton.contains(target) &&
+      userMenuButton &&
+      !userMenuButton.contains(target) &&
       !target.closest('.notifications') // Verifica se o clique ocorreu fora das notificações
     ) {
       this.isNotificationsOpen = false;

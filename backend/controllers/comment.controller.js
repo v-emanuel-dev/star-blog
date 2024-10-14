@@ -1,63 +1,67 @@
 const db = require("../config/db");
 
-// Função para criar um novo post
-exports.createPost = (req, res) => {
-  const { title, content, user_id, visibility, categoryIds } = req.body;
+// Adicionar um novo comentário
+exports.addComment = (io) => (req, res) => {
+  const { content, postId, userId } = req.body; // Incluindo userId
 
-  // Logando a requisição recebida
-  console.log('Received request to create post:', { title, content, user_id, visibility, categoryIds });
-
-  // Verifica se os campos obrigatórios estão preenchidos
-  if (!title || !content || !user_id || !categoryIds || categoryIds.length === 0) {
-    console.warn('Validation error: Title, content, user ID, and at least one category are required.');
-    return res.status(400).json({ message: 'Title, content, user ID, and at least one category are required.' });
+  // Validação
+  if (!content || !postId || !userId) {
+    return res.status(400).json({ message: "Conteúdo, ID do post e ID do usuário são obrigatórios." });
   }
 
-  // Insere o novo post na tabela posts
-  const query = 'INSERT INTO posts (title, content, user_id, visibility) VALUES (?, ?, ?, ?)';
-  const values = [title, content, user_id, visibility];
+  // Validação adicional
+  if (typeof postId !== 'number' || typeof userId !== 'number' || typeof content !== 'string') {
+    return res.status(400).json({ message: "Tipos de dados inválidos." });
+  }
 
-  db.query(query, values, (error, result) => {
-    if (error) {
-      console.error('Error creating post:', error);
-      return res.status(500).json({ message: 'Error creating post' });
+  console.log("Inserindo comentário:", { content, postId, userId });
+
+  // Query para inserir o comentário
+  const sql = "INSERT INTO comments (content, postId, user_id) VALUES (?, ?, ?)"; // Adicionando user_id
+  db.query(sql, [content, postId, userId], (err, result) => {
+    if (err) {
+      console.error("Erro ao inserir comentário:", err); // Log completo do erro
+      return res.status(500).json({ error: "Erro ao inserir comentário." });
     }
 
-    const postId = result.insertId;
-    console.log('Post created successfully with ID:', postId);
+    const newComment = { id: result.insertId, content, postId, userId }; // Retorna o novo comentário
+    console.log("Comentário inserido com sucesso:", newComment);
 
-    // Prepara a query para associar múltiplas categorias ao post
-    const categoryQueries = categoryIds.map(categoryId => {
-      return 'INSERT INTO post_categories (postId, categoryId) VALUES (?, ?)';
-    });
-
-    let index = 0;
-
-    const insertCategory = () => {
-      if (index >= categoryQueries.length) {
-        return res.status(201).json({ message: 'Post created successfully', postId });
+    // Buscando o autor do post para enviar a notificação
+    const getAuthorQuery = 'SELECT user_id FROM posts WHERE id = ?';
+    db.query(getAuthorQuery, [postId], (error, results) => {
+      if (error || results.length === 0) {
+        console.error('Erro ao buscar autor do post:', error);
+        return res.status(500).json({ message: 'Erro ao buscar autor do post' });
       }
 
-      const categoryQuery = categoryQueries[index];
-      const categoryValue = [postId, categoryIds[index]];
+      const postAuthorId = results[0].user_id;
+      console.log(`Emitindo notificação para o autor do post: ${postAuthorId}`);
 
-      db.query(categoryQuery, categoryValue, (error) => {
-        if (error) {
-          console.error('Error associating category to post:', error);
-          return res.status(500).json({ message: 'Error associating category' });
-        }
+      // Emita uma notificação para o autor do post
+      if (io) {
+        // Certifique-se de que o autor do post está em uma sala de socket válida
+        io.to(`user_${postAuthorId}`).emit('new-comment', {
+          postId,
+          commentId: newComment.id,
+          message: 'Você tem um novo comentário no seu post!',
+          content
+        });
+        console.log('Notificação enviada:', {
+          postId,
+          commentId: newComment.id,
+          message: 'Você tem um novo comentário no seu post!',
+          content
+        });
+      } else {
+        console.error('Socket.IO não está definido');
+      }
 
-        console.log(`Category with ID ${categoryIds[index]} associated with post ID ${postId}`);
-        index++;
-        insertCategory(); // Chama novamente para o próximo
-      });
-    };
-
-    insertCategory(); // Inicia a inserção das categorias
+      return res.status(201).json(newComment);
+    });
   });
 };
 
-// Outras funções (getAllPosts, getPostById, updatePost, deletePost) permanecem inalteradas
 
 
 // Obter comentários por post
