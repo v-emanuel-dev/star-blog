@@ -4,6 +4,8 @@ import { AuthService } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
 import { WebSocketService } from '../../services/websocket.service';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { ChangeDetectorRef } from '@angular/core';
+import { UserService } from '../../services/user.service';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 
 @Component({
@@ -15,124 +17,60 @@ export class NavbarComponent implements OnInit, OnDestroy {
   userName: string | null = null;
   isMenuOpen = false;
   isDropdownOpen = false;
-  profileImageUrl: SafeUrl | null = null;
+  profileImageUrl: SafeUrl | string | null = null;
   defaultProfilePicture: string = 'assets/img/default-profile.png';
   notifications: any[] = [];
   unreadNotificationsCount: number = 0;
   isNotificationsOpen: boolean = false;
   userId: number | null = null; // Inicialize com null ou um valor padrão
 
-  private userNameSubscription: Subscription;
-  private profileImageSubscription: Subscription | undefined;
   private notificationsSubscription: Subscription | undefined; // Adicionando subscription para notificações
+  private subscription: Subscription = new Subscription();
 
   constructor(
     private authService: AuthService,
     private router: Router,
     private webSocketService: WebSocketService,
     private http: HttpClient,
+    private changeDetectorRef: ChangeDetectorRef,
+    private userService: UserService,
     private sanitizer: DomSanitizer
-  ) {
-    this.userNameSubscription = this.authService.userName$.subscribe((name) => {
-      this.userName = name || null;
-      this.loadProfilePicture();
-    });
-
-    this.profileImageSubscription = this.authService.profileImageUrl$.subscribe(
-      (url) => {
-        this.profileImageUrl = url || this.defaultProfilePicture; // Definindo uma imagem padrão
-      }
-    );
-  }
+  ) {}
 
   ngOnInit(): void {
-    const userIdFromStorage = localStorage.getItem('userId');
-    this.userId = userIdFromStorage ? Number(userIdFromStorage) : null;
+    // Inscreva-se para mudanças na imagem de perfil
+    this.subscription.add(
+      this.userService.profilePicture$.subscribe(url => {
+        this.profileImageUrl = this.getSanitizedImageUrl(url);
+        console.log('Profile image URL updated in Navbar:', this.profileImageUrl);
+      })
+    );
 
-    // Fetch notifications apenas se o userId estiver disponível
-    if (this.userId) {
-      this.fetchNotifications();
-    }
-    // Inscrever-se para receber notificações do WebSocket
     this.notificationsSubscription =
       this.webSocketService.notifications$.subscribe((notifications) => {
         console.log('Notificações recebidas no Navbar:', notifications);
         this.notifications = notifications;
         this.unreadNotificationsCount = this.notifications.length;
+        this.changeDetectorRef.detectChanges(); // Força a detecção de mudanças na interface
+
         console.log(
           'Número de notificações não lidas:',
           this.unreadNotificationsCount
         );
       });
 
-    // Inscrição na URL da imagem de perfil
-    this.profileImageSubscription = this.authService.profileImageUrl$.subscribe(
-      (url) => {
-        if (url) {
-          this.profileImageUrl = this.sanitizeUrl(url);
-        } else {
-          this.profileImageUrl = this.defaultProfilePicture; // Usar imagem padrão
-        }
-      }
-    );
-
-    this.loadProfilePicture();
-    console.log('Profile picture loaded on init');
-
     this.loadUserInfo();
-    this.userName = this.authService.getUserName();
     document.addEventListener('click', this.closeDropdowns.bind(this));
   }
 
-  fetchNotifications() {
-    if (!this.userId) return; // Verifica se userId está disponível
-
-    this.http
-      .get(`http://localhost:3000/api/users/${this.userId}/notifications`)
-      .subscribe(
-        (data: any) => {
-          this.notifications = data;
-          this.unreadNotificationsCount = this.notifications.filter(
-            (n) => !n.read
-          ).length; // Atualiza a contagem de notificações não lidas
-        },
-        (error: HttpErrorResponse) => {
-          console.error('Erro ao buscar notificações:', error);
-        }
-      );
-  }
-
-  hasNotifications(): boolean {
-    return this.unreadNotificationsCount > 0;
-  }
-
-  markNotificationAsRead(index: number): void {
-    this.notifications.splice(index, 1);
-    this.unreadNotificationsCount = this.notifications.length;
-    // Aqui, você pode enviar uma atualização para o backend, se necessário, para marcar a notificação como lida.
+  getSanitizedImageUrl(url: string | null): SafeUrl {
+    return url ? this.sanitizer.bypassSecurityTrustUrl(url) : this.defaultProfilePicture;
   }
 
   private loadUserInfo(): void {
-    this.userName = this.authService.getUserName();
-    this.profileImageUrl =
-      this.authService.getProfileImageUrl() || this.defaultProfilePicture;
-  }
-
-  private loadProfilePicture(): void {
     const storedProfilePicture = localStorage.getItem('profilePicture');
-    console.log('Stored profile picture URL:', storedProfilePicture); // Log da URL armazenada
-    if (storedProfilePicture) {
-      this.profileImageUrl = this.sanitizeUrl(storedProfilePicture);
-    } else {
-      this.profileImageUrl = this.defaultProfilePicture;
-    }
-    console.log('Loaded profile image URL:', this.profileImageUrl);
-  }
-
-  sanitizeUrl(url: string): SafeUrl {
-    // Substitui barras invertidas por barras normais
-    const normalizedUrl = url.replace(/\\/g, '/');
-    return this.sanitizer.bypassSecurityTrustUrl(normalizedUrl);
+    this.profileImageUrl = this.getSanitizedImageUrl(storedProfilePicture);
+    console.log('Loaded profile image URL in Navbar:', this.profileImageUrl);
   }
 
   isLoggedIn(): boolean {
@@ -162,12 +100,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
         queryParams: { message: 'Please log in to proceed' },
       });
     }
-  }
-
-  ngOnDestroy() {
-    this.userNameSubscription.unsubscribe();
-    this.profileImageSubscription?.unsubscribe();
-    document.removeEventListener('click', this.closeDropdowns.bind(this));
   }
 
   toggleNotifications() {
@@ -235,7 +167,42 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
   }
 
+  fetchNotifications() {
+    if (!this.userId) return; // Verifica se userId está disponível
+
+    this.http
+      .get(`http://localhost:3000/api/comments/${this.userId}/notifications`)
+      .subscribe(
+        (data: any) => {
+          this.notifications = data;
+          this.unreadNotificationsCount = this.notifications.filter(
+            (n) => !n.read
+          ).length; // Atualiza a contagem de notificações não lidas
+        },
+        (error: HttpErrorResponse) => {
+          console.error('Erro ao buscar notificações:', error);
+        }
+      );
+  }
+
+  hasNotifications(): boolean {
+    return this.unreadNotificationsCount > 0;
+  }
+
+  markNotificationAsRead(index: number): void {
+    this.notifications.splice(index, 1);
+    this.unreadNotificationsCount = this.notifications.length;
+    // Aqui, você pode enviar uma atualização para o backend, se necessário, para marcar a notificação como lida.
+  }
+
   logout(): void {
+    this.notifications = [];
+    this.unreadNotificationsCount = 0;
+
     this.authService.logout();
+  }
+
+  ngOnDestroy() {
+    document.removeEventListener('click', this.closeDropdowns.bind(this));
   }
 }

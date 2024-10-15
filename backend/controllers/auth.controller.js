@@ -56,7 +56,15 @@ exports.login = (req, res) => {
     // Log do usuário que está fazendo login
     console.log('User logged in:', { id: user.id, username: user.username }); // Log do usuário que logou
 
-    // Envia o nome do usuário, email e id na resposta
-    res.status(200).json({ accessToken: token, username: user.username || 'Usuário', email: user.email, userId: user.id });
+    // Envia o nome do usuário, email, id e profilePicture na resposta
+    res.status(200).json({
+      accessToken: token,
+      username: user.username || 'Usuário',
+      email: user.email,
+      userId: user.id,
+      profilePicture: user.profilePicture || null, // Inclua a profilePicture
+    });
   });
 };
+
+

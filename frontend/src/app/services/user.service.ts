@@ -12,12 +12,18 @@ export class UserService {
     new BehaviorSubject<string | null>(null);
   public profilePicture$ = this.profilePictureSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    const storedProfilePicture = localStorage.getItem('profilePicture');
+    this.profilePictureSubject.next(storedProfilePicture);
+  }
 
   updateProfilePicture(picture: string | null) {
     console.log('Updating profile picture in UserService:', picture);
-    this.profilePictureSubject.next(this.cleanUrl(picture)); // Limpa a URL antes de emitir
-  }
+    localStorage.setItem('profilePicture', picture ?? '');
+    this.profilePictureSubject.next(picture);
+    console.log('Profile picture stored in localStorage:', localStorage.getItem('profilePicture'));
+}
+
 
   getUserById(userId: number) {
     return this.http.get<any>(`${this.apiUrl}/users/${userId}`);

@@ -36,10 +36,13 @@ export class AuthService {
         tap((response) => {
           console.log('Login Response:', response); // Log da resposta do login
           localStorage.setItem('accessToken', response.accessToken);
-          console.log('Extracted Username:', response.username); // Log do username extraído
           localStorage.setItem('userName', response.username);
           localStorage.setItem('email', response.email); // Armazenando o email
           localStorage.setItem('userId', response.userId); // Armazenando o userId
+          localStorage.setItem('profilePicture', response.profilePicture); // Armazena a imagem de perfil
+
+          // Log do valor armazenado
+          console.log('Stored Profile Picture:', response.profilePicture); // Verifique se não é undefined
 
           // Atualiza o subject com o nome do usuário e ID do usuário
           this.userNameSubject.next(response.username);
@@ -47,8 +50,6 @@ export class AuthService {
 
           // Notifica que o usuário está logado
           this.userLoggedInSubject.next(true);
-
-          console.log('Username stored in localStorage:', response.username); // Log do nome do usuário armazenado
         })
       );
   }
