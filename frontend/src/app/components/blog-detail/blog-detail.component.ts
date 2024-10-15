@@ -115,9 +115,8 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
       postId: this.postId,
       userId: userId, // Incluindo userId ou null aqui
       content: this.newComment,
-      created_at: new Date().toISOString(),
+      created_at: new Date().toISOString(), // Certifique-se de que esse campo existe no backend
       visibility: 'public',
-      timestamp: '',
     };
 
     console.log('Comentário a ser adicionado:', comment); // Log para verificar os detalhes do comentário
@@ -126,7 +125,8 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
       (newComment) => {
         console.log('Novo comentário adicionado:', newComment); // Log para confirmar a adição do comentário
         this.comments.push(newComment);
-        this.newComment = '';
+        this.newComment = ''; // Limpa o campo de comentário
+        this.commentService.getCommentsByPostId(this.postId); // Atualiza a lista de comentários após a adição
       },
       (error) => {
         console.error('Erro ao adicionar comentário:', error); // Log para erros ao adicionar o comentário
@@ -134,44 +134,48 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
     );
   }
 
-  editComment(comment: Comment): void {
-    this.editCommentId = comment.id ?? null; // Use o operador nullish coalescing
-    this.editCommentContent = comment.content;
-  }
+  // Método para iniciar a edição de um comentário
+editComment(comment: Comment): void {
+  this.editCommentId = comment.id ?? null; // Use o operador nullish coalescing
+  this.editCommentContent = comment.content;
+}
 
-  saveComment(): void {
-    if (this.editCommentContent && this.editCommentId !== null) {
-      this.commentService
-        .updateComment(this.editCommentId, { content: this.editCommentContent }) // Certifique-se de que editCommentId está definido
-        .subscribe(
-          () => {
-            const index = this.comments.findIndex(
-              (c) => c.id === this.editCommentId
-            );
-            if (index !== -1) {
-              this.comments[index].content = this.editCommentContent;
-            }
-            this.cancelEdit();
-          },
-          (error) => {
-            console.error('Erro ao salvar comentário:', error);
+// Método para salvar o comentário editado
+saveComment(): void {
+  if (this.editCommentContent && this.editCommentId !== null) {
+    this.commentService
+      .updateComment(this.editCommentId, { content: this.editCommentContent }) // Certifique-se de que editCommentId está definido
+      .subscribe(
+        (updatedComment) => {
+          const index = this.comments.findIndex(
+            (c) => c.id === this.editCommentId
+          );
+          if (index !== -1) {
+            this.comments[index].content = updatedComment.content; // Atualiza o conteúdo do comentário
           }
-        );
-    }
-  }
-
-  deleteComment(commentId: number): void {
-    this.commentService.deleteComment(commentId).subscribe(() => {
-      this.comments = this.comments.filter(
-        (comment) => comment.id !== commentId
+          this.cancelEdit(); // Cancela a edição
+        },
+        (error) => {
+          console.error('Erro ao salvar comentário:', error);
+        }
       );
-    });
   }
+}
 
-  cancelEdit(): void {
-    this.editCommentId = null;
-    this.editCommentContent = '';
-  }
+// Método para deletar um comentário
+deleteComment(commentId: number): void {
+  this.commentService.deleteComment(commentId).subscribe(() => {
+    this.comments = this.comments.filter(
+      (comment) => comment.id !== commentId
+    ); // Remove o comentário da lista
+  });
+}
+
+// Método para cancelar a edição
+cancelEdit(): void {
+  this.editCommentId = null;
+  this.editCommentContent = '';
+}
 
   // Métodos para gerenciar categorias
   addCategory(): void {

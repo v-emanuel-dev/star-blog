@@ -32,7 +32,7 @@ io.on('connection', (socket) => {
 // Outras configurações de CORS
 app.use(cors({
   origin: 'http://localhost:4200',
-  methods: ["GET", "POST"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
 }));
 

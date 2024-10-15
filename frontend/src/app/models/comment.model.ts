@@ -6,5 +6,4 @@ export interface Comment {
   content: string; // Conteúdo do comentário
   visibility: string; // Adicionando a visibilidade
   created_at: string; // Adicione essa linha
-  timestamp: string; // Adicione a propriedade timestamp, podendo ser string ou Date
 }

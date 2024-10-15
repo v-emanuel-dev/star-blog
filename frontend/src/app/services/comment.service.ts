@@ -21,12 +21,12 @@ export class CommentService {
   }
 
   getCommentsByPostId(postId: number): Observable<Comment[]> {
-    return this.http.get<Comment[]>(`${this.apiUrl}/${postId}`).pipe(
+    return this.http.get<Comment[]>(`${this.apiUrl}/post/${postId}`).pipe( // Corrigir a URL
       tap((comments) => console.log('Comentários recebidos:', comments)), // Inspeciona os comentários no console
       map((comments) =>
         comments.sort((a, b) => {
-          const timestampA = new Date(a.timestamp || 0).getTime(); // Usa 0 como fallback
-          const timestampB = new Date(b.timestamp || 0).getTime(); // Usa 0 como fallback
+          const timestampA = new Date(a.created_at).getTime(); // Usando created_at para ordenar
+          const timestampB = new Date(b.created_at).getTime(); // Usando created_at para ordenar
           return timestampB - timestampA; // Ordena de forma decrescente
         })
       ),
@@ -37,7 +37,6 @@ export class CommentService {
     );
   }
 
-  // Atualizar um comentário
   updateComment(
     commentId: number,
     updatedComment: { content: string }

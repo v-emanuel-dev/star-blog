@@ -66,10 +66,55 @@ router.post('/', (req, res) => {
   });
 });
 
+// Atualizar comentário pelo ID
 router.put("/:id", (req, res) => {
+  const commentId = req.params.id;
+  const { content } = req.body;
+
+  if (!content) {
+    return res
+      .status(400)
+      .json({ message: "O conteúdo do comentário é obrigatório." });
+  }
+
+  const sql = "UPDATE comments SET content = ? WHERE id = ?";
+  db.query(sql, [content, commentId], (err, result) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Comentário não encontrado." });
+    }
+
+    // Retorne o comentário atualizado
+    const updatedComment = { id: commentId, content: content };
+    return res.status(200).json(updatedComment);
+  });
 });
 
+// Excluir comentário pelo ID
 router.delete("/:id", (req, res) => {
+  const commentId = req.params.id;
+
+  const sqlCheck = "SELECT * FROM comments WHERE id = ?";
+  db.query(sqlCheck, [commentId], (err, result) => {
+    if (err) {
+      return res.status(500).json({ message: "Erro ao buscar o comentário." });
+    }
+    if (result.length === 0) {
+      return res.status(404).json({ message: "Comentário não encontrado." });
+    }
+
+    const sqlDelete = "DELETE FROM comments WHERE id = ?";
+    db.query(sqlDelete, [commentId], (err, result) => {
+      if (err) {
+        return res
+          .status(500)
+          .json({ message: "Erro ao deletar o comentário." });
+      }
+      res.json({ message: "Comentário deletado com sucesso!" });
+    });
+  });
 });
 
 router.get('/post/:postId', (req, res) => {
