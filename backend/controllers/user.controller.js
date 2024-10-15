@@ -56,15 +56,26 @@ exports.getUserById = (req, res) => {
             console.error('Error executing query', error);
             return res.status(500).json({ message: 'Internal server error.' });
         }
-
+    
         if (results.length === 0) {
             return res.status(404).json({ message: 'User not found.' });
         }
-
+    
         const user = results[0];
+    
+        // Verifica se a imagem de perfil existe e trata dependendo do formato
         if (user.profilePicture) {
-            user.profilePicture = `http://localhost:3000/${user.profilePicture}`;
-        }
+            // Verifica se a imagem é uma URL completa
+            if (user.profilePicture.startsWith('http://') || user.profilePicture.startsWith('https://')) {
+                // É uma URL externa (como do Google), mantém a URL externa como está
+                user.profilePicture = user.profilePicture;
+            } else {
+                // É um caminho local, troca barras invertidas por barras normais e adiciona o prefixo
+                user.profilePicture = `http://localhost:3000/${user.profilePicture.replace(/\\/g, '/')}`;
+            }
+        }        
+    
         res.status(200).json(user);
     });
+    
 };

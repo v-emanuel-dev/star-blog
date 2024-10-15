@@ -32,6 +32,16 @@ export class UserProfileComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.profilePicture = localStorage.getItem('profilePicture');
+    const storedImageUrl = localStorage.getItem('profilePicture'); // Substitua pelo nome correto da chave
+
+    if (storedImageUrl) {
+      this.profileImageUrl = this.sanitizer.bypassSecurityTrustUrl(storedImageUrl);
+      console.log('Loaded profile image URL:', this.profileImageUrl);
+    } else {
+      this.profileImageUrl = null;
+    }
+
     // Carrega a imagem de perfil inicialmente do localStorage
     this.loadProfilePicture();
     this.loadUserData();
@@ -39,11 +49,13 @@ export class UserProfileComponent implements OnInit {
 
   loadProfilePicture(): void {
     const storedProfilePicture = this.getProfilePicture();
-    this.profilePicture = storedProfilePicture
-      ? this.sanitizeUrl(storedProfilePicture)
+
+    // Verifica se a imagem de perfil armazenada existe
+    this.profileImageUrl = storedProfilePicture
+      ? this.getProfilePictureUrl(storedProfilePicture)
       : this.sanitizeUrl(this.defaultProfilePicture);
 
-    console.log('Loaded profile picture:', this.profilePicture);
+    console.log('Loaded profile picture:', this.profileImageUrl);
   }
 
   getProfilePicture(): string | null {
@@ -52,15 +64,34 @@ export class UserProfileComponent implements OnInit {
 
     if (profilePicture) {
       // Remove qualquer prefixo indesejado de 'http://localhost:3000/'
-      const sanitizedProfilePicture = profilePicture.replace('http://localhost:3000/', '');
-      return sanitizedProfilePicture;
+      const sanitizedProfilePicture = profilePicture.replace(
+        'http://localhost:3000/',
+        ''
+      ).replace(/\\/g, '/'); // Troca barras invertidas por barras normais
+
+      return sanitizedProfilePicture; // Retorna apenas o caminho do arquivo
     }
 
     return null;
   }
 
   sanitizeUrl(url: string): SafeUrl {
-    return this.sanitizer.bypassSecurityTrustUrl(url);
+    // Substitui barras invertidas por barras normais
+    const normalizedUrl = url.replace(/\\/g, '/');
+    return this.sanitizer.bypassSecurityTrustUrl(normalizedUrl);
+  }
+
+  getProfilePictureUrl(profilePicture: string): SafeUrl {
+    if (profilePicture) {
+      // Verifica se a imagem é uma URL completa
+      if (profilePicture.startsWith('http://') || profilePicture.startsWith('https://')) {
+        return this.sanitizeUrl(profilePicture); // Retorna a URL externa como está
+      } else {
+        // Retorna o caminho local com a formatação correta
+        return this.sanitizeUrl(`http://localhost:3000/uploads/${profilePicture}`);
+      }
+    }
+    return this.sanitizeUrl(this.defaultProfilePicture); // Retorna a imagem padrão se não houver
   }
 
   loadUserData(): void {
@@ -74,15 +105,11 @@ export class UserProfileComponent implements OnInit {
           this.email = user.email || '';
           console.log('User data loaded:', user);
 
-          // Verifica e carrega a imagem de perfil, mas só substitui se diferente da atual
-          if (user.profilePicture && user.profilePicture !== localStorage.getItem('profilePicture')) {
-            this.profilePicture = this.sanitizeUrl(user.profilePicture);
-            localStorage.setItem('profilePicture', user.profilePicture);
-            console.log('Profile Picture updated and saved to localStorage:', user.profilePicture);
-          }
+          // Usa o método para obter a URL da imagem de perfil
+          this.profilePicture = this.getProfilePictureUrl(user.profilePicture || '');
+          localStorage.setItem('profilePicture', this.profilePicture.toString()); // Armazena a imagem sanitizada
 
-          // Garante que a imagem de perfil esteja setada, seja do usuário ou a padrão
-          this.profilePicture = this.profilePicture || this.sanitizeUrl(this.defaultProfilePicture);
+          console.log('Profile Picture updated and saved to localStorage:', this.profilePicture);
         },
         (error) => {
           console.error('Error loading user data', error);

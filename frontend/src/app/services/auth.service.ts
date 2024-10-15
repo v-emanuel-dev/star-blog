@@ -9,8 +9,6 @@ import { BehaviorSubject, Observable, tap } from 'rxjs';
 export class AuthService {
   private baseUrl = 'http://localhost:3000/api/auth';
 
-  private profileImageUrl: string | null = null;
-
   private userNameSubject = new BehaviorSubject<string | undefined>(
     this.getUserName()
   );
@@ -53,6 +51,12 @@ export class AuthService {
           console.log('Username stored in localStorage:', response.username); // Log do nome do usuário armazenado
         })
       );
+  }
+
+  updateProfileImageUrl(url: string): void {
+    localStorage.setItem('profilePicture', url);
+    this.profileImageUrlSubject.next(url);
+    console.log('Profile picture updated in localStorage:', url); // Adicione este log
   }
 
   register(email: string, username: string, password: string): Observable<any> {
