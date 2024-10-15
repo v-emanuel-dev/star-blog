@@ -86,6 +86,7 @@ exports.getCommentsByPostId = (req, res) => {
   });
 };
 
+// Atualizar um comentário
 exports.updateComment = (req, res) => {
   const commentId = req.params.id;
   const { content } = req.body;
@@ -104,6 +105,10 @@ exports.updateComment = (req, res) => {
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: "Comentário não encontrado." });
     }
+
+    // Emitir notificação sobre o comentário atualizado (opcional)
+    const io = getSocket(); // Obtém a instância do Socket.io
+    io.emit('update-comment', { id: commentId, content });
 
     // Retorne o comentário atualizado
     const updatedComment = { id: commentId, content: content };

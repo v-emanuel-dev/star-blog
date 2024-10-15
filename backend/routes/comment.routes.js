@@ -3,6 +3,26 @@ const router = express.Router();
 const db = require('../config/db'); // Importando a conexão com o banco de dados
 const { getSocket } = require('../socket'); // Importando a função para obter o Socket.io
 
+// Rota para obter comentários por postId
+router.get('/post/:postId', (req, res) => {
+  const { postId } = req.params;
+
+  const query = `
+    SELECT comments.id, comments.content, comments.postId, comments.user_id, comments.created_at, posts.visibility 
+    FROM comments 
+    JOIN posts ON comments.postId = posts.id 
+    WHERE comments.postId = ?
+  `;
+
+  db.query(query, [postId], (error, results) => {
+    if (error) {
+      console.error("Erro ao buscar comentários:", error);
+      return res.status(500).json({ message: "Erro ao buscar comentários.", error });
+    }
+    res.json(results);
+  });
+});
+
 // Rota para obter notificações de um usuário
 router.get('/:userId/notifications', (req, res) => {
   const userId = req.params.userId;
@@ -92,6 +112,24 @@ router.put("/:id", (req, res) => {
   });
 });
 
+// Rota para remover uma notificação
+router.delete('/notifications/:id', (req, res) => {
+  const notificationId = req.params.id;
+
+  const sql = 'DELETE FROM notifications WHERE id = ?';
+  db.query(sql, [notificationId], (error, result) => {
+    if (error) {
+      console.error('Erro ao remover notificação:', error);
+      return res.status(500).json({ message: 'Erro ao remover notificação.' });
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Notificação não encontrada.' });
+    }
+
+    return res.status(200).json({ message: 'Notificação removida com sucesso.' });
+  });
+});
+
 // Excluir comentário pelo ID
 router.delete("/:id", (req, res) => {
   const commentId = req.params.id;
@@ -114,25 +152,6 @@ router.delete("/:id", (req, res) => {
       }
       res.json({ message: "Comentário deletado com sucesso!" });
     });
-  });
-});
-
-router.get('/post/:postId', (req, res) => {
-  const { postId } = req.params;
-
-  const query = `
-    SELECT comments.id, comments.content, comments.postId, comments.user_id, comments.created_at, posts.visibility 
-    FROM comments 
-    JOIN posts ON comments.postId = posts.id 
-    WHERE comments.postId = ?
-  `;
-
-  db.query(query, [postId], (error, results) => {
-    if (error) {
-      console.error("Erro ao buscar comentários:", error);
-      return res.status(500).json({ message: "Erro ao buscar comentários.", error });
-    }
-    res.json(results);
   });
 });
 

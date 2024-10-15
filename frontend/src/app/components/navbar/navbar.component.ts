@@ -127,8 +127,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
       this.profileImageUrl = this.defaultProfilePicture;
     }
     console.log('Loaded profile image URL:', this.profileImageUrl);
-}
-
+  }
 
   sanitizeUrl(url: string): SafeUrl {
     // Substitui barras invertidas por barras normais
@@ -180,10 +179,43 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   markAsRead(index: number) {
+    if (index < 0 || index >= this.notifications.length) {
+      console.error(
+        'Índice inválido para marcação de notificação como lida:',
+        index
+      );
+      return;
+    }
+
+    const notificationToRemove = this.notifications[index];
+    console.log('Marcando a notificação como lida:', notificationToRemove); // Log da notificação sendo marcada como lida
+
+    // Atualiza o estado local
     this.notifications.splice(index, 1);
     this.unreadNotificationsCount = this.notifications.length;
     this.isNotificationsOpen = false; // Fecha as notificações ao marcar como lida
-    this.notifications[index].read = true;
+
+    // Atualiza a notificação como lida
+    notificationToRemove.read = true;
+
+    // Remover a notificação do banco de dados
+    this.removeNotificationFromDatabase(notificationToRemove.id).subscribe(
+      () => {
+        console.log(
+          'Notificação removida do banco de dados com sucesso:',
+          notificationToRemove.id
+        );
+      },
+      (error) => {
+        console.error('Erro ao remover notificação do banco de dados:', error);
+      }
+    );
+  }
+
+  private removeNotificationFromDatabase(notificationId: number) {
+    return this.http.delete(
+      `http://localhost:3000/api/comments/notifications/${notificationId}`
+    );
   }
 
   closeDropdowns(event: MouseEvent) {

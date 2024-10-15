@@ -37,6 +37,7 @@ export class CommentService {
     );
   }
 
+  // Atualizar um comentário
   updateComment(
     commentId: number,
     updatedComment: { content: string }

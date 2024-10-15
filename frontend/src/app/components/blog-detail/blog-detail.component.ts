@@ -162,6 +162,7 @@ saveComment(): void {
   }
 }
 
+
 // Método para deletar um comentário
 deleteComment(commentId: number): void {
   this.commentService.deleteComment(commentId).subscribe(() => {

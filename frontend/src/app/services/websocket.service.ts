@@ -70,7 +70,7 @@ export class WebSocketService {
       this.http
         .post<Notification>(
           `http://localhost:3000/api/comments/${this.userId}/notifications`,
-          notification
+          { message: notification.message, postId: notification.postId }
         )
         .subscribe(
           (response) => {
