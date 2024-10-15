@@ -66,19 +66,29 @@ router.post('/', (req, res) => {
   });
 });
 
-// Rota para atualizar um comentário (placeholder)
 router.put("/:id", (req, res) => {
-  // Lógica para atualizar um comentário
 });
 
-// Rota para deletar um comentário (placeholder)
 router.delete("/:id", (req, res) => {
-  // Lógica para deletar um comentário
 });
 
-// Rota para obter um comentário específico (placeholder)
-router.get("/:postId", (req, res) => {
-  // Lógica para obter um comentário específico
+router.get('/post/:postId', (req, res) => {
+  const { postId } = req.params;
+
+  const query = `
+    SELECT comments.id, comments.content, comments.postId, comments.user_id, comments.created_at, posts.visibility 
+    FROM comments 
+    JOIN posts ON comments.postId = posts.id 
+    WHERE comments.postId = ?
+  `;
+
+  db.query(query, [postId], (error, results) => {
+    if (error) {
+      console.error("Erro ao buscar comentários:", error);
+      return res.status(500).json({ message: "Erro ao buscar comentários.", error });
+    }
+    res.json(results);
+  });
 });
 
 module.exports = router;
