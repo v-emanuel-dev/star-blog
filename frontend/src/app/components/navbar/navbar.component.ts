@@ -22,6 +22,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   userId: number | null = null; // Inicialize com null ou um valor padrão
   profilePicture: string | null = null;
   defaultProfilePicture: string = 'assets/img/default-profile.png';
+  userRole: string | null = null; // Propriedade para armazenar o papel do usuário
 
   private notificationsSubscription: Subscription | undefined; // Adicionando subscription para notificações
   private subscription: Subscription = new Subscription();
@@ -37,9 +38,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    console.log('NavbarComponent initialized.');
+    this.userRole = localStorage.getItem('userRole'); // Recupera o papel do usuário
     this.imageService.profilePic$.subscribe((pic) => {
-      console.log('Profile picture updated in NavBarComponent:', pic);
       this.profilePicture = pic || this.defaultProfilePicture;
       // Força o Angular a detectar mudanças na imagem
       this.cd.detectChanges();
@@ -47,24 +47,20 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
     this.notificationsSubscription =
       this.webSocketService.notifications$.subscribe((notifications) => {
-        console.log('Notificações recebidas no Navbar:', notifications);
         this.notifications = notifications;
         this.unreadNotificationsCount = this.notifications.length;
         this.changeDetectorRef.detectChanges(); // Força a detecção de mudanças na interface
-        console.log('Número de notificações não lidas:', this.unreadNotificationsCount);
-
-        console.log(
-          'Número de notificações não lidas:',
-          this.unreadNotificationsCount
-        );
       });
 
     document.addEventListener('click', this.closeDropdowns.bind(this));
   }
 
+  isAdmin(): boolean {
+    return this.userRole === 'admin'; // Retorna true se o usuário for admin
+  }
+
   ngAfterViewInit(): void {
     // Força a detecção de mudanças após a inicialização da view
-    console.log('ngAfterViewInit called, forcing change detection.');
     this.cd.detectChanges();
   }
 

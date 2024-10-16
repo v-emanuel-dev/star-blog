@@ -17,6 +17,7 @@ export class BlogEditComponent implements OnInit {
   content: string = '';
   userId!: number;
   visibility: 'public' | 'private' = 'public';
+  role: string = 'user'; // Valor padrão para o papel
   message: string | null = null;
   success: boolean = false;
   selectedCategoryIds: number[] = [];
@@ -41,6 +42,7 @@ export class BlogEditComponent implements OnInit {
       categories: [],
       user_id: 0,
       visibility: '',
+      role: ''
     };
   }
 
@@ -84,6 +86,7 @@ export class BlogEditComponent implements OnInit {
       created_at: new Date().toISOString(),
       username: '',
       categoryIds: this.selectedCategoryIds,
+      role: this.role // Adicione a propriedade role aqui
     };
 
     this.postService.updatePost(this.postId, updatedPost).subscribe(

@@ -63,6 +63,22 @@
         </div>
       </div>
       <div class="mb-4">
+        <!-- Verifica se o usuário é admin -->
+        <label for="role" class="block text-gray-700">Role</label>
+        <select
+          id="role"
+          [(ngModel)]="role"
+          name="role"
+          required
+          class="mt-1 block w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-blue-200"
+        >
+          <option value="" disabled selected>Select your role</option>
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+
+      <div class="mb-4">
         <label for="username" class="block text-gray-700">Username</label>
         <input
           type="text"

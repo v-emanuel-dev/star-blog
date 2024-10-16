@@ -17,12 +17,14 @@ export class UserProfileComponent implements OnInit {
   email: string | null = null;
   password: string = '';
   confirmPassword: string = '';
+  role: string | null = null; // Permite que role seja string ou null
   message: string | null = null;
   success: boolean | undefined;
   selectedImage: File | null = null;
   selectedImagePreview: SafeUrl | null = null;
   profilePicture: string | null = null;
-  defaultPicture: string = 'URL_DA_IMAGEM_PADRAO'; // Substitua pela URL da imagem padrão
+  defaultPicture: string = 'assets/img/default-profile.png'; // Substitua pela URL da imagem padrão
+  isAdmin: boolean = false; // Flag para verificar se o usuário é admin
 
   constructor(
     private authService: AuthService,
@@ -34,51 +36,37 @@ export class UserProfileComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadUserData();
-    console.log('UserProfile initialized.');
     this.imageService.profilePic$.subscribe((pic) => {
-      console.log('Profile picture updated in MenuComponent:', pic);
       this.profilePicture = pic || this.defaultPicture;
-      // Força o Angular a detectar mudanças na imagem
       this.cd.detectChanges();
+    });
+    this.authService.getUserRole().subscribe(role => {
+      this.role = role;
+      this.isAdmin = (role === 'admin'); // Verifica se o usuário é admin
     });
   }
 
   ngAfterViewInit(): void {
-    // Força a detecção de mudanças após a inicialização da view
-    console.log('ngAfterViewInit called, forcing change detection.');
     this.cd.detectChanges();
   }
 
   onImageError() {
-    console.log('Failed to load profile picture, using default.');
     this.profilePicture = this.defaultPicture;
   }
 
   loadUserData(): void {
     const userId = this.authService.getUserId();
-    console.log('Loading user data for userId:', userId);
-
     if (userId !== null) {
       this.userService.getUserById(userId).subscribe(
         (user) => {
           this.username = user.username || '';
           this.email = user.email || '';
-          console.log('User data loaded:', user);
-
-          // Usa o método do ImageService para obter a URL da imagem de perfil
+          this.role || 'user', // Use 'user' como valor padrão se role for null
+          'User data loaded:', user;
           const profilePictureUrl = this.imageService.getFullProfilePicUrl(user.profilePicture || '');
-
-          // Atualiza a imagem de perfil no ImageService
           this.imageService.updateProfilePic(profilePictureUrl);
-
-          console.log('Profile Picture updated in ImageService:', profilePictureUrl);
-        },
-        (error) => {
-          console.error('Error loading user data', error);
         }
       );
-    } else {
-      console.error('User ID not found or user is not logged in');
     }
   }
 
@@ -89,8 +77,7 @@ export class UserProfileComponent implements OnInit {
 
       const reader = new FileReader();
       reader.onload = () => {
-        this.selectedImagePreview =
-          reader.result as string;
+        this.selectedImagePreview = reader.result as string;
       };
       reader.readAsDataURL(file);
     }
@@ -126,6 +113,7 @@ export class UserProfileComponent implements OnInit {
         this.email ?? '',
         this.password || '',
         this.selectedImage,
+        this.role || 'user', // Use 'user' como valor padrão se role for null
         headers
       )
       .subscribe(
@@ -134,7 +122,6 @@ export class UserProfileComponent implements OnInit {
           this.success = true;
           this.loadUserData();
 
-          // Notifica a navbar sobre a atualização da imagem do perfil
           if (this.selectedImage) {
             const imageUrl = URL.createObjectURL(this.selectedImage);
             this.userService.updateProfilePicture(imageUrl);

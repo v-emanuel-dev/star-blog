@@ -118,8 +118,8 @@
               class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 cursor-pointer"
               (click)="markAsRead(i)"
             >
-            {{ notification.message }} {{ notification.content }}
-          </div>
+              {{ notification.message }} {{ notification.content }}
+            </div>
           </div>
           <ng-template #noNotifications>
             <div class="px-4 py-2 text-sm text-gray-500">
@@ -167,6 +167,15 @@
           aria-labelledby="user-menu-button"
           tabindex="-1"
         >
+          <a
+            *ngIf="isLoggedIn() && isAdmin()"
+            routerLink="/admin"
+            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200"
+            role="menuitem"
+            tabindex="-1"
+            id="user-menu-item-2"
+            >Dashboard</a
+          >
           <a
             *ngIf="!isLoggedIn()"
             class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200"

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -17,6 +17,23 @@ export class UserService {
     if (storedProfilePicture) {
       this.profilePictureSubject.next(storedProfilePicture);
     }
+  }
+
+  getUsers(): Observable<any[]> {
+    return this.http.get<any[]>(this.apiUrl);
+  }
+
+  updateUserAdmin(id: number, userData: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${id}`, userData);
+  }
+
+  deleteUser(userId: number): Observable<any> {
+    const token = localStorage.getItem('accessToken'); // Pega o token do localStorage
+    return this.http.delete(`${this.apiUrl}/users/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${token}` // Envia o token nos headers
+      }
+    });
   }
 
   updateProfilePicture(picture: string | null) {
@@ -39,6 +56,7 @@ export class UserService {
     email: string,
     password: string | null,
     selectedImage: File | null,
+    role: string, // Adicione o parâmetro role
     headers: HttpHeaders
   ): Observable<any> {
     const formData = new FormData();
@@ -53,12 +71,15 @@ export class UserService {
       formData.append('profilePicture', selectedImage);
     }
 
+    formData.append('role', role); // Adicione o role no FormData
+
     console.log('Sending update user request with data:', {
       userId,
       username,
       email,
       password,
       selectedImage,
+      role, // Inclua o role nos logs para depuração
     });
 
     return this.http.put(`${this.apiUrl}/update/${userId}`, formData, {

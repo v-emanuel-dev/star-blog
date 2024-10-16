@@ -105,56 +105,41 @@ export class BlogListComponent implements OnInit {
   }
 
   getPosts(): void {
-    this.loading = true; // Ativa o carregamento
+    this.loading = true;
 
-    this.postService.getPosts().subscribe({
-      next: (data: Post[]) => {
-        setTimeout(() => {
+    // Inscreva-se no Observable para obter o papel do usuário
+    this.authService.getUserRole().subscribe((userRole) => {
+      const isAdmin = userRole === 'admin'; // Verifica se o papel é admin
+
+      // Se for admin, carrega todos os posts usando getPostsAdmin
+      const postsObservable = isAdmin
+        ? this.postService.getPostsAdmin()
+        : this.postService.getPosts();
+
+      postsObservable.subscribe({
+        next: (data: Post[]) => {
           this.posts = data;
+          this.filteredPosts = this.isLoggedIn
+            ? this.posts
+            : this.posts.filter(post => post.visibility === 'public');
+          this.updatePostsTitle();
+          this.loading = false; // Para parar o loading
+        },
+        error: (error) => {
+          console.error('Erro ao obter posts:', error);
+          this.loading = false; // Para parar o loading em caso de erro
+        }
+      });
 
-          // Carrega categorias para cada post
-          const categoryRequests = this.posts.map((post) =>
-            post.id !== undefined
-              ? this.categoryService.getCategoriesByPostId(post.id).pipe(
-                  catchError((error) => {
-                    console.error(
-                      `Erro ao obter categorias para o post ${post.id}:`,
-                      error
-                    );
-                    return of([]);
-                  })
-                )
-              : of([])
-          );
+      // Define o título para admins
+      this.postsTitle = isAdmin ? 'All Posts' : this.postsTitle;
 
-          forkJoin(categoryRequests).subscribe({
-            next: (categoriesArray) => {
-              // Associa categorias a cada post
-              categoriesArray.forEach((categories, index) => {
-                this.posts[index].categories = categories;
-              });
-
-              // Define os posts filtrados uma única vez com base na visibilidade e no login
-              this.filteredPosts = this.isLoggedIn
-                ? this.posts
-                : this.posts.filter((post) => post.visibility === 'public');
-
-              this.updatePostsTitle(); // Atualiza o título após carregar e filtrar os posts
-              this.loading = false;
-            },
-            error: (error) => {
-              console.error('Erro ao carregar categorias:', error);
-              this.loading = false;
-            },
-          });
-        }, 1000); // Simula um atraso de 1 segundo
-      },
-      error: (error) => {
-        console.error('Erro ao obter posts:', error);
-        this.loading = false;
-      },
+    }, (error) => {
+      console.error('Error fetching user role:', error);
+      this.loading = false; // Para parar o loading em caso de erro ao buscar o papel do usuário
     });
   }
+
 
   filterPosts(): void {
     const searchTermLower = this.searchTerm.toLowerCase().trim();

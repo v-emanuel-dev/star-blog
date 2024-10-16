@@ -1,6 +1,19 @@
 const bcrypt = require('bcrypt');
 const db = require('../config/db'); // Ajuste para o caminho correto do seu arquivo de configuração do banco
 
+exports.getAllUsers = (req, res) => {
+    const query = 'SELECT id, username, email, role, profilePicture FROM users'; // Inclua o que quiser retornar
+
+    db.query(query, (error, results) => {
+        if (error) {
+            console.error('Error executing query', error);
+            return res.status(500).json({ message: 'Internal server error.' });
+        }
+
+        res.status(200).json(results); // Retorna todos os usuários
+    });
+};
+
 exports.updateUser = (req, res) => {
     const { username, email, password } = req.body;
     const userId = req.userId; // O ID do usuário é obtido do token JWT
@@ -77,5 +90,43 @@ exports.getUserById = (req, res) => {
     
         res.status(200).json(user);
     });
-    
 };
+
+// Função para deletar um usuário (apenas para admins)
+exports.deleteUser = (req, res) => {
+    const userId = req.params.id;
+    const requestingUserRole = req.userRole; // Supondo que você tenha configurado o middleware que adiciona o papel do usuário na requisição
+
+    console.log('Received delete request for user ID:', userId); // Log do ID do usuário
+    console.log('Requesting user role:', requestingUserRole); // Log do papel do usuário
+
+    // Verifica se o ID do usuário é um número válido
+    if (isNaN(userId)) {
+        console.warn('Invalid user ID received:', userId);
+        return res.status(400).json({ message: 'Invalid user ID.' });
+    }
+
+    // Somente administradores podem deletar usuários
+    if (requestingUserRole !== 'admin') {
+        console.warn('Access denied for user role:', requestingUserRole);
+        return res.status(403).json({ message: 'Access denied. Only administrators can delete users.' });
+    }
+
+    const deleteQuery = 'DELETE FROM users WHERE id = ?';
+
+    db.query(deleteQuery, [userId], (error, results) => {
+        if (error) {
+            console.error('Error executing query', error);
+            return res.status(500).json({ message: 'Internal server error.' });
+        }
+
+        if (results.affectedRows === 0) {
+            console.warn('No user found with ID:', userId); // Log quando nenhum usuário é encontrado
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        console.log('User deleted successfully with ID:', userId);
+        res.status(200).json({ message: 'User deleted successfully' });
+    });
+};
+

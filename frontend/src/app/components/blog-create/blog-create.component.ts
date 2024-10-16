@@ -73,6 +73,9 @@ export class BlogCreateComponent implements OnInit {
 
   // Create a new post
   createPost(): void {
+
+    const userRole = 'user'; // ou qualquer valor que faça sentido para o contexto
+
     if (!this.title.trim() || !this.content.trim()) {
       this.message = 'Title and content are required.';
       this.success = false;
@@ -91,7 +94,8 @@ export class BlogCreateComponent implements OnInit {
       content: this.content.trim(),
       user_id: this.user_id,
       visibility: this.visibility,
-      categoryIds: this.selectedCategoryIds, // Agora usa um array de IDs de categorias
+      categoryIds: this.selectedCategoryIds,
+      role: userRole // adicione a propriedade role aqui
     };
 
     console.log('Criando post com dados:', newPost); // Log para depuração

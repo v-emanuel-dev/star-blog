@@ -29,53 +29,62 @@ export class AuthService {
   private profileImageUrlSubject = new BehaviorSubject<string | null>(null);
   profileImageUrl$ = this.profileImageUrlSubject.asObservable();
 
+  private userRoleSubject = new BehaviorSubject<string | null>(null);
+
   constructor(
     private http: HttpClient,
     private router: Router,
     private imageService: ImageService,
     private websocketService: WebSocketService
-  ) {}
+  ) {
+    const savedRole = localStorage.getItem('userRole');
+    if (savedRole) {
+      this.userRoleSubject.next(savedRole);
+    }
+  }
 
   login(email: string, password: string) {
     return this.http
       .post<any>(`${this.baseUrl}/login`, { email, password })
       .pipe(
         tap((response) => {
-          // Armazena informações no localStorage
+          // Armazenar informações no localStorage
           localStorage.setItem('accessToken', response.accessToken);
           localStorage.setItem('userName', response.username);
-          localStorage.setItem('email', response.email); // Armazenando o email
-          localStorage.setItem('userId', response.userId); // Armazenando o userId
+          localStorage.setItem('email', response.email);
+          localStorage.setItem('userId', response.userId);
+          console.log('User role from response:', response.userRole); // Verifica o papel do usuário na resposta
+          localStorage.setItem('userRole', response.userRole); // Armazenar o papel do usuário
+          // Lógica para armazenar a URL da imagem do perfil
+          let profilePicUrl = response.profilePicture;
 
-          // Verificando se a imagem de perfil é local ou do Google e armazenando corretamente.
-          let profilePicUrl = response.profilePicture; // Use 'response.profilePicture' corretamente.
-
-          // Troca as barras invertidas por barras normais
-          profilePicUrl = profilePicUrl.replace(/\\/g, '/');
-
-          // Adiciona o prefixo para usuários locais (caso o path não contenha 'http')
-          if (profilePicUrl && !profilePicUrl.startsWith('http')) {
-            profilePicUrl = `http://localhost:3000/${profilePicUrl}`;
+          // Verifique se a URL da imagem de perfil é válida
+          if (profilePicUrl) {
+            profilePicUrl = profilePicUrl.replace(/\\/g, '/');
+            if (!profilePicUrl.startsWith('http')) {
+              profilePicUrl = `http://localhost:3000/${profilePicUrl}`;
+            }
+            localStorage.setItem('profilePicture', profilePicUrl);
+          } else {
+            console.log('No profile picture found, setting to default.');
+            profilePicUrl = 'assets/img/default-profile.png'; // Defina o caminho para a imagem padrão
+            localStorage.setItem('profilePicture', profilePicUrl);
           }
 
-          // Armazena a imagem de perfil no localStorage com a URL completa.
-          localStorage.setItem('profilePicture', profilePicUrl);
-          console.log('Stored Profile Picture:', profilePicUrl);
-
-          // Atualiza o BehaviorSubject para notificar os componentes que a imagem foi atualizada.
+          // Notificações
           this.profileImageUrlSubject.next(profilePicUrl);
-          this.imageService.updateProfilePic(profilePicUrl); // Notifica o UserService
-
-          // Atualiza o subject com o nome do usuário e ID do usuário
+          this.imageService.updateProfilePic(profilePicUrl);
           this.userNameSubject.next(response.username);
-          this.currentUserIdSubject.next(response.userId); // Atualizando o ID do usuário logado
-
-          // Notifica que o usuário está logado
+          this.currentUserIdSubject.next(response.userId);
           this.userLoggedInSubject.next(true);
+          this.websocketService.fetchNotifications(response.userId);
 
-          // Inicializa WebSocket para buscar notificações
-          this.websocketService.fetchNotifications(response.userId); // Adiciona esta linha
-          console.log('Fetching notifications for User ID:', response.userId);
+          // Redirecionamento baseado no papel do usuário
+          if (response.userRole === 'admin') {
+            this.router.navigate(['/admin']); // Roteamento para a página de admin
+          } else {
+            this.router.navigate(['/blog']); // Roteamento para o dashboard normal
+          }
         })
       );
   }
@@ -87,12 +96,28 @@ export class AuthService {
     console.log('Profile picture updated in localStorage:', url); // Adicione este log
   }
 
-  register(email: string, username: string, password: string): Observable<any> {
+  register(
+    email: string,
+    username: string,
+    password: string,
+    role: string
+  ): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/register`, {
       email,
       username,
       password,
+      role,
     });
+  }
+
+  getUserRole() {
+    return this.userRoleSubject.asObservable();
+  }
+
+  // Função para atualizar a role do usuário
+  setUserRole(role: string) {
+    this.userRoleSubject.next(role);
+    localStorage.setItem('userRole', role); // Armazenar no localStorage para persistência
   }
 
   getUserName(): string {

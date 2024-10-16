@@ -1,4 +1,7 @@
 import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { AuthService } from '../services/auth.service';
 import { CanActivate, Router } from '@angular/router';
 
 @Injectable({
@@ -6,26 +9,29 @@ import { CanActivate, Router } from '@angular/router';
 })
 export class AuthGuard implements CanActivate {
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private authService: AuthService) {}
 
-  canActivate(): boolean {
+  canActivate(): boolean | Observable<boolean> {
     const token = localStorage.getItem('token');
 
     if (token && !this.isTokenExpired(token)) {
-      return true; // Allow access if token is present and not expired
+      return true;
     }
 
-    // Log the denied access attempt
     console.warn('Access denied - no valid token found.');
-
-    // If no token or expired, navigate to the login page
     this.router.navigate(['/login']);
-    return false; // Deny access
+    return false;
   }
 
   private isTokenExpired(token: string): boolean {
-    const payload = JSON.parse(atob(token.split('.')[1])); // Decode the token payload
-    const expiry = payload.exp * 1000; // Convert expiry to milliseconds
-    return Date.now() > expiry; // Check if the current time is greater than expiry time
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const expiry = payload.exp * 1000;
+    return Date.now() > expiry;
+  }
+
+  isAdmin(): Observable<boolean> {
+    return this.authService.getUserRole().pipe(
+      map(role => role === 'admin') // Retorna verdadeiro se o papel for admin
+    );
   }
 }

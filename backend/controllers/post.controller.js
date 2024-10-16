@@ -1,7 +1,73 @@
 // Importando a conexão com o banco de dados
 const db = require("../config/db");
 
-// Função para listar todos os posts, incluindo públicos e os do usuário logado
+exports.getPostsAdmin = (req, res) => {
+  const userRole = req.userRole; // Pega a role do usuário do token JWT decodificado
+
+  // Verifica se o usuário é admin
+  if (userRole !== 'admin') {
+    return res.status(403).json({ message: 'Acesso negado' });
+  }
+
+  // Consulta SQL para buscar todos os posts, independentemente do usuário e da visibilidade
+  const query = `
+    SELECT 
+      posts.*, 
+      users.username, 
+      comments.id AS comment_id, 
+      comments.content AS comment_content, 
+      categories.name AS category_name 
+    FROM posts 
+    JOIN users ON posts.user_id = users.id
+    LEFT JOIN comments ON comments.postId = posts.id
+    LEFT JOIN post_categories ON posts.id = post_categories.postId
+    LEFT JOIN categories ON post_categories.categoryId = categories.id
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Erro na consulta SQL:', err);
+      return res.status(500).json({ error: err.message });
+    }
+
+    // Organizar resultados para incluir comentários e categorias nos posts
+    const postsWithDetails = results.reduce((acc, post) => {
+      const { id, title, content, username, comment_id, comment_content, category_name } = post;
+
+      // Encontra o post no acumulador
+      let existingPost = acc.find(p => p.id === id);
+
+      // Se o post já existe, apenas adiciona o comentário
+      if (existingPost) {
+        if (comment_content) {
+          existingPost.comments.push({
+            id: comment_id,
+            content: comment_content,
+          });
+        }
+      } else {
+        // Se o post não existe, cria um novo post
+        existingPost = {
+          id,
+          title,
+          content,
+          username,
+          comments: comment_content
+            ? [{ id: comment_id, content: comment_content }]
+            : [],
+          category: category_name || null,
+          created_at: post.created_at,
+          visibility: post.visibility,
+        };
+        acc.push(existingPost);
+      }
+      return acc;
+    }, []);
+
+    res.json(postsWithDetails);
+  });
+};
+
 // Função para listar todos os posts, incluindo públicos e os do usuário logado
 exports.getAllPosts = (req, res) => {
   const userId = req.userId; // O ID do usuário vem do token JWT decodificado

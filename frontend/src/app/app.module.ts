@@ -17,6 +17,8 @@ import { RegisterComponent } from './components/register/register.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { AuthService } from './services/auth.service';
 import { NotificationsComponent } from './components/notifications/notifications.component';
+import { UsersComponent } from './components/admin/users/users.component';
+import { AccessDeniedComponent } from './components/access-denied/access-denied.component';
 
 @NgModule({
   declarations: [
@@ -30,6 +32,8 @@ import { NotificationsComponent } from './components/notifications/notifications
     UserProfileComponent,
     BlogDetailComponent,
     NotificationsComponent,
+    UsersComponent,
+    AccessDeniedComponent,
   ],
   imports: [
     BrowserModule,

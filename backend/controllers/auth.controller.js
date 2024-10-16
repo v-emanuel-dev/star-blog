@@ -49,7 +49,7 @@ exports.login = (req, res) => {
     }
 
     // Gera um token JWT
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, {
       expiresIn: 86400, // expires in 24 hours
     });
 
@@ -63,8 +63,10 @@ exports.login = (req, res) => {
       email: user.email,
       userId: user.id,
       profilePicture: user.profilePicture || null, // Inclua a profilePicture
-    });
+      userRole: user.role // Adicione esta linha para incluir o role do usuário
+    });    
   });
 };
+
 
 

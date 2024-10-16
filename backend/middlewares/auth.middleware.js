@@ -12,7 +12,9 @@ exports.verifyToken = (req, res, next) => {
       return res.status(403).send('Invalid token.'); // Retorna 403 se o token for inválido
     }
 
-    req.userId = decoded.id; // Armazena o ID do usuário em req para uso posterior
+    req.userId = decoded.id;
+    req.userRole = decoded.role;
+
     next(); // Chama o próximo middleware ou rota
   });
 };

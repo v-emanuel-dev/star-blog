@@ -63,6 +63,19 @@
           <option value="private">Private</option>
         </select>
       </div>
+      <div class="mb-3">
+        <label for="role" class="form-label">Role:</label>
+        <select
+          [(ngModel)]="role"
+          name="role"
+          required
+          class="form-control"
+        >
+          <option value="user">User</option>
+          <option value="editor">Editor</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
       <button
         *ngFor="let category of categories"
         type="button"
