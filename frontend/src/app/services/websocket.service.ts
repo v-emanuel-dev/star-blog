@@ -48,14 +48,15 @@ export class WebSocketService {
     }
   }
 
-   fetchNotifications(userId: string) {
+  fetchNotifications(userId: string) {
     console.log('Buscando notificações para o User ID:', userId);
     this.http
       .get<Notification[]>(`http://localhost:3000/api/comments/${userId}/notifications`)
       .subscribe(
         (notifications) => {
-          console.log('Notificações recebidas:', notifications);
-          this.notificationsSubject.next(notifications);
+          const validNotifications = notifications.filter(n => n.message && n.postId);
+          console.log('Notificações válidas recebidas:', validNotifications);
+          this.notificationsSubject.next(validNotifications);
         },
         (error) => {
           console.error('Erro ao recuperar notificações do banco de dados:', error);
@@ -64,12 +65,14 @@ export class WebSocketService {
   }
 
   private addNotification(notification: Notification) {
-    const currentNotifications = this.notificationsSubject.value;
-    const updatedNotifications = [...currentNotifications, notification];
-
-    // Atualizar o BehaviorSubject
-    this.notificationsSubject.next(updatedNotifications);
-    console.log('Notificação adicionada:', notification); // Log da notificação adicionada
+    if (notification && notification.message && notification.postId) {
+      const currentNotifications = this.notificationsSubject.value;
+      const updatedNotifications = [...currentNotifications, notification];
+      this.notificationsSubject.next(updatedNotifications);
+      console.log('Notificação adicionada:', notification);
+    } else {
+      console.warn('Notificação inválida recebida e não foi adicionada:', notification);
+    }
   }
 
   private watchForUserIdAndFetchNotifications() {

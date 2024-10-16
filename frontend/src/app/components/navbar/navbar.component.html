@@ -115,7 +115,7 @@
           <div *ngIf="notifications.length > 0; else noNotifications">
             <div
               *ngFor="let notification of notifications; let i = index"
-              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200"
+              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 cursor-pointer"
               (click)="markAsRead(i)"
             >
             {{ notification.message }} {{ notification.content }}

@@ -181,8 +181,16 @@ export class BlogListComponent implements OnInit {
     const hasPrivatePosts = this.filteredPosts.some(
       (post) => post.visibility === 'private'
     );
-    this.postsTitle = hasPrivatePosts ? 'Private Posts' : 'Public Posts';
-  }
+    const hasPublicPosts = this.filteredPosts.some(
+      (post) => post.visibility === 'public'
+    )
+    if (hasPrivatePosts && hasPublicPosts) {
+      this.postsTitle = 'Public and Private Posts';
+    } else if (hasPrivatePosts) {
+      this.postsTitle = 'Private Posts';
+    } else {
+      this.postsTitle = 'Public Posts';
+    }  }
 
   editPost(postId: number): void {
     this.router.navigate(['/blog/edit', postId]);

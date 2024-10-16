@@ -56,6 +56,12 @@ router.post('/:userId/notifications', (req, res) => {
 router.post('/', (req, res) => {
   const { content, postId, userId } = req.body;
 
+  // Verifique se todos os dados necessários foram fornecidos
+  if (!content || !postId) {
+    return res.status(400).json({ error: 'Conteúdo e postId são obrigatórios.' });
+  }  
+
+  // Salvar o novo comentário no banco de dados
   db.query("INSERT INTO comments (content, postId, user_id) VALUES (?, ?, ?)", [content, postId, userId], (error, result) => {
     if (error) {
       console.error('Erro ao criar comentário:', error);
@@ -64,25 +70,43 @@ router.post('/', (req, res) => {
 
     const newCommentId = result.insertId;
 
-    // Emitindo um evento para notificar sobre o novo comentário
-    const io = getSocket(); // Obtém a instância do Socket.io
-    io.emit('new-comment', {
-      postId: postId,
-      content: content,
-      author: userId // Lógica para obter o autor
-    });
-
-    // Criar uma notificação
-    const notificationMessage = `Novo comentário no post ${postId}: "${content}"`;
-    db.query("INSERT INTO notifications (userId, message, postId) VALUES (?, ?, ?)", [userId, notificationMessage, postId], (err) => {
+    // Verificar quem é o autor do post
+    db.query("SELECT user_id FROM posts WHERE id = ?", [postId], (err, rows) => {
       if (err) {
-        console.error('Erro ao salvar notificação:', err);
-      } else {
-        console.log('Notificação salva com sucesso.');
+        console.error('Erro ao obter autor do post:', err);
+        return res.status(500).json({ error: 'Erro ao obter autor do post' });
       }
-    });
 
-    res.status(201).json({ id: newCommentId, content, postId, userId });
+      if (rows.length === 0) {
+        return res.status(404).json({ error: 'Post não encontrado.' });
+      }
+
+      const postAuthorId = rows[0].user_id;
+
+      // Verificar se o autor do comentário é diferente do autor do post
+      if (postAuthorId !== userId) {
+        // Emitindo um evento para notificar sobre o novo comentário
+        const io = getSocket(); // Obtém a instância do Socket.io
+        io.emit('new-comment', {
+          postId: postId,
+          content: content,
+          author: userId // Pode ser ajustado para incluir o nome do autor
+        });
+
+        // Criar uma notificação para o autor do post
+        const notificationMessage = `Novo comentário no seu post ${postId}: "${content}"`;
+        db.query("INSERT INTO notifications (userId, message, postId) VALUES (?, ?, ?)", [postAuthorId, notificationMessage, postId], (err) => {
+          if (err) {
+            console.error('Erro ao salvar notificação:', err);
+          } else {
+            console.log('Notificação salva com sucesso.');
+          }
+        });
+      }
+
+      // Retorne a resposta com o comentário criado
+      res.status(201).json({ id: newCommentId, content, postId, userId });
+    });
   });
 });
 

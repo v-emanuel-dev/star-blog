@@ -96,7 +96,7 @@ export class AuthService {
   }
 
   getUserName(): string {
-    return localStorage.getItem('username') || 'Usuário';
+    return localStorage.getItem('username') || 'Visitor';
   }
 
   getUserId(): number | null {

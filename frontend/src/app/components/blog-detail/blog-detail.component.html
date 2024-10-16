@@ -1,117 +1,122 @@
 <div class="container d-flex justify-content-center">
   <div
-  class="card p-5 mt-5 shadow bg-white rounded w-100"
-  style="max-width: 600px"
->
-  <div *ngIf="post">
-    <h2 class="display-4 mb-4">{{ post.title }}</h2>
-    <p class="lead">{{ post.content }}</p>
+    class="card p-5 mt-5 shadow bg-white rounded w-100"
+    style="max-width: 600px"
+  >
+    <div *ngIf="post">
+      <h2 class="display-4 mb-4">{{ post.title }}</h2>
+      <p class="lead">{{ post.content }}</p>
 
-    <!-- Lista de categorias -->
-    <div class="categories-list mt-5 flex flex-wrap"> <!-- Aumentei a margem superior para mt-5 -->
-      <span *ngFor="let category of categories; let last = last"
-            class="badge rounded-full bg-warning me-4 flex items-center shadow-md custom-pill"
-            style="max-width: fit-content;"> <!-- Usei rounded-full e adicionei shadow -->
-        <span class="text-black mr-3">{{ category.name }}</span> <!-- Texto preto -->
-        <button
-          (click)="deleteCategory(category.id!)"
-          class="remove-icon focus:outline-none"
-          aria-label="Remove category"
+      <!-- Lista de categorias -->
+      <div class="categories-list mt-5 flex flex-wrap">
+        <!-- Aumentei a margem superior para mt-5 -->
+        <span
+          *ngFor="let category of categories; let last = last"
+          class="badge rounded-full bg-warning me-4 flex items-center shadow-md custom-pill"
+          style="max-width: fit-content"
         >
-          <i class="fa-solid fa-times"></i> <!-- Ícone "x" -->
-        </button>
-      </span>
+          <!-- Usei rounded-full e adicionei shadow -->
+          <span class="text-black mr-3">{{ category.name }}</span>
+          <!-- Texto preto -->
+          <button
+            (click)="deleteCategory(category.id!)"
+            class="remove-icon focus:outline-none"
+            aria-label="Remove category"
+          >
+            <i class="fa-solid fa-times"></i>
+            <!-- Ícone "x" -->
+          </button>
+        </span>
+      </div>
     </div>
-
-
-
+    <div class="d-flex justify-content-end mt-4">
+      <button routerLink="/blog" class="btn btn-primary me-2">Back</button>
+    </div>
   </div>
-
-  <div class="d-flex justify-content-end mt-4">
-    <button routerLink="/blog" class="btn btn-primary me-2">Back</button>
-  </div>
-</div>
-
 </div>
 
 <!-- Comments Section -->
-<div class="container my-5">
-  <h1 class="mb-4"><strong>Comments:</strong></h1>
+<div class="container mx-auto my-10 p-4">
+  <h1 class="text-2xl font-bold mb-6">Comments:</h1>
 
-  <!-- Adicionar Comentário -->
-  <div class="card my-4">
-    <div class="card-header">
-      <h3 class="mb-0">Add a Comment</h3>
+  <!-- Add Comment -->
+  <div class="bg-white shadow-md rounded-lg mb-6">
+    <div class="px-4 py-3 border-b">
+      <h3 class="text-lg font-semibold">Add a Comment</h3>
     </div>
-    <div class="card-body">
+    <div class="px-4 py-3">
       <textarea
         [(ngModel)]="newComment"
         placeholder="Write your comment here..."
-        class="form-control mb-2"
+        class="w-full border border-gray-300 rounded-lg p-2 mb-4 focus:outline-none focus:border-gray-500"
       ></textarea>
-      <button (click)="addComment()" class="btn btn-outline-secondary">
+      <button
+        (click)="addComment()"
+        class="bg-gray-800 text-white rounded-lg px-4 py-2 hover:bg-gray-700 transition"
+      >
         Add Comment
       </button>
     </div>
   </div>
 
-  <div *ngFor="let comment of comments" class="card mb-3">
-    <div class="card-header">
-      <strong>{{ userName }}</strong>
-      <p class="text-muted">{{ comment.created_at | date : "short" }}</p>
+  <!-- Comment List -->
+  <div
+    *ngFor="let comment of comments"
+    class="bg-white shadow-md rounded-lg mb-4"
+  >
+    <div class="px-4 py-3 border-b flex items-center justify-between">
+      <div>
+        <strong class="text-gray-900">{{ userName }}</strong>
+        <p class="text-sm text-gray-500">
+          {{ comment.created_at | date : "short" }}
+        </p>
+      </div>
     </div>
-    <div class="card-body">
-      <div class="d-flex align-items-center">
-        <!-- Exibição do comentário quando não está em modo de edição -->
-        <div *ngIf="editCommentId !== comment.id" class="flex-grow-1">
-          <p class="mb-0">{{ comment.content }}</p>
+    <div class="px-4 py-3">
+      <div class="flex items-center">
+        <!-- Comment display -->
+        <div *ngIf="editCommentId !== comment.id" class="flex-grow">
+          <p class="text-gray-700">{{ comment.content }}</p>
         </div>
 
-        <!-- Campo de edição do comentário -->
-        <div *ngIf="editCommentId === comment.id" class="flex-grow-1">
+        <!-- Comment edit -->
+        <div *ngIf="editCommentId === comment.id" class="flex-grow">
           <input
             [(ngModel)]="editCommentContent"
-            class="form-control"
+            class="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:border-gray-500"
             placeholder="Edit your comment..."
             aria-label="Edit comment"
           />
         </div>
       </div>
 
-      <!-- Botões de ações: Editar, Salvar, Cancelar e Deletar -->
-      <div *ngIf="isLoggedIn" class="d-flex justify-content-end mt-3">
-        <!-- Botão de Editar -->
+      <!-- Action buttons -->
+      <div *ngIf="isLoggedIn" class="flex justify-end mt-3 space-x-2">
         <button
           *ngIf="editCommentId !== comment.id"
           (click)="editComment(comment)"
-          class="btn btn-outline-dark btn-sm me-2"
+          class="text-gray-600 hover:text-gray-900 transition"
         >
           Edit
         </button>
-
-        <!-- Botão de Salvar -->
         <button
           *ngIf="editCommentId === comment.id"
           (click)="saveComment()"
-          class="btn btn-outline-success btn-sm me-2"
+          class="text-green-600 hover:text-green-900 transition"
         >
           Save
         </button>
-
-        <!-- Botão de Cancelar -->
         <button
           *ngIf="editCommentId === comment.id"
           (click)="cancelEdit()"
-          class="btn btn-outline-danger btn-sm me-2"
+          class="text-red-600 hover:text-red-900 transition"
         >
           Cancel
         </button>
-
-        <!-- Botão de Deletar -->
         <button
           *ngIf="comment.id !== undefined"
           (click)="deleteComment(comment.id)"
-          class="btn btn-outline-danger btn-sm"
+          class="text-red-600 hover:text-red-900 transition"
         >
           Delete
         </button>
@@ -121,81 +126,84 @@
 </div>
 
 <!-- Categories Section -->
-<div *ngIf="isLoggedIn" class="container my-5">
-  <h1 class="mb-4"><strong>Categories:</strong></h1>
+<div *ngIf="isLoggedIn" class="container mx-auto my-10 p-4">
+  <h1 class="text-2xl font-bold mb-6">Categories:</h1>
 
-  <!-- Adicionar Categoria -->
-  <div class="card my-4">
-    <div class="card-header">
-      <h3 class="mb-0">Add a Category</h3>
+  <!-- Add Category -->
+  <div class="bg-white shadow-md rounded-lg mb-6">
+    <div class="px-4 py-3 border-b">
+      <h3 class="text-lg font-semibold">Add a Category</h3>
     </div>
-    <div class="card-body">
+    <div class="px-4 py-3">
       <input
         [(ngModel)]="newCategoryName"
         placeholder="Enter category name"
-        class="form-control mb-2"
+        class="w-full border border-gray-300 rounded-lg p-2 mb-4 focus:outline-none focus:border-gray-500"
       />
-      <button (click)="addCategory()" class="btn btn-outline-secondary">
+      <button
+        (click)="addCategory()"
+        class="bg-gray-800 text-white rounded-lg px-4 py-2 hover:bg-gray-700 transition"
+      >
         Add Category
       </button>
     </div>
   </div>
 
-  <div *ngFor="let category of allCategories" class="card mb-3">
-    <div class="card-header">
-      <strong>{{ category.name }}</strong>
+  <!-- Category List -->
+  <div
+    *ngFor="let category of allCategories"
+    class="bg-white shadow-md rounded-lg mb-4"
+  >
+    <div class="px-4 py-3 border-b flex items-center justify-between">
+      <div>
+        <strong class="text-gray-900">{{ category.name }}</strong>
+      </div>
     </div>
-    <div class="card-body">
-      <div class="d-flex align-items-center">
-        <!-- Campo de edição da categoria -->
-        <div *ngIf="editCategoryId !== category.id" class="flex-grow-1">
-          <p class="mb-0">{{ category.name }}</p>
+    <div class="px-4 py-3">
+      <div class="flex items-center">
+        <!-- Category display -->
+        <div *ngIf="editCategoryId !== category.id" class="flex-grow">
+          <p class="text-gray-700">{{ category.name }}</p>
         </div>
 
-        <div *ngIf="editCategoryId === category.id" class="flex-grow-1">
+        <!-- Category edit -->
+        <div *ngIf="editCategoryId === category.id" class="flex-grow">
           <input
             [(ngModel)]="editCategoryName"
-            class="form-control"
+            class="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:border-gray-500"
             placeholder="Edit category name..."
             aria-label="Edit category"
           />
         </div>
       </div>
 
-      <!-- Botões de ações: Editar, Salvar, Cancelar e Deletar -->
-      <div *ngIf="isLoggedIn" class="d-flex justify-content-end mt-3">
-        <!-- Botão de Editar -->
+      <!-- Action buttons -->
+      <div *ngIf="isLoggedIn" class="flex justify-end mt-3 space-x-2">
         <button
           *ngIf="editCategoryId !== category.id"
           (click)="editCategory(category)"
-          class="btn btn-outline-dark btn-sm me-2"
+          class="text-gray-600 hover:text-gray-900 transition"
         >
           Edit
         </button>
-
-        <!-- Botão de Salvar -->
         <button
           *ngIf="editCategoryId === category.id"
           (click)="saveCategory()"
-          class="btn btn-outline-success btn-sm me-2"
+          class="text-green-600 hover:text-green-900 transition"
         >
           Save
         </button>
-
-        <!-- Botão de Cancelar -->
         <button
           *ngIf="editCategoryId === category.id"
           (click)="cancelEditCategory()"
-          class="btn btn-outline-danger btn-sm me-2"
+          class="text-red-600 hover:text-red-900 transition"
         >
           Cancel
         </button>
-
-        <!-- Botão de Deletar -->
         <button
           *ngIf="category.id !== undefined"
           (click)="deleteCategory(category.id)"
-          class="btn btn-outline-danger btn-sm"
+          class="text-red-600 hover:text-red-900 transition"
         >
           Delete
         </button>
@@ -203,3 +211,4 @@
     </div>
   </div>
 </div>
+
