@@ -5,8 +5,7 @@ import { Subscription } from 'rxjs';
 import { WebSocketService } from '../../services/websocket.service';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectorRef } from '@angular/core';
-import { UserService } from '../../services/user.service';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { ImageService } from '../../services/image.service';
 
 @Component({
   selector: 'app-navbar',
@@ -17,12 +16,12 @@ export class NavbarComponent implements OnInit, OnDestroy {
   userName: string | null = null;
   isMenuOpen = false;
   isDropdownOpen = false;
-  profileImageUrl: SafeUrl | string | null = null;
-  defaultProfilePicture: string = 'assets/img/default-profile.png';
   notifications: any[] = [];
   unreadNotificationsCount: number = 0;
   isNotificationsOpen: boolean = false;
   userId: number | null = null; // Inicialize com null ou um valor padrão
+  profilePicture: string | null = null;
+  defaultProfilePicture: string = 'assets/img/default-profile.png';
 
   private notificationsSubscription: Subscription | undefined; // Adicionando subscription para notificações
   private subscription: Subscription = new Subscription();
@@ -33,18 +32,18 @@ export class NavbarComponent implements OnInit, OnDestroy {
     private webSocketService: WebSocketService,
     private http: HttpClient,
     private changeDetectorRef: ChangeDetectorRef,
-    private userService: UserService,
-    private sanitizer: DomSanitizer
+    private imageService: ImageService,
+    private cd: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    // Inscreva-se para mudanças na imagem de perfil
-    this.subscription.add(
-      this.userService.profilePicture$.subscribe(url => {
-        this.profileImageUrl = this.getSanitizedImageUrl(url);
-        console.log('Profile image URL updated in Navbar:', this.profileImageUrl);
-      })
-    );
+    console.log('NavbarComponent initialized.');
+    this.imageService.profilePic$.subscribe((pic) => {
+      console.log('Profile picture updated in NavBarComponent:', pic);
+      this.profilePicture = pic || this.defaultProfilePicture;
+      // Força o Angular a detectar mudanças na imagem
+      this.cd.detectChanges();
+    });
 
     this.notificationsSubscription =
       this.webSocketService.notifications$.subscribe((notifications) => {
@@ -52,6 +51,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
         this.notifications = notifications;
         this.unreadNotificationsCount = this.notifications.length;
         this.changeDetectorRef.detectChanges(); // Força a detecção de mudanças na interface
+        console.log('Número de notificações não lidas:', this.unreadNotificationsCount);
 
         console.log(
           'Número de notificações não lidas:',
@@ -59,37 +59,17 @@ export class NavbarComponent implements OnInit, OnDestroy {
         );
       });
 
-    this.loadUserInfo();
     document.addEventListener('click', this.closeDropdowns.bind(this));
   }
 
-  getSanitizedImageUrl(url: string | null): SafeUrl {
-    return url ? this.sanitizer.bypassSecurityTrustUrl(url) : this.defaultProfilePicture;
-  }
-
-  private loadUserInfo(): void {
-    const storedProfilePicture = localStorage.getItem('profilePicture');
-    this.profileImageUrl = this.getSanitizedImageUrl(storedProfilePicture);
-    console.log('Loaded profile image URL in Navbar:', this.profileImageUrl);
+  ngAfterViewInit(): void {
+    // Força a detecção de mudanças após a inicialização da view
+    console.log('ngAfterViewInit called, forcing change detection.');
+    this.cd.detectChanges();
   }
 
   isLoggedIn(): boolean {
     return this.authService.isLoggedIn();
-  }
-
-  login(email: string, password: string) {
-    console.log('Attempting login with email:', email); // Log do email usado para login
-    this.authService.login(email, password).subscribe({
-      next: (response) => {
-        // Isso deve incluir a resposta do backend
-        console.log('Login successful, response:', response); // Log da resposta do login
-        this.loadUserInfo(); // Carregar informações do usuário após o login
-        this.router.navigate(['/blog']);
-      },
-      error: (error) => {
-        console.error('Login failed:', error); // Log de erro no login
-      },
-    });
   }
 
   goToLoginWithMessage() {
@@ -100,6 +80,24 @@ export class NavbarComponent implements OnInit, OnDestroy {
         queryParams: { message: 'Please log in to proceed' },
       });
     }
+  }
+
+  fetchNotifications() {
+    if (!this.userId) return; // Verifica se userId está disponível
+
+    this.http
+      .get(`http://localhost:3000/api/comments/${this.userId}/notifications`)
+      .subscribe(
+        (data: any) => {
+          this.notifications = data;
+          this.unreadNotificationsCount = this.notifications.filter(
+            (n) => !n.read
+          ).length; // Atualiza a contagem de notificações não lidas
+        },
+        (error: HttpErrorResponse) => {
+          console.error('Erro ao buscar notificações:', error);
+        }
+      );
   }
 
   toggleNotifications() {
@@ -150,6 +148,16 @@ export class NavbarComponent implements OnInit, OnDestroy {
     );
   }
 
+  hasNotifications(): boolean {
+    return this.unreadNotificationsCount > 0;
+  }
+
+  markNotificationAsRead(index: number): void {
+    this.notifications.splice(index, 1);
+    this.unreadNotificationsCount = this.notifications.length;
+    // Aqui, você pode enviar uma atualização para o backend, se necessário, para marcar a notificação como lida.
+  }
+
   closeDropdowns(event: MouseEvent) {
     const target = event.target as HTMLElement;
     const notificationButton = document.querySelector('.fa-bell');
@@ -167,35 +175,13 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
   }
 
-  fetchNotifications() {
-    if (!this.userId) return; // Verifica se userId está disponível
-
-    this.http
-      .get(`http://localhost:3000/api/comments/${this.userId}/notifications`)
-      .subscribe(
-        (data: any) => {
-          this.notifications = data;
-          this.unreadNotificationsCount = this.notifications.filter(
-            (n) => !n.read
-          ).length; // Atualiza a contagem de notificações não lidas
-        },
-        (error: HttpErrorResponse) => {
-          console.error('Erro ao buscar notificações:', error);
-        }
-      );
-  }
-
-  hasNotifications(): boolean {
-    return this.unreadNotificationsCount > 0;
-  }
-
-  markNotificationAsRead(index: number): void {
-    this.notifications.splice(index, 1);
-    this.unreadNotificationsCount = this.notifications.length;
-    // Aqui, você pode enviar uma atualização para o backend, se necessário, para marcar a notificação como lida.
+  onImageError() {
+    console.log('Failed to load profile picture, using default.');
+    this.profilePicture = this.defaultProfilePicture;
   }
 
   logout(): void {
+    localStorage.removeItem('profilePicture');
     this.notifications = [];
     this.unreadNotificationsCount = 0;
 

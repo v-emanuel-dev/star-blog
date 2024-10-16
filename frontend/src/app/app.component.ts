@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { ImageService } from './services/image.service';
 
 @Component({
   selector: 'app-root',
@@ -9,7 +10,10 @@ import { ActivatedRoute } from '@angular/router';
 export class AppComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
-  ) {}
+    private imageService: ImageService
+  ) {
+    this.imageService.initialize();
+  }
 
   ngOnInit() {
     // Captura os parâmetros da URL ao iniciar o componente

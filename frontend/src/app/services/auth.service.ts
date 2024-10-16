@@ -1,7 +1,9 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { ImageService } from './image.service';
+import { WebSocketService } from './websocket.service';
 
 @Injectable({
   providedIn: 'root',
@@ -27,22 +29,42 @@ export class AuthService {
   private profileImageUrlSubject = new BehaviorSubject<string | null>(null);
   profileImageUrl$ = this.profileImageUrlSubject.asObservable();
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+    private imageService: ImageService,
+    private websocketService: WebSocketService
+  ) {}
 
   login(email: string, password: string) {
     return this.http
       .post<any>(`${this.baseUrl}/login`, { email, password })
       .pipe(
         tap((response) => {
-          console.log('Login Response:', response); // Log da resposta do login
+          // Armazena informações no localStorage
           localStorage.setItem('accessToken', response.accessToken);
           localStorage.setItem('userName', response.username);
           localStorage.setItem('email', response.email); // Armazenando o email
           localStorage.setItem('userId', response.userId); // Armazenando o userId
-          localStorage.setItem('profilePicture', response.profilePicture); // Armazena a imagem de perfil
 
-          // Log do valor armazenado
-          console.log('Stored Profile Picture:', response.profilePicture); // Verifique se não é undefined
+          // Verificando se a imagem de perfil é local ou do Google e armazenando corretamente.
+          let profilePicUrl = response.profilePicture; // Use 'response.profilePicture' corretamente.
+
+          // Troca as barras invertidas por barras normais
+          profilePicUrl = profilePicUrl.replace(/\\/g, '/');
+
+          // Adiciona o prefixo para usuários locais (caso o path não contenha 'http')
+          if (profilePicUrl && !profilePicUrl.startsWith('http')) {
+            profilePicUrl = `http://localhost:3000/${profilePicUrl}`;
+          }
+
+          // Armazena a imagem de perfil no localStorage com a URL completa.
+          localStorage.setItem('profilePicture', profilePicUrl);
+          console.log('Stored Profile Picture:', profilePicUrl);
+
+          // Atualiza o BehaviorSubject para notificar os componentes que a imagem foi atualizada.
+          this.profileImageUrlSubject.next(profilePicUrl);
+          this.imageService.updateProfilePic(profilePicUrl); // Notifica o UserService
 
           // Atualiza o subject com o nome do usuário e ID do usuário
           this.userNameSubject.next(response.username);
@@ -50,9 +72,14 @@ export class AuthService {
 
           // Notifica que o usuário está logado
           this.userLoggedInSubject.next(true);
+
+          // Inicializa WebSocket para buscar notificações
+          this.websocketService.fetchNotifications(response.userId); // Adiciona esta linha
+          console.log('Fetching notifications for User ID:', response.userId);
         })
       );
   }
+
 
   updateProfileImageUrl(url: string): void {
     localStorage.setItem('profilePicture', url);
@@ -103,19 +130,15 @@ export class AuthService {
   }
 
   logout() {
-    // Removendo os dados do localStorage
-    this.profileImageUrlSubject.next(null); // Limpa a URL da imagem ao fazer logout.
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('token');
-    localStorage.removeItem('username');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('email');
-    localStorage.removeItem('profilePicture');
+    // Limpa todo o localStorage
+    localStorage.clear();
 
     this.userLoggedInSubject.next(false);
     this.userNameSubject.next(undefined);
     this.currentUserIdSubject.next(null); // Limpando o ID do usuário
+
+    this.profileImageUrlSubject.next(null);
+    this.imageService.clearProfilePic(); // Notificar o UserService sobre a remoção da imagem
 
     // Redirecionando para a página de login após o logout
     this.router.navigate(['/login']);

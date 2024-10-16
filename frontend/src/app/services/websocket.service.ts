@@ -19,31 +19,42 @@ export class WebSocketService {
   private socket: Socket;
   private notificationsSubject = new BehaviorSubject<Notification[]>([]);
   notifications$ = this.notificationsSubject.asObservable();
-  private userId: string | null = localStorage.getItem('userId'); // Obtém o ID do usuário do localStorage
+  private userId: string | null = localStorage.getItem('userId');
 
   constructor(private http: HttpClient) {
-    this.socket = io('http://localhost:3000'); // Considere usar HTTPS em produção
+    this.socket = io('http://localhost:3000');
 
     this.socket.on('connect', () => {
       console.log('Conectado ao servidor Socket.IO', this.socket.id);
     });
 
     this.socket.on('new-comment', (data: Notification) => {
-      console.log('Nova notificação recebida:', data); // Log dos dados da notificação
+      console.log('Nova notificação recebida:', data);
       this.addNotification(data);
     });
 
-    // Recuperar notificações do banco de dados ao iniciar o serviço
+    // Inicializa notificações
+    this.initializeNotifications();
+    this.watchForUserIdAndFetchNotifications(); // Monitora o userId
+  }
+
+  initializeNotifications() {
+    console.log('Inicializando notificações...');
     if (this.userId) {
+      console.log('User ID encontrado durante a inicialização:', this.userId);
       this.fetchNotifications(this.userId);
+    } else {
+      console.log('User ID não encontrado durante a inicialização. Aguardando...');
     }
   }
 
-  private fetchNotifications(userId: string) {
+   fetchNotifications(userId: string) {
+    console.log('Buscando notificações para o User ID:', userId);
     this.http
       .get<Notification[]>(`http://localhost:3000/api/comments/${userId}/notifications`)
       .subscribe(
         (notifications) => {
+          console.log('Notificações recebidas:', notifications);
           this.notificationsSubject.next(notifications);
         },
         (error) => {
@@ -58,29 +69,23 @@ export class WebSocketService {
 
     // Atualizar o BehaviorSubject
     this.notificationsSubject.next(updatedNotifications);
-
-    // Salvar notificação no banco de dados
-    this.saveNotificationToDatabase(notification);
-
-    console.log('Notificação adicionada:', notification); // Log para confirmar que a notificação foi adicionada
+    console.log('Notificação adicionada:', notification); // Log da notificação adicionada
   }
 
-  private saveNotificationToDatabase(notification: Notification) {
-    if (this.userId) {
-      this.http
-        .post<Notification>(
-          `http://localhost:3000/api/comments/${this.userId}/notifications`,
-          { message: notification.message, postId: notification.postId }
-        )
-        .subscribe(
-          (response) => {
-            console.log('Notificação salva no banco de dados:', response);
-          },
-          (error) => {
-            console.error('Erro ao salvar notificação no banco de dados:', error);
-          }
-        );
-    }
+  private watchForUserIdAndFetchNotifications() {
+    console.log('Iniciando monitoramento para o User ID...');
+    const intervalId = setInterval(() => {
+      this.userId = localStorage.getItem('userId'); // Atualiza o userId
+
+      if (this.userId) {
+        console.log('User ID encontrado:', this.userId);
+        this.fetchNotifications(this.userId); // Busca as notificações
+        clearInterval(intervalId); // Limpa o intervalo uma vez que o userId foi encontrado
+        console.log('Monitoramento para User ID encerrado.');
+      } else {
+        console.log('Aguardando userId...');
+      }
+    }, 1000); // Verifica a cada 1 segundo
   }
 
   // Método para desconectar o socket (opcional)

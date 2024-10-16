@@ -1,10 +1,11 @@
 import { UserService } from './../../services/user.service';
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { NgForm } from '@angular/forms';
 import { HttpHeaders } from '@angular/common/http';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { ImageService } from '../../services/image.service';
 
 @Component({
   selector: 'app-user-profile',
@@ -20,78 +21,37 @@ export class UserProfileComponent implements OnInit {
   success: boolean | undefined;
   selectedImage: File | null = null;
   selectedImagePreview: SafeUrl | null = null;
-  profilePicture: SafeUrl | null = null;
-  defaultProfilePicture: string = 'assets/img/default-profile.png'; // Caminho da imagem padrão
-  profileImageUrl: SafeUrl | null = null; // Adiciona a propriedade profileImageUrl
+  profilePicture: string | null = null;
+  defaultPicture: string = 'URL_DA_IMAGEM_PADRAO'; // Substitua pela URL da imagem padrão
 
   constructor(
     private authService: AuthService,
     private router: Router,
     private userService: UserService,
-    private sanitizer: DomSanitizer
+    private imageService: ImageService,
+    private cd: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.profilePicture = localStorage.getItem('profilePicture');
-    const storedImageUrl = localStorage.getItem('profilePicture'); // Substitua pelo nome correto da chave
-
-    if (storedImageUrl) {
-      this.profileImageUrl = this.sanitizer.bypassSecurityTrustUrl(storedImageUrl);
-      console.log('Loaded profile image URL:', this.profileImageUrl);
-    } else {
-      this.profileImageUrl = null;
-    }
-
-    // Carrega a imagem de perfil inicialmente do localStorage
-    this.loadProfilePicture();
     this.loadUserData();
+    console.log('UserProfile initialized.');
+    this.imageService.profilePic$.subscribe((pic) => {
+      console.log('Profile picture updated in MenuComponent:', pic);
+      this.profilePicture = pic || this.defaultPicture;
+      // Força o Angular a detectar mudanças na imagem
+      this.cd.detectChanges();
+    });
   }
 
-  loadProfilePicture(): void {
-    const storedProfilePicture = this.getProfilePicture();
-
-    // Verifica se a imagem de perfil armazenada existe
-    this.profileImageUrl = storedProfilePicture
-      ? this.getProfilePictureUrl(storedProfilePicture)
-      : this.sanitizeUrl(this.defaultProfilePicture);
-
-    console.log('Loaded profile picture:', this.profileImageUrl);
+  ngAfterViewInit(): void {
+    // Força a detecção de mudanças após a inicialização da view
+    console.log('ngAfterViewInit called, forcing change detection.');
+    this.cd.detectChanges();
   }
 
-  getProfilePicture(): string | null {
-    const profilePicture = localStorage.getItem('profilePicture');
-    console.log('Getting profile picture from localStorage:', profilePicture);
-
-    if (profilePicture) {
-      // Remove qualquer prefixo indesejado de 'http://localhost:3000/'
-      const sanitizedProfilePicture = profilePicture.replace(
-        'http://localhost:3000/',
-        ''
-      ).replace(/\\/g, '/'); // Troca barras invertidas por barras normais
-
-      return sanitizedProfilePicture; // Retorna apenas o caminho do arquivo
-    }
-
-    return null;
-  }
-
-  sanitizeUrl(url: string): SafeUrl {
-    // Substitui barras invertidas por barras normais
-    const normalizedUrl = url.replace(/\\/g, '/');
-    return this.sanitizer.bypassSecurityTrustUrl(normalizedUrl);
-  }
-
-  getProfilePictureUrl(profilePicture: string): SafeUrl {
-    if (profilePicture) {
-      // Verifica se a imagem é uma URL completa
-      if (profilePicture.startsWith('http://') || profilePicture.startsWith('https://')) {
-        return this.sanitizeUrl(profilePicture); // Retorna a URL externa como está
-      } else {
-        // Retorna o caminho local com a formatação correta
-        return this.sanitizeUrl(`http://localhost:3000/uploads/${profilePicture}`);
-      }
-    }
-    return this.sanitizeUrl(this.defaultProfilePicture); // Retorna a imagem padrão se não houver
+  onImageError() {
+    console.log('Failed to load profile picture, using default.');
+    this.profilePicture = this.defaultPicture;
   }
 
   loadUserData(): void {
@@ -105,11 +65,13 @@ export class UserProfileComponent implements OnInit {
           this.email = user.email || '';
           console.log('User data loaded:', user);
 
-          // Usa o método para obter a URL da imagem de perfil
-          this.profilePicture = this.getProfilePictureUrl(user.profilePicture || '');
-          localStorage.setItem('profilePicture', this.profilePicture.toString()); // Armazena a imagem sanitizada
+          // Usa o método do ImageService para obter a URL da imagem de perfil
+          const profilePictureUrl = this.imageService.getFullProfilePicUrl(user.profilePicture || '');
 
-          console.log('Profile Picture updated and saved to localStorage:', this.profilePicture);
+          // Atualiza a imagem de perfil no ImageService
+          this.imageService.updateProfilePic(profilePictureUrl);
+
+          console.log('Profile Picture updated in ImageService:', profilePictureUrl);
         },
         (error) => {
           console.error('Error loading user data', error);
@@ -127,9 +89,8 @@ export class UserProfileComponent implements OnInit {
 
       const reader = new FileReader();
       reader.onload = () => {
-        this.selectedImagePreview = this.sanitizer.bypassSecurityTrustUrl(
-          reader.result as string
-        );
+        this.selectedImagePreview =
+          reader.result as string;
       };
       reader.readAsDataURL(file);
     }

@@ -142,9 +142,9 @@
           >
             <span class="absolute -inset-1.5"></span>
             <span class="sr-only">Open user menu</span>
-            <div *ngIf="profileImageUrl; else noImage">
+            <div *ngIf="profilePicture; else noImage">
               <img
-                [src]="profileImageUrl"
+                [src]="profilePicture"
                 alt="Profile Image"
                 class="h-8 w-8 rounded-full"
               />

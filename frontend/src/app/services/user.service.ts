@@ -14,16 +14,20 @@ export class UserService {
 
   constructor(private http: HttpClient) {
     const storedProfilePicture = localStorage.getItem('profilePicture');
-    this.profilePictureSubject.next(storedProfilePicture);
+    if (storedProfilePicture) {
+      this.profilePictureSubject.next(storedProfilePicture);
+    }
   }
 
   updateProfilePicture(picture: string | null) {
     console.log('Updating profile picture in UserService:', picture);
     localStorage.setItem('profilePicture', picture ?? '');
     this.profilePictureSubject.next(picture);
-    console.log('Profile picture stored in localStorage:', localStorage.getItem('profilePicture'));
-}
-
+    console.log(
+      'Profile picture stored in localStorage:',
+      localStorage.getItem('profilePicture')
+    );
+  }
 
   getUserById(userId: number) {
     return this.http.get<any>(`${this.apiUrl}/users/${userId}`);

@@ -5,8 +5,8 @@ import { Post } from '../../models/post.model';
 import { PostService } from '../../services/post.service';
 import { AuthService } from '../../services/auth.service';
 import { CategoryService } from '../../services/category.service';
-import { Category } from '../../models/category.model'; // Ajuste o caminho conforme necessário
 import { catchError, forkJoin, of } from 'rxjs';
+import { UserService } from '../../services/user.service';
 
 @Component({
   selector: 'app-blog-list',
@@ -32,10 +32,19 @@ export class BlogListComponent implements OnInit {
     private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute,
-    private categoryService: CategoryService // Injete o serviço de categorias
+    private categoryService: CategoryService,
+    private userService: UserService,
   ) {}
 
   ngOnInit(): void {
+    this.route.queryParams.subscribe(params => {
+      const profileImageUrl = params['profileImage'];
+
+      if (profileImageUrl) {
+        this.userService.updateProfilePicture(profileImageUrl);
+        console.log('Profile image updated after Google login:', profileImageUrl);
+      }
+    });
     this.loadPostsAndCategories();
     this.getPosts(); // Carrega os posts na inicialização
     this.isLoggedIn = this.authService.isLoggedIn();
