@@ -24,7 +24,15 @@ export class UserService {
   }
 
   updateUserAdmin(id: number, userData: any): Observable<any> {
-    return this.http.put(`${this.apiUrl}/admin/update/${id}`, userData);
+    const token = localStorage.getItem('accessToken'); // Pega o token do localStorage
+
+    // Cria os cabeçalhos incluindo o token de autorização
+    const headers = {
+      Authorization: `Bearer ${token}`
+    };
+
+    // Passa os dados do usuário e os cabeçalhos na chamada PUT
+    return this.http.put(`${this.apiUrl}/admin/update/${id}`, userData, { headers });
   }
 
   deleteUser(userId: number): Observable<any> {
