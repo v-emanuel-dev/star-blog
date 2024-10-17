@@ -5,7 +5,7 @@
   >
     <div *ngIf="post">
       <h2 class="display-4 mb-4">{{ post.title }}</h2>
-      <p class="lead">{{ post.content }}</p>
+      <p class="lead" [innerHTML]="post.content"></p>
 
       <!-- Lista de categorias -->
       <div class="categories-list mt-5 flex flex-wrap">

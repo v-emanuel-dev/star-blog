@@ -40,17 +40,13 @@
           placeholder="Enter the title of your post"
         />
       </div>
-      <div class="mb-3">
-        <label for="content" class="form-label">Content:</label>
-        <textarea
-          [(ngModel)]="content"
-          name="content"
-          required
-          class="form-control"
-          rows="5"
-          placeholder="Write your post content here..."
-        ></textarea>
-      </div>
+      <ckeditor
+        [(ngModel)]="content"
+        name="content"
+        [editor]="Editor"
+        [config]="editorConfig"
+        (ready)="onReady($event)"
+      ></ckeditor>
       <div class="mb-3">
         <label for="visibility" class="form-label">Visibility:</label>
         <select

@@ -13,5 +13,6 @@ export interface Post {
   category_name?: string; // Adicione esta linha
   categoryIds?: number[]; // Use `categoryIds` se você precisar de um array
   categories?: Category[]; // Adiciona a nova propriedade
-  role: string; // Nova propriedade para o papel
+  role?: string; // Se o campo role for opcional
+  imageUrl?: string | null; // Permitir null
 }

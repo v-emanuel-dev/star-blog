@@ -5,6 +5,9 @@ import { PostService } from '../../services/post.service';
 import { AuthService } from '../../services/auth.service';
 import { CategoryService } from '../../services/category.service';
 import { Category } from '../../models/category.model';
+import * as ClassicEditor from '@ckeditor/ckeditor5-build-classic'; // Importa a classe do editor
+import { HttpClient } from '@angular/common/http';
+import { ImageUpload } from '../../components/image-upload/image-upload.component';
 
 @Component({
   selector: 'app-blog-create',
@@ -23,13 +26,38 @@ export class BlogCreateComponent implements OnInit {
   selectedCategoryIds: number[] = []; // Inicializa como um array vazio
   currentPostId: number | null = null;
   message: string | null = null; // Permite que message seja uma string ou null
+  editorContent: string = '';
+  public isEmojiPickerVisible: boolean = false;
+
+  public Editor = ClassicEditor.default; // Use a propriedade .default aqui
+  public blogEditorContent: string = ''; // Variável renomeada para evitar conflitos
+  public editorConfig = {
+    toolbar: [
+      'heading',
+      '|',
+      'bold',
+      'italic',
+      'link',
+      'bulletedList',
+      'numberedList',
+      '|',
+      'imageUpload',
+      'blockQuote',
+      'insertTable',
+      'mediaEmbed',
+      '|',
+      'undo',
+      'redo',
+    ],
+  };
 
   constructor(
     private postService: PostService,
     private router: Router,
     private route: ActivatedRoute,
     private authService: AuthService,
-    private categoryService: CategoryService
+    private categoryService: CategoryService,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
@@ -41,13 +69,28 @@ export class BlogCreateComponent implements OnInit {
       if (this.currentPostId !== null) {
         this.loadCategories(this.currentPostId); // Passa o currentPostId como argumento
       } else {
-        console.error('currentPostId é null. Não é possível carregar categorias.');
+        console.error(
+          'currentPostId é null. Não é possível carregar categorias.'
+        );
       }
     });
 
     this.getUserId();
     this.setVisibility();
     this.handleQueryParams();
+  }
+
+  addEmoji(event: any): void {
+    const emoji = event.emoji.native; // Captura o emoji selecionado
+    this.content += emoji; // Adiciona ao conteúdo do CKEditor
+  }
+
+  public onReady(editor: any): void {
+    editor.plugins.get('FileRepository').createUploadAdapter = (
+      loader: any
+    ) => {
+      return new ImageUpload(loader, this.http);
+    };
   }
 
   private getUserId(): void {
@@ -73,29 +116,35 @@ export class BlogCreateComponent implements OnInit {
 
   // Create a new post
   createPost(): void {
-
     const userRole = 'user'; // ou qualquer valor que faça sentido para o contexto
+
+    // Log para depuração
+    console.log('Título:', this.title);
+    console.log('Conteúdo:', this.content); // Adicione esta linha para depuração
+    console.log('IDs de categoria selecionados:', this.selectedCategoryIds); // Log dos IDs de categoria
 
     if (!this.title.trim() || !this.content.trim()) {
       this.message = 'Title and content are required.';
       this.success = false;
+      console.log('Erro: Título ou conteúdo vazio.'); // Log de erro
       return;
     }
 
     if (this.selectedCategoryIds.length === 0) {
       this.message = 'At least one category is required.';
       this.success = false;
+      console.log('Erro: Nenhuma categoria selecionada.'); // Log de erro
       return;
     }
 
     const newPost: Post = {
       id: 0,
       title: this.title.trim(),
-      content: this.content.trim(),
+      content: this.content.trim(), // Use o conteúdo do CKEditor
       user_id: this.user_id,
       visibility: this.visibility,
       categoryIds: this.selectedCategoryIds,
-      role: userRole // adicione a propriedade role aqui
+      role: userRole,
     };
 
     console.log('Criando post com dados:', newPost); // Log para depuração
@@ -107,7 +156,10 @@ export class BlogCreateComponent implements OnInit {
         this.success = true;
         this.router.navigate(['/blog']);
       },
-      error: (error) => this.onPostCreationError(error),
+      error: (error) => {
+        console.log('Erro ao criar post:', error); // Log de erro
+        this.onPostCreationError(error);
+      },
     });
   }
 
@@ -166,7 +218,9 @@ export class BlogCreateComponent implements OnInit {
           if (this.currentPostId !== null) {
             this.loadCategories(this.currentPostId); // Passa o postId para recarregar as categorias
           } else {
-            console.error('currentPostId is null. Cannot load categories after deletion.');
+            console.error(
+              'currentPostId is null. Cannot load categories after deletion.'
+            );
           }
 
           this.message = 'Category deleted successfully!';
@@ -187,7 +241,9 @@ export class BlogCreateComponent implements OnInit {
 
     if (isChecked) {
       // Remove o ID se o botão for clicado novamente
-      this.selectedCategoryIds = this.selectedCategoryIds.filter(id => id !== categoryId);
+      this.selectedCategoryIds = this.selectedCategoryIds.filter(
+        (id) => id !== categoryId
+      );
     } else {
       // Adiciona o ID se o botão for clicado
       this.selectedCategoryIds.push(categoryId);
