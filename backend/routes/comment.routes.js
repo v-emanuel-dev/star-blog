@@ -1,7 +1,10 @@
 const express = require("express");
 const router = express.Router();
+const commentController = require('../controllers/comment.controller'); // Certifique-se de que o caminho esteja correto
 const db = require('../config/db'); // Importando a conexão com o banco de dados
 const { getSocket } = require('../socket'); // Importando a função para obter o Socket.io
+
+router.get('/', commentController.getAllComments);
 
 // Rota para obter comentários por postId
 router.get('/post/:postId', (req, res) => {

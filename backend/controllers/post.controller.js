@@ -235,7 +235,7 @@ exports.updatePost = (req, res) => {
   const { title, content, visibility, categoryIds } = req.body;
   const postId = req.params.id;
 
-  // Verificação para garantir que o usuário que está atualizando é o dono do post
+  // Verificação para garantir que o usuário que está atualizando é o dono do post ou um administrador
   db.query(
     "SELECT user_id FROM posts WHERE id = ?",
     [postId],
@@ -245,7 +245,10 @@ exports.updatePost = (req, res) => {
         return res.status(500).json({ error: err.message });
       }
 
-      if (results.length === 0 || results[0].user_id !== req.userId) {
+      const isOwner = results.length > 0 && results[0].user_id === req.userId;
+      const isAdmin = req.userRole === 'admin'; // Supondo que `userRole` foi definido no middleware
+
+      if (!isOwner && !isAdmin) {
         return res.status(403).json({ error: "Access denied" });
       }
 

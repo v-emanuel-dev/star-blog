@@ -9,6 +9,8 @@ router.get('/', userController.getAllUsers); // Certifique-se de que esta rota c
 // Rota para atualizar o usuário com upload de imagem
 router.put('/update/:id', verifyToken, upload.single('profilePicture'), userController.updateUser);
 
+router.put('/admin/update/:id', verifyToken, upload.single('profilePicture'), userController.updateUserAdmin);
+
 // Rota para obter um usuário pelo ID
 router.get('/users/:id', verifyToken, userController.getUserById);
 

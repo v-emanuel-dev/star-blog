@@ -11,13 +11,15 @@ export class CommentService {
 
   constructor(private http: HttpClient) {}
 
-  // Adicionar um novo comentário
-  // comment.service.ts
   addComment(comment: {
     content: string;
     postId: number;
   }): Observable<Comment> {
     return this.http.post<Comment>(this.apiUrl, comment);
+  }
+
+  getAllComments(): Observable<any[]> {
+    return this.http.get<any[]>(this.apiUrl);
   }
 
   getCommentsByPostId(postId: number): Observable<Comment[]> {
@@ -37,19 +39,16 @@ export class CommentService {
     );
   }
 
-  // Atualizar um comentário
-  updateComment(
-    commentId: number,
-    updatedComment: { content: string }
-  ): Observable<Comment> {
-    return this.http.put<Comment>(
-      `${this.apiUrl}/${commentId}`,
-      updatedComment
-    );
+  updateComment(id: number, commentData: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${id}`, commentData);
   }
 
-  // Deletar um comentário
   deleteComment(commentId: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${commentId}`);
+    const token = localStorage.getItem('accessToken');
+    return this.http.delete(`${this.apiUrl}/${commentId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
   }
 }

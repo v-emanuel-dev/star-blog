@@ -1,5 +1,17 @@
 const db = require("../config/db");
 
+exports.getAllComments = (req, res) => {
+  const query = 'SELECT * FROM comments';
+
+  db.query(query, (error, results) => {
+    if (error) {
+      console.error('Erro ao buscar todos os comentários:', error);
+      return res.status(500).json({ message: 'Erro ao buscar todos os comentários.', error });
+    }
+    res.json(results);
+  });
+};
+
 // Adicionar um novo comentário
 exports.addComment = (io) => (req, res) => {
   const { content, postId, userId } = req.body;
@@ -60,8 +72,6 @@ exports.addComment = (io) => (req, res) => {
     });
   });
 };
-
-
 
 // Obter comentários por post
 exports.getCommentsByPostId = (req, res) => {

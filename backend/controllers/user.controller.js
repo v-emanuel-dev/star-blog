@@ -56,6 +56,55 @@ exports.updateUser = (req, res) => {
     });
 };
 
+exports.updateUserAdmin = (req, res) => {
+    const { username, email, password, role } = req.body;
+    const { id } = req.params;
+    const profilePicture = req.file ? req.file.path : null;
+
+    console.log('Admin update request received');
+    console.log('User ID:', id);
+    console.log('Username:', username);
+    console.log('Email:', email);
+    console.log('Role:', role);
+    console.log('Profile Picture Provided:', profilePicture ? 'Yes' : 'No');
+
+    let updateQuery = 'UPDATE users SET username = ?, email = ?';
+    const queryParams = [username, email];
+
+    if (role) {
+        updateQuery += ', role = ?';
+        queryParams.push(role);
+    }
+
+    if (profilePicture) {
+        updateQuery += ', profilePicture = ?';
+        queryParams.push(profilePicture);
+    }
+
+    if (password) {
+        const hashedPassword = bcrypt.hashSync(password, 10);
+        updateQuery += ', password = ?';
+        queryParams.push(hashedPassword);
+    }
+
+    updateQuery += ' WHERE id = ?';
+    queryParams.push(id);
+
+    db.query(updateQuery, queryParams, (err, results) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ message: 'Database error', error: err });
+        }
+        if (results.affectedRows === 0) {
+            console.warn('No user found with ID:', id);
+            return res.status(404).json({ message: 'User not found' });
+        }
+        console.log('User information updated successfully for ID:', id);
+        res.status(200).json({ message: 'User information updated successfully' });
+    });
+};
+
+
 exports.getUserById = (req, res) => {
     const userId = req.params.id;
 

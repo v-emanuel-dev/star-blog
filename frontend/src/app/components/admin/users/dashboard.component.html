@@ -1,0 +1,101 @@
+<div class="container mx-auto p-5">
+  <h2 class="text-center m-4 display-4">Dashboard</h2>
+
+  <!-- Users Section -->
+    <h2 class="text-2xl font-semibold text-center mb-6 mt-6">Users</h2>
+    <ul class="space-y-4">
+      <li *ngFor="let user of users" class="flex flex-col md:flex-row justify-between items-center p-4 bg-gray-50 rounded-lg shadow">
+        <div *ngIf="editingUser?.id !== user.id" class="flex justify-between items-center w-full">
+          <span class="text-lg text-gray-800 truncate md:w-2/3">
+            {{ user.username }} - {{ user.email }} - {{ user.role }}
+          </span>
+          <div class="flex space-x-2">
+            <button (click)="startEditUser(user)" class="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 transition duration-200">Edit</button>
+            <button (click)="deleteUser(user.id)" class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-200">Delete</button>
+          </div>
+        </div>
+        <div *ngIf="editingUser?.id === user.id" class="flex flex-col w-full">
+          <input [(ngModel)]="editingUser.username" placeholder="Username" class="border border-gray-300 rounded-md p-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <input [(ngModel)]="editingUser.email" placeholder="Email" class="border border-gray-300 rounded-md p-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <select [(ngModel)]="editingUser.role" class="border border-gray-300 rounded-md p-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+          <div class="flex space-x-2">
+            <button (click)="saveEditUser()" class="bg-green-500 text-white py-1 px-3 rounded hover:bg-green-600 transition duration-200">Save</button>
+            <button (click)="cancelEditUser()" class="bg-gray-400 text-white py-1 px-3 rounded hover:bg-gray-500 transition duration-200">Cancel</button>
+          </div>
+        </div>
+      </li>
+    </ul>
+
+  <!-- Categories Section -->
+    <h2 class="text-2xl font-semibold text-center mb-6 mt-6">Categories</h2>
+    <ul class="space-y-4">
+      <li *ngFor="let category of categories" class="flex flex-col md:flex-row justify-between items-center p-4 bg-gray-50 rounded-lg shadow">
+        <div *ngIf="editingCategory?.id !== category.id" class="flex justify-between items-center w-full">
+          <span class="text-lg text-gray-800 truncate md:w-2/3">
+            {{ category.name }}
+          </span>
+          <div class="flex space-x-2">
+            <button (click)="startEditCategory(category)" class="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 transition duration-200">Edit</button>
+            <button (click)="deleteCategory(category.id)" class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-200">Delete</button>
+          </div>
+        </div>
+        <div *ngIf="editingCategory?.id === category.id" class="flex flex-col w-full">
+          <input [(ngModel)]="editingCategory.name" placeholder="Name" class="border border-gray-300 rounded-md p-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <div class="flex space-x-2">
+            <button (click)="saveEditCategory()" class="bg-green-500 text-white py-1 px-3 rounded hover:bg-green-600 transition duration-200">Save</button>
+            <button (click)="cancelEditCategory()" class="bg-gray-400 text-white py-1 px-3 rounded hover:bg-gray-500 transition duration-200">Cancel</button>
+          </div>
+        </div>
+      </li>
+    </ul>
+
+  <!-- Comments Section -->
+    <h2 class="text-2xl font-semibold text-center mb-6 mt-6">Comments</h2>
+    <ul class="space-y-4">
+      <li *ngFor="let comment of comments" class="flex flex-col md:flex-row justify-between items-center p-4 bg-gray-50 rounded-lg shadow">
+        <div *ngIf="editingComment?.id !== comment.id" class="flex justify-between items-center w-full">
+          <span class="text-lg text-gray-800 truncate md:w-2/3">
+            {{ comment.content }} - {{ comment.created_at | date:'short' }}
+          </span>
+          <div class="flex space-x-2">
+            <button (click)="startEditComment(comment)" class="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 transition duration-200">Edit</button>
+            <button (click)="deleteComment(comment.id)" class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-200">Delete</button>
+          </div>
+        </div>
+        <div *ngIf="editingComment?.id === comment.id" class="flex flex-col w-full">
+          <input [(ngModel)]="editingComment.content" placeholder="Content" class="border border-gray-300 rounded-md p-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <div class="flex space-x-2">
+            <button (click)="saveEditComment()" class="bg-green-500 text-white py-1 px-3 rounded hover:bg-green-600 transition duration-200">Save</button>
+            <button (click)="cancelEditComment()" class="bg-gray-400 text-white py-1 px-3 rounded hover:bg-gray-500 transition duration-200">Cancel</button>
+          </div>
+        </div>
+      </li>
+    </ul>
+
+  <!-- Posts Section -->
+    <h2 class="text-2xl font-semibold text-center mb-6 mt-6">Posts</h2>
+    <ul class="space-y-4">
+      <li *ngFor="let post of posts" class="flex flex-col md:flex-row justify-between items-center p-4 bg-gray-50 rounded-lg shadow">
+        <div *ngIf="editingPost?.id !== post.id" class="flex justify-between items-center w-full">
+          <span class="text-lg text-gray-800 truncate md:w-2/3">
+            {{ post.title }} - {{ post.created_at | date:'short' }}
+          </span>
+          <div class="flex space-x-2">
+            <button (click)="startEditPost(post)" class="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 transition duration-200">Edit</button>
+            <button (click)="deletePost(post.id)" class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-200">Delete</button>
+          </div>
+        </div>
+        <div *ngIf="editingPost?.id === post.id" class="flex flex-col w-full">
+          <input [(ngModel)]="editingPost.title" placeholder="Title" class="border border-gray-300 rounded-md p-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <input [(ngModel)]="editingPost.content" placeholder="Content" class="border border-gray-300 rounded-md p-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <div class="flex space-x-2">
+            <button (click)="saveEditPost()" class="bg-green-500 text-white py-1 px-3 rounded hover:bg-green-600 transition duration-200">Save</button>
+            <button (click)="cancelEditPost()" class="bg-gray-400 text-white py-1 px-3 rounded hover:bg-gray-500 transition duration-200">Cancel</button>
+          </div>
+        </div>
+      </li>
+    </ul>
+</div>

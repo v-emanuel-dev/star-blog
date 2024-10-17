@@ -28,7 +28,12 @@ export class CategoryService {
     return this.http.put<Category>(`${this.apiUrl}/${id}`, category);
   }
 
-  deleteCategory(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  deleteCategory(categoryId: number): Observable<any> {
+    const token = localStorage.getItem('accessToken');
+    return this.http.delete(`${this.apiUrl}/${categoryId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
   }
 }

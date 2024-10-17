@@ -8,7 +8,7 @@ import { LoginComponent } from '../app/components/login/login.component';
 import { RegisterComponent } from '../app/components/register/register.component';
 import { BlogDetailComponent } from './components/blog-detail/blog-detail.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
-import { UsersComponent } from './components/admin/users/users.component'; // Importando AdminDashboardComponent
+import { UsersComponent } from './components/admin/users/dashboard.component'; // Importando AdminDashboardComponent
 
 const routes: Routes = [
   { path: '', redirectTo: '/blog', pathMatch: 'full' },

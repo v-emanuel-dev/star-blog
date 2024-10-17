@@ -53,7 +53,6 @@ export class AuthService {
           localStorage.setItem('userName', response.username);
           localStorage.setItem('email', response.email);
           localStorage.setItem('userId', response.userId);
-          console.log('User role from response:', response.userRole); // Verifica o papel do usuário na resposta
           localStorage.setItem('userRole', response.userRole); // Armazenar o papel do usuário
           // Lógica para armazenar a URL da imagem do perfil
           let profilePicUrl = response.profilePicture;
