@@ -8,7 +8,7 @@ import { LoginComponent } from '../app/components/login/login.component';
 import { RegisterComponent } from '../app/components/register/register.component';
 import { BlogDetailComponent } from './components/blog-detail/blog-detail.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
-import { UsersComponent } from './components/admin/users/dashboard.component'; // Importando AdminDashboardComponent
+import { DashboardComponent } from './components/admin/dashboard/dashboard.component'; // Importando AdminDashboardComponent
 
 const routes: Routes = [
   { path: '', redirectTo: '/blog', pathMatch: 'full' },
@@ -19,7 +19,7 @@ const routes: Routes = [
   { path: 'blog/edit/:id', component: BlogEditComponent, canActivate: [AuthGuard] },
   { path: 'blog/post/:id', component: BlogDetailComponent },
   { path: 'user', component: UserProfileComponent, canActivate: [AuthGuard] },
-  { path: 'admin', component: UsersComponent, canActivate: [AuthGuard], data: { requiresAdmin: true } } // Rota para admin
+  { path: 'admin', component: DashboardComponent, canActivate: [AuthGuard], data: { requiresAdmin: true } } // Rota para admin
 ];
 
 @NgModule({

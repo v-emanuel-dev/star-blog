@@ -17,7 +17,7 @@ import { RegisterComponent } from './components/register/register.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { AuthService } from './services/auth.service';
 import { NotificationsComponent } from './components/notifications/notifications.component';
-import { UsersComponent } from './components/admin/users/dashboard.component';
+import { DashboardComponent } from './components/admin/dashboard/dashboard.component';
 import { AccessDeniedComponent } from './components/access-denied/access-denied.component';
 
 @NgModule({
@@ -32,7 +32,7 @@ import { AccessDeniedComponent } from './components/access-denied/access-denied.
     UserProfileComponent,
     BlogDetailComponent,
     NotificationsComponent,
-    UsersComponent,
+    DashboardComponent,
     AccessDeniedComponent,
   ],
   imports: [

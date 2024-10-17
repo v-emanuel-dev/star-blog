@@ -9,7 +9,7 @@ import { PostService } from '../../../services/post.service';
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'], // Corrigi 'styleUrl' para 'styleUrls'
 })
-export class UsersComponent implements OnInit {
+export class DashboardComponent implements OnInit {
   users: any[] = [];
   editingUser: any = null;
   categories: any[] = [];
