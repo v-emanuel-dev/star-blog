@@ -149,7 +149,6 @@ export class DashboardComponent implements OnInit {
         console.error('Error deleting user:', err);
         this.message = 'Failed to delete user.';
         this.success = false;
-
       },
       complete: () => {
         this.loading = false; // Finaliza o carregamento
@@ -437,7 +436,7 @@ export class DashboardComponent implements OnInit {
       this.loadUsers(),
       this.loadCategories(),
       this.loadComments(),
-      this.loadPosts()
+      this.loadPosts(),
     ]).subscribe({
       next: () => {
         console.log('All data loaded successfully.');
@@ -447,7 +446,7 @@ export class DashboardComponent implements OnInit {
       },
       complete: () => {
         this.loading = false; // Finaliza o carregamento quando todos os dados forem carregados
-      }
+      },
     });
   }
 }
