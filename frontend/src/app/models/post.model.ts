@@ -15,4 +15,5 @@ export interface Post {
   categories?: Category[]; // Adiciona a nova propriedade
   role?: string; // Se o campo role for opcional
   imageUrl?: string | null; // Permitir null
+  likes: number; // Mude de 0 para number
 }

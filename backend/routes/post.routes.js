@@ -11,5 +11,6 @@ router.get('/admin', authMiddleware.verifyToken, postController.getPostsAdmin);
 router.get('/:id', authMiddleware.verifyToken, postController.getPostById);
 router.put('/:id', authMiddleware.verifyToken, upload.single('profilePicture'), postController.updatePost);
 router.delete('/:id', authMiddleware.verifyToken, postController.deletePost);
+router.post('/:id/like', authMiddleware.verifyToken, postController.toggleLike);
 
 module.exports = router;

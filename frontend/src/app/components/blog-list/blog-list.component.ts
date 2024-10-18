@@ -33,16 +33,19 @@ export class BlogListComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private categoryService: CategoryService,
-    private userService: UserService,
+    private userService: UserService
   ) {}
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.subscribe((params) => {
       const profileImageUrl = params['profileImage'];
 
       if (profileImageUrl) {
         this.userService.updateProfilePicture(profileImageUrl);
-        console.log('Profile image updated after Google login:', profileImageUrl);
+        console.log(
+          'Profile image updated after Google login:',
+          profileImageUrl
+        );
       }
     });
     this.loadPostsAndCategories();
@@ -56,6 +59,22 @@ export class BlogListComponent implements OnInit {
         this.success = false;
       }
     });
+  }
+
+  toggleLike(postId: number): void {
+    this.postService.toggleLike(postId).subscribe(
+      response => {
+        console.log(response);
+        // Aqui, você deve atualizar a contagem de likes do post
+        const post = this.posts.find(p => p.id === postId);
+        if (post) {
+          post.likes = post.likes ? post.likes + 1 : 1; // Incrementa ou inicializa o número de likes
+        }
+      },
+      error => {
+        console.error('Erro ao curtir/descurtir post:', error);
+      }
+    );
   }
 
   loadPostsAndCategories(): void {
@@ -108,36 +127,39 @@ export class BlogListComponent implements OnInit {
     this.loading = true;
 
     // Inscreva-se no Observable para obter o papel do usuário
-    this.authService.getUserRole().subscribe((userRole) => {
-      const isAdmin = userRole === 'admin'; // Verifica se o papel é admin
+    this.authService.getUserRole().subscribe(
+      (userRole) => {
+        const isAdmin = userRole === 'admin'; // Verifica se o papel é admin
 
-      // Se for admin, carrega todos os posts usando getPostsAdmin
-      const postsObservable = isAdmin
-        ? this.postService.getPostsAdmin()
-        : this.postService.getPosts();
+        // Se for admin, carrega todos os posts usando getPostsAdmin
+        const postsObservable = isAdmin
+          ? this.postService.getPostsAdmin()
+          : this.postService.getPosts();
 
-      postsObservable.subscribe({
-        next: (data: Post[]) => {
-          this.posts = data;
-          this.filteredPosts = this.isLoggedIn
-            ? this.posts
-            : this.posts.filter(post => post.visibility === 'public');
-          this.updatePostsTitle();
-          this.loading = false; // Para parar o loading
-        },
-        error: (error) => {
-          console.error('Erro ao obter posts:', error);
-          this.loading = false; // Para parar o loading em caso de erro
-        }
-      });
+        postsObservable.subscribe({
+          next: (data: Post[]) => {
+            this.posts = data; // Atribui posts à variável posts
+            console.log("Data:", data);
+            this.filteredPosts = this.isLoggedIn
+              ? this.posts
+              : this.posts.filter((post) => post.visibility === 'public');
+            this.updatePostsTitle();
+            this.loading = false; // Para parar o loading
+          },
+          error: (error) => {
+            console.error('Erro ao obter posts:', error);
+            this.loading = false; // Para parar o loading em caso de erro
+          },
+        });
 
-      // Define o título para admins
-      this.postsTitle = isAdmin ? 'All Posts' : this.postsTitle;
-
-    }, (error) => {
-      console.error('Error fetching user role:', error);
-      this.loading = false; // Para parar o loading em caso de erro ao buscar o papel do usuário
-    });
+        // Define o título para admins
+        this.postsTitle = isAdmin ? 'All Posts' : this.postsTitle;
+      },
+      (error) => {
+        console.error('Error fetching user role:', error);
+        this.loading = false; // Para parar o loading em caso de erro ao buscar o papel do usuário
+      }
+    );
   }
 
 
@@ -168,14 +190,15 @@ export class BlogListComponent implements OnInit {
     );
     const hasPublicPosts = this.filteredPosts.some(
       (post) => post.visibility === 'public'
-    )
+    );
     if (hasPrivatePosts && hasPublicPosts) {
       this.postsTitle = 'Public and Private Posts';
     } else if (hasPrivatePosts) {
       this.postsTitle = 'Private Posts';
     } else {
       this.postsTitle = 'Public Posts';
-    }  }
+    }
+  }
 
   editPost(postId: number): void {
     this.router.navigate(['/blog/edit', postId]);

@@ -17,6 +17,24 @@ export class PostService {
     return localStorage.getItem('token'); // Certifique-se de recuperar o token correto
   }
 
+  toggleLike(postId: number): Observable<any> {
+    const token = localStorage.getItem('token'); // Assumindo que o token está armazenado no localStorage
+
+    return this.http.post<any>(
+      `${this.apiUrl}/${postId}/like`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}` // Inclui o token de autenticação no cabeçalho
+        }
+      }
+    );
+  }
+
+  updatePostLikes(postId: number, likes: number): Observable<void> {
+    return this.http.patch<void>(`${this.apiUrl}/${postId}`, { likes });
+  }
+
   // Método para criar um post
   createPost(post: Post): Observable<Post> {
     console.log('Post a ser criado:', post); // Adicione este log para depuração
@@ -44,6 +62,8 @@ export class PostService {
   }
 
   getPosts(): Observable<Post[]> {
+    console.log('Iniciando a busca de posts...');
+
     const token = this.getToken();
     const headers = token
       ? new HttpHeaders({ Authorization: `Bearer ${token}` })
@@ -51,17 +71,26 @@ export class PostService {
 
     return this.http.get<Post[]>(this.apiUrl, { headers }).pipe(
       map((posts) => {
-        // Processar comentários nos posts
-        posts.forEach((post) => {});
+        console.log('Posts recebidos da API:', posts);
+
+        // Processar comentários e likes nos posts
+        posts.forEach((post) => {
+          post.likes = post.likes || 0; // Garantir que likes está definido
+          console.log(`Post ID: ${post.id} - Likes: ${post.likes}`); // Log da contagem de likes
+        });
 
         // Se o usuário estiver logado, retorne todos os posts
         if (this.isLoggedIn()) {
+          console.log('Usuário está logado. Retornando todos os posts.');
+
           return posts.sort((a, b) => {
             const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
             const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
             return dateB - dateA; // Ordenação decrescente
           });
         } else {
+          console.log('Usuário não está logado. Retornando apenas posts públicos.');
+
           // Retornar apenas posts públicos e ordená-los
           return posts
             .filter((post) => post.visibility === 'public')
@@ -74,6 +103,8 @@ export class PostService {
       })
     );
   }
+
+
 
   // Método para buscar um post específico pelo ID
   getPostById(postId: number): Observable<Post> {

@@ -42,7 +42,8 @@ export class BlogEditComponent implements OnInit {
       categories: [],
       user_id: 0,
       visibility: '',
-      role: ''
+      role: '',
+      likes: 0
     };
   }
 
@@ -86,7 +87,8 @@ export class BlogEditComponent implements OnInit {
       created_at: new Date().toISOString(),
       username: '',
       categoryIds: this.selectedCategoryIds,
-      role: this.role // Adicione a propriedade role aqui
+      role: this.role,
+      likes: this.post.likes || 0, // Garantir que likes esteja presente ao atualizar
     };
 
     this.postService.updatePost(this.postId, updatedPost).subscribe(

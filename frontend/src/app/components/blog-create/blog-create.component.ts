@@ -145,6 +145,7 @@ export class BlogCreateComponent implements OnInit {
       visibility: this.visibility,
       categoryIds: this.selectedCategoryIds,
       role: userRole,
+      likes: 0, // Definir likes como 0 ao criar o post
     };
 
     console.log('Criando post com dados:', newPost); // Log para depuração
