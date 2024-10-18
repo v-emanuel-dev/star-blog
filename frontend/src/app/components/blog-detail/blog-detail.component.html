@@ -6,7 +6,6 @@
     <div *ngIf="post">
       <h2 class="display-4 mb-4">{{ post.title }}</h2>
       <p class="lead" [innerHTML]="post.content"></p>
-
       <!-- Lista de categorias -->
       <div class="categories-list mt-5 flex flex-wrap">
         <!-- Aumentei a margem superior para mt-5 -->
@@ -29,8 +28,19 @@
         </span>
       </div>
     </div>
-    <div class="d-flex justify-content-end mt-4">
-      <button routerLink="/blog" class="btn btn-primary me-2">Back</button>
+    <div class="d-flex justify-content-between mt-4">
+      <div class="d-flex align-items-center">
+        <button
+          *ngIf="post && post.id !== undefined"
+          (click)="toggleLike(post.id)"
+          class="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 transition duration-300 me-2"
+          title="Like Post"
+        >
+          <i class="fa-solid fa-thumbs-up"></i>
+          {{ post.likes !== undefined ? post.likes : 0 }}
+        </button>
+      </div>
+      <button routerLink="/blog" class="btn btn-secondary">Back</button>
     </div>
   </div>
 </div>
@@ -211,4 +221,3 @@
     </div>
   </div>
 </div>
-

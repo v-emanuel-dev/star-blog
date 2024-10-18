@@ -53,6 +53,19 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
     }
   }
 
+  toggleLike(postId: number): void {
+    this.postService.toggleLike(postId).subscribe(
+      response => {
+        console.log(response);
+        // Atualiza a contagem de likes chamando a função loadPost para garantir que os dados estejam atualizados
+        this.loadPost();
+      },
+      error => {
+        console.error('Erro ao curtir/descurtir post:', error);
+      }
+    );
+  }
+
   loadPost(): void {
     this.postService.getPostById(this.postId).subscribe(
       (post) => {

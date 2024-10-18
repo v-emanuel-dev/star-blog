@@ -168,9 +168,9 @@ exports.getPostById = (req, res) => {
     FROM posts 
     LEFT JOIN post_categories ON posts.id = post_categories.postId 
     LEFT JOIN categories ON post_categories.categoryId = categories.id 
-    LEFT JOIN likes ON likes.postId = posts.id
+    LEFT JOIN likes ON likes.post_id = posts.id  -- Use o nome correto da coluna aqui
     WHERE posts.id = ?
-    GROUP BY posts.id
+    GROUP BY posts.id, categories.name
   `;
 
   db.query(query, [postId], (err, results) => {

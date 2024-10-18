@@ -48,8 +48,9 @@ export class BlogCreateComponent implements OnInit {
       '|',
       'undo',
       'redo',
-    ],
+    ]
   };
+
 
   constructor(
     private postService: PostService,
@@ -78,11 +79,6 @@ export class BlogCreateComponent implements OnInit {
     this.getUserId();
     this.setVisibility();
     this.handleQueryParams();
-  }
-
-  addEmoji(event: any): void {
-    const emoji = event.emoji.native; // Captura o emoji selecionado
-    this.content += emoji; // Adiciona ao conteúdo do CKEditor
   }
 
   public onReady(editor: any): void {
