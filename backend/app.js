@@ -54,7 +54,6 @@ const PORT = process.env.PORT || 3000;
 
 // Suas rotas
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use('/assets', express.static(path.join(__dirname, 'src/assets')));
 
 app.use("/api/categories", categoryRoutes);
 app.use('/api/auth', authRoutes);
