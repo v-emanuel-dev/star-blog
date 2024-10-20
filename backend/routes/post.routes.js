@@ -6,7 +6,7 @@ const upload = require('../middlewares/upload.middleware'); // Importa o middlew
 
 // Rota para criar um post com upload de imagem
 router.post('/', authMiddleware.verifyToken, upload.single('profilePicture'), postController.createPost);
-router.get('/', authMiddleware, postController.getAllPosts);
+router.get('/', authMiddleware.verifyToken, postController.getAllPosts);
 router.get('/admin', authMiddleware.verifyToken, postController.getPostsAdmin); 
 router.get('/:id', authMiddleware.verifyToken, postController.getPostById);
 router.put('/:id', authMiddleware.verifyToken, upload.single('profilePicture'), postController.updatePost);

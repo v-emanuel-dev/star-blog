@@ -28,6 +28,10 @@ export class RegisterComponent implements OnInit {
     });
   }
 
+  isLoggedIn(): boolean {
+    return this.authService.isLoggedIn();
+  }
+
   // Método para lidar com o registro
   register(form: NgForm) {
     console.log('Register method called. Form validity:', form.valid);

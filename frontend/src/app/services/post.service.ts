@@ -57,7 +57,6 @@ export class PostService {
       ? new HttpHeaders({ Authorization: `Bearer ${token}` })
       : new HttpHeaders();
 
-    // Supondo que exista uma rota /posts/admin para buscar todos os posts
     return this.http.get<Post[]>(`${this.apiUrl}/admin`, { headers });
   }
 

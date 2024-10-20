@@ -5,7 +5,6 @@ import { BehaviorSubject } from 'rxjs';
   providedIn: 'root',
 })
 export class ImageService {
-  private serverUrl: string = 'http://localhost:3000'; // Substitua pela URL do seu servidor Node.js
   private profilePicSubject = new BehaviorSubject<string | null>(null);
   profilePic$ = this.profilePicSubject.asObservable();
 
@@ -51,7 +50,7 @@ export class ImageService {
     picUrl = picUrl.replace(/\\/g, '/');
     return picUrl.startsWith('http')
       ? picUrl
-      : `http://localhost:3000/${picUrl}`;
+      : `http://localhost:4200/${picUrl}`;
   }
 
   clearProfilePic(): void {
