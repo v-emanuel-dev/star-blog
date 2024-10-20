@@ -12,6 +12,9 @@ export class UserService {
     new BehaviorSubject<string | null>(null);
   public profilePicture$ = this.profilePictureSubject.asObservable();
 
+  private usersSubject = new BehaviorSubject<any[]>([]);
+  users$ = this.usersSubject.asObservable();
+
   constructor(private http: HttpClient) {
     const storedProfilePicture = localStorage.getItem('profilePicture');
     if (storedProfilePicture) {
@@ -20,26 +23,41 @@ export class UserService {
   }
 
   getUsers(): Observable<any[]> {
-    return this.http.get<any[]>(this.apiUrl);
+    return this.http.get<any[]>(this.apiUrl).pipe(
+      tap(users => this.usersSubject.next(users))
+    );
   }
 
   updateUserAdmin(id: number, userData: any): Observable<any> {
     const token = localStorage.getItem('accessToken'); // Pega o token do localStorage
-
     const headers = {
-      Authorization: `Bearer ${token}`
+      Authorization: `Bearer ${token}`,
     };
 
-    return this.http.put(`${this.apiUrl}/admin/update/${id}`, userData, { headers });
+    return this.http.put(`${this.apiUrl}/admin/update/${id}`, userData, {
+      headers,
+    }).pipe(
+      tap(() => {
+        const updatedUsers = this.usersSubject.value.map((u) =>
+          u.id === id ? { ...u, ...userData } : u
+        );
+        this.usersSubject.next(updatedUsers);
+      })
+    );
   }
 
   deleteUser(userId: number): Observable<any> {
-    const token = localStorage.getItem('accessToken'); // Pega o token do localStorage
+    const token = localStorage.getItem('accessToken');
     return this.http.delete(`${this.apiUrl}/users/${userId}`, {
       headers: {
-        Authorization: `Bearer ${token}` // Envia o token nos headers
-      }
-    });
+        Authorization: `Bearer ${token}`,
+      },
+    }).pipe(
+      tap(() => {
+        const filteredUsers = this.usersSubject.value.filter((u) => u.id !== userId);
+        this.usersSubject.next(filteredUsers);
+      })
+    );
   }
 
   updateProfilePicture(picture: string | null) {

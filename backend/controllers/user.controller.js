@@ -142,40 +142,59 @@ exports.getUserById = (req, res) => {
 };
 
 // Função para deletar um usuário (apenas para admins)
+// userController.js
 exports.deleteUser = (req, res) => {
     const userId = req.params.id;
-  
+    console.log('Request to delete user received'); // Log para verificar a requisição
+    console.log('User ID to delete:', userId); // Log do ID do usuário recebido
+
+    // Verifica se o userId é um número
+    if (isNaN(userId)) {
+        console.warn('Invalid user ID format:', userId);
+        return res.status(400).json({ message: 'Invalid user ID format.' });
+    }
+
     // Desativar verificações de chave estrangeira
     db.query('SET FOREIGN_KEY_CHECKS = 0', (err) => {
-      if (err) {
-        console.error('Error disabling foreign key checks:', err);
-        return res.status(500).json({ message: 'Error disabling foreign key checks', error: err });
-      }
-  
-      // Deletar o usuário e todos os registros relacionados de uma vez
-      db.query('DELETE FROM users WHERE id = ?', [userId], (err, results) => {
         if (err) {
-          console.error('Database error:', err);
-          return res.status(500).json({ message: 'Database error', error: err });
+            console.error('Error disabling foreign key checks:', err);
+            return res.status(500).json({ message: 'Error disabling foreign key checks', error: err });
         }
-  
-        if (results.affectedRows === 0) {
-          console.warn('No user found with ID:', userId);
-          return res.status(404).json({ message: 'User not found' });
-        }
-  
-        // Reativar verificações de chave estrangeira
-        db.query('SET FOREIGN_KEY_CHECKS = 1', (err) => {
-          if (err) {
-            console.error('Error re-enabling foreign key checks:', err);
-            return res.status(500).json({ message: 'Error re-enabling foreign key checks', error: err });
-          }
-  
-          res.status(200).json({ message: 'User and related data deleted successfully' });
+        console.log('Foreign key checks disabled'); // Log de sucesso
+
+        // Deletar o usuário
+        const deleteQuery = 'DELETE FROM users WHERE id = ?';
+        db.query(deleteQuery, [userId], (err, results) => {
+            if (err) {
+                console.error('Database error during deletion:', err);
+                return res.status(500).json({ message: 'Database error', error: err });
+            }
+
+            console.log('Deletion results:', results); // Log dos resultados da deleção
+
+            if (results.affectedRows === 0) {
+                console.warn('No user found with ID:', userId);
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            console.log('User deleted successfully with ID:', userId); // Log de sucesso da deleção
+
+            // Reativar verificações de chave estrangeira
+            db.query('SET FOREIGN_KEY_CHECKS = 1', (err) => {
+                if (err) {
+                    console.error('Error re-enabling foreign key checks:', err);
+                    return res.status(500).json({ message: 'Error re-enabling foreign key checks', error: err });
+                }
+
+                console.log('Foreign key checks re-enabled'); // Log de sucesso
+                res.status(200).json({ message: 'User deleted successfully' });
+            });
         });
-      });
     });
-  };
+};
+s
+
+  
   
   
 
