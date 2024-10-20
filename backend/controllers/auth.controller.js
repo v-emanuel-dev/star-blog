@@ -4,7 +4,7 @@ const db = require('../config/db');
 
 // Registro de usuário
 exports.register = (req, res) => {
-  const { email, password, username } = req.body; // Captura o username
+  const { email, password, username, role = 'user' } = req.body; // Captura o role com valor padrão 'user'
 
   // Verifica se o usuário já existe
   db.query('SELECT * FROM users WHERE email = ?', [email], (err, results) => {
@@ -18,7 +18,7 @@ exports.register = (req, res) => {
 
     // Cria um novo usuário
     const hashedPassword = bcrypt.hashSync(password, 10);
-    db.query('INSERT INTO users (email, password, username) VALUES (?, ?, ?)', [email, hashedPassword, username], (err, results) => {
+    db.query('INSERT INTO users (email, password, username, role) VALUES (?, ?, ?, ?)', [email, hashedPassword, username, role], (err, results) => {
       if (err) {
         return res.status(500).json({ message: 'Error creating user', error: err });
       }

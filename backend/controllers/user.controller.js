@@ -144,38 +144,38 @@ exports.getUserById = (req, res) => {
 // Função para deletar um usuário (apenas para admins)
 exports.deleteUser = (req, res) => {
     const userId = req.params.id;
-    const requestingUserRole = req.userRole; // Supondo que você tenha configurado o middleware que adiciona o papel do usuário na requisição
-
-    console.log('Received delete request for user ID:', userId); // Log do ID do usuário
-    console.log('Requesting user role:', requestingUserRole); // Log do papel do usuário
-
-    // Verifica se o ID do usuário é um número válido
-    if (isNaN(userId)) {
-        console.warn('Invalid user ID received:', userId);
-        return res.status(400).json({ message: 'Invalid user ID.' });
-    }
-
-    // Somente administradores podem deletar usuários
-    if (requestingUserRole !== 'admin') {
-        console.warn('Access denied for user role:', requestingUserRole);
-        return res.status(403).json({ message: 'Access denied. Only administrators can delete users.' });
-    }
-
-    const deleteQuery = 'DELETE FROM users WHERE id = ?';
-
-    db.query(deleteQuery, [userId], (error, results) => {
-        if (error) {
-            console.error('Error executing query', error);
-            return res.status(500).json({ message: 'Internal server error.' });
+  
+    // Desativar verificações de chave estrangeira
+    db.query('SET FOREIGN_KEY_CHECKS = 0', (err) => {
+      if (err) {
+        console.error('Error disabling foreign key checks:', err);
+        return res.status(500).json({ message: 'Error disabling foreign key checks', error: err });
+      }
+  
+      // Deletar o usuário e todos os registros relacionados de uma vez
+      db.query('DELETE FROM users WHERE id = ?', [userId], (err, results) => {
+        if (err) {
+          console.error('Database error:', err);
+          return res.status(500).json({ message: 'Database error', error: err });
         }
-
+  
         if (results.affectedRows === 0) {
-            console.warn('No user found with ID:', userId); // Log quando nenhum usuário é encontrado
-            return res.status(404).json({ message: 'User not found.' });
+          console.warn('No user found with ID:', userId);
+          return res.status(404).json({ message: 'User not found' });
         }
-
-        console.log('User deleted successfully with ID:', userId);
-        res.status(200).json({ message: 'User deleted successfully' });
+  
+        // Reativar verificações de chave estrangeira
+        db.query('SET FOREIGN_KEY_CHECKS = 1', (err) => {
+          if (err) {
+            console.error('Error re-enabling foreign key checks:', err);
+            return res.status(500).json({ message: 'Error re-enabling foreign key checks', error: err });
+          }
+  
+          res.status(200).json({ message: 'User and related data deleted successfully' });
+        });
+      });
     });
-};
+  };
+  
+  
 

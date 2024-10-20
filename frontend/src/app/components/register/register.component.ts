@@ -59,7 +59,7 @@ export class RegisterComponent implements OnInit {
         console.log('Registration response received:', response);
         this.message = 'Registration successful! Please log in.';
         this.success = true;
-        form.reset();
+        form.reset(); // Ou limpar campos manualmente se preferir
 
         setTimeout(() => {
           this.router.navigate(['/login']);

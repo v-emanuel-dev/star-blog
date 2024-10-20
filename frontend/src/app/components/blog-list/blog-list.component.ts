@@ -48,6 +48,7 @@ export class BlogListComponent implements OnInit {
         );
       }
     });
+
     this.loadPostsAndCategories();
     this.getPosts(); // Carrega os posts na inicialização
     this.isLoggedIn = this.authService.isLoggedIn();
@@ -63,16 +64,16 @@ export class BlogListComponent implements OnInit {
 
   toggleLike(postId: number): void {
     this.postService.toggleLike(postId).subscribe(
-      response => {
+      (response) => {
         console.log(response);
         // Aqui, você deve atualizar a contagem de likes do post
-        const post = this.posts.find(p => p.id === postId);
+        const post = this.posts.find((p) => p.id === postId);
         if (post) {
           post.likes = post.likes ? post.likes + 1 : 1; // Incrementa ou inicializa o número de likes
         }
       },
-      error => {
-        console.error('Erro ao curtir/descurtir post:', error);
+      (error) => {
+        console.error('Error liking/disliking post:', error);
       }
     );
   }
@@ -90,7 +91,7 @@ export class BlogListComponent implements OnInit {
             return this.categoryService.getCategoriesByPostId(post.id).pipe(
               catchError((error) => {
                 console.error(
-                  `Erro ao carregar categorias do post ${post.id}:`,
+                  `Error loading post categories ${post.id}:`,
                   error
                 );
                 return of([]); // Retorna um array vazio em caso de erro
@@ -126,42 +127,53 @@ export class BlogListComponent implements OnInit {
   getPosts(): void {
     this.loading = true;
 
-    // Inscreva-se no Observable para obter o papel do usuário
-    this.authService.getUserRole().subscribe(
-      (userRole) => {
-        const isAdmin = userRole === 'admin'; // Verifica se o papel é admin
+    // Obter o papel do usuário, se já estiver disponível
+    const userRole = localStorage.getItem('userRole'); // Exemplo de como recuperar o papel
 
-        // Se for admin, carrega todos os posts usando getPostsAdmin
-        const postsObservable = isAdmin
-          ? this.postService.getPostsAdmin()
-          : this.postService.getPosts();
-
-        postsObservable.subscribe({
-          next: (data: Post[]) => {
-            this.posts = data; // Atribui posts à variável posts
-            console.log("Data:", data);
-            this.filteredPosts = this.isLoggedIn
-              ? this.posts
-              : this.posts.filter((post) => post.visibility === 'public');
-            this.updatePostsTitle();
-            this.loading = false; // Para parar o loading
-          },
-          error: (error) => {
-            console.error('Erro ao obter posts:', error);
-            this.loading = false; // Para parar o loading em caso de erro
-          },
-        });
-
-        // Define o título para admins
-        this.postsTitle = isAdmin ? 'All Posts' : this.postsTitle;
-      },
-      (error) => {
-        console.error('Error fetching user role:', error);
-        this.loading = false; // Para parar o loading em caso de erro ao buscar o papel do usuário
-      }
-    );
+    // Se o papel não estiver disponível, solicite-o ao AuthService
+    if (!userRole) {
+      this.authService.getUserRole().subscribe(
+        (role) => {
+          if (role) {
+            localStorage.setItem('userRole', role); // Armazena o papel do usuário
+            this.loadPosts(role); // Chama loadPosts apenas se role não for null
+          } else {
+            console.error('User role is null'); // Lida com o caso em que o papel é null
+            this.loading = false; // Para o carregamento em caso de erro
+          }
+        },
+        (error) => {
+          console.error('Error fetching user role:', error);
+          this.loading = false; // Para o carregamento em caso de erro
+        }
+      );
+    } else {
+      this.loadPosts(userRole); // Carrega posts com o papel já armazenado
+    }
   }
 
+  private loadPosts(userRole: string): void {
+    const isAdmin = userRole === 'admin';
+    const postsObservable = isAdmin
+      ? this.postService.getPostsAdmin()
+      : this.postService.getPosts();
+
+    postsObservable.subscribe({
+      next: (data: Post[]) => {
+        this.posts = data;
+        this.filteredPosts = this.isLoggedIn
+          ? this.posts
+          : this.posts.filter((post) => post.visibility === 'public');
+
+        this.updatePostsTitle(); // Atualiza o título com base na nova lógica
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error fetching posts:', error);
+        this.loading = false;
+      },
+    });
+  }
 
   filterPosts(): void {
     const searchTermLower = this.searchTerm.toLowerCase().trim();
@@ -191,12 +203,21 @@ export class BlogListComponent implements OnInit {
     const hasPublicPosts = this.filteredPosts.some(
       (post) => post.visibility === 'public'
     );
-    if (hasPrivatePosts && hasPublicPosts) {
-      this.postsTitle = 'Public and Private';
+
+    // Verifica se o usuário é admin
+    const isAdmin =
+      this.authService.isLoggedIn() &&
+      localStorage.getItem('userRole') === 'admin';
+
+    // Atualiza o título com base na visibilidade dos posts e no papel do usuário
+    if (isAdmin) {
+      this.postsTitle = 'Admin Posts'; // Para admin, sempre mostra 'All Posts'
+    } else if (hasPrivatePosts && hasPublicPosts) {
+      this.postsTitle = 'Public and Private'; // Se houver posts públicos e privados
     } else if (hasPrivatePosts) {
-      this.postsTitle = 'Private';
+      this.postsTitle = 'Private'; // Se houver apenas posts privados
     } else {
-      this.postsTitle = 'Public';
+      this.postsTitle = 'Public'; // Se houver apenas posts públicos
     }
   }
 
@@ -208,12 +229,12 @@ export class BlogListComponent implements OnInit {
     this.postService.deletePost(postId).subscribe({
       next: () => {
         this.getPosts(); // Atualiza a lista de posts após a exclusão
-        this.message = 'Post deletado com sucesso!';
+        this.message = 'Post deleted successfully!';
         this.success = true;
       },
       error: (err) => {
-        console.error('Erro ao deletar post:', err); // Exibe o erro detalhado no console
-        this.message = 'Falha ao deletar o post.';
+        console.error('Error deleting post:', err); // Exibe o erro detalhado no console
+        this.message = 'Failed to delete post.';
         this.success = false;
       },
       complete: () => {
@@ -228,7 +249,7 @@ export class BlogListComponent implements OnInit {
     const content = `Título: ${post.title}\n\nConteúdo:\n${post.content}`;
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     saveAs(blob, `${post.title}.txt`);
-    this.message = 'Texto exportado com sucesso!';
+    this.message = 'Text exported successfully!';
     this.success = true;
     setTimeout(() => {
       this.message = '';
@@ -258,13 +279,13 @@ export class BlogListComponent implements OnInit {
       this.postService.deletePost(postId).subscribe({
         next: () => {
           this.getPosts(); // Atualiza a lista de posts após a exclusão
-          this.message = 'Post deletado com sucesso!';
+          this.message = 'Post deleted successfully!';
           this.success = true;
           this.closeModal(); // Fecha o modal após a deleção
         },
         error: (err) => {
-          console.error('Erro ao deletar post:', err); // Exibe o erro detalhado no console
-          this.message = 'Falha ao deletar o post.';
+          console.error('Error deleting post:', err); // Exibe o erro detalhado no console
+          this.message = 'Failed to delete post.';
           this.success = false;
         },
         complete: () => {
@@ -274,7 +295,7 @@ export class BlogListComponent implements OnInit {
         },
       });
     } else {
-      console.error('ID do post não é válido:', postId);
+      console.error('Post ID is not valid:', postId);
     }
   }
 }

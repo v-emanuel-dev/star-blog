@@ -1,16 +1,17 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { catchError, map, Observable, throwError } from 'rxjs';
+import { catchError, map, Observable, of, Subject, throwError } from 'rxjs';
 import { Post } from '../models/post.model';
-import { AuthService } from './auth.service'; // Importe o AuthService
 
 @Injectable({
   providedIn: 'root',
 })
 export class PostService {
   private apiUrl = 'http://localhost:3000/api/posts';
+  private postsUpdated = new Subject<Post[]>();
+  private posts: Post[] = []; // Armazena a lista atual de posts
 
-  constructor(private http: HttpClient, private authService: AuthService) {} // Injete AuthService
+  constructor(private http: HttpClient) {}
 
   // Método para obter o token
   private getToken(): string | null {
@@ -18,15 +19,15 @@ export class PostService {
   }
 
   toggleLike(postId: number): Observable<any> {
-    const token = localStorage.getItem('token'); // Assumindo que o token está armazenado no localStorage
+    const token = this.getToken();
 
     return this.http.post<any>(
       `${this.apiUrl}/${postId}/like`,
       {},
       {
         headers: {
-          Authorization: `Bearer ${token}` // Inclui o token de autenticação no cabeçalho
-        }
+          Authorization: `Bearer ${token}`, // Inclui o token de autenticação no cabeçalho
+        },
       }
     );
   }
@@ -44,6 +45,11 @@ export class PostService {
     );
 
     return this.http.post<Post>(this.apiUrl, post, { headers }).pipe(
+      map((newPost) => {
+        this.posts.push(newPost); // Adiciona o novo post à lista de posts
+        this.postsUpdated.next(this.posts); // Emite a nova lista de posts
+        return newPost;
+      }),
       catchError((error) => {
         console.error('Erro ao criar post:', error);
         return throwError(() => new Error('Erro ao criar post.'));
@@ -61,49 +67,34 @@ export class PostService {
   }
 
   getPosts(): Observable<Post[]> {
-    console.log('Iniciando a busca de posts...');
-
     const token = this.getToken();
     const headers = token
-      ? new HttpHeaders({ Authorization: `Bearer ${token}` })
-      : new HttpHeaders();
+        ? new HttpHeaders({ Authorization: `Bearer ${token}` })
+        : new HttpHeaders();
 
     return this.http.get<Post[]>(this.apiUrl, { headers }).pipe(
-      map((posts) => {
-        console.log('Posts recebidos da API:', posts);
+        map((posts) => {
+            console.log('Posts recebidos da API:', posts);
 
-        // Processar comentários e likes nos posts
-        posts.forEach((post) => {
-          post.likes = post.likes || 0; // Garantir que likes está definido
-          console.log(`Post ID: ${post.id} - Likes: ${post.likes}`); // Log da contagem de likes
-        });
-
-        // Se o usuário estiver logado, retorne todos os posts
-        if (this.isLoggedIn()) {
-          console.log('Usuário está logado. Retornando todos os posts.');
-
-          return posts.sort((a, b) => {
-            const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
-            const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
-            return dateB - dateA; // Ordenação decrescente
-          });
-        } else {
-          console.log('Usuário não está logado. Retornando apenas posts públicos.');
-
-          // Retornar apenas posts públicos e ordená-los
-          return posts
-            .filter((post) => post.visibility === 'public')
-            .sort((a, b) => {
-              const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
-              const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
-              return dateB - dateA; // Ordenação decrescente
+            // Processa likes
+            posts.forEach((post) => {
+                post.likes = post.likes || 0;
             });
-        }
-      })
+
+            // Filtra posts públicos se não estiver logado
+            const filteredPosts = this.isLoggedIn()
+                ? posts
+                : posts.filter((post) => post.visibility === 'public');
+
+            console.log('Posts filtrados:', filteredPosts); // Log dos posts filtrados
+            return filteredPosts; // Retorna os posts filtrados
+        }),
+        catchError((error) => {
+            console.error('Erro ao buscar posts:', error);
+            return of([]); // Retorna um array vazio em caso de erro
+        })
     );
-  }
-
-
+}
 
   // Método para buscar um post específico pelo ID
   getPostById(postId: number): Observable<Post> {
@@ -127,7 +118,7 @@ export class PostService {
 
   // Método para atualizar um post
   updatePost(postId: number, post: Post): Observable<Post> {
-    const token = this.getToken(); // Certifique-se de que o token está sendo obtido corretamente
+    const token = this.getToken();
     return this.http.put<Post>(`${this.apiUrl}/${postId}`, post, {
       headers: {
         Authorization: `Bearer ${token}`, // Inclui o token no cabeçalho
@@ -138,15 +129,31 @@ export class PostService {
   // Método para deletar um post
   deletePost(postId: number): Observable<void> {
     const token = this.getToken();
-    return this.http.delete<void>(`${this.apiUrl}/${postId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`, // Inclua o token
-      },
-    });
+    return this.http
+      .delete<void>(`${this.apiUrl}/${postId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`, // Inclua o token
+        },
+      })
+      .pipe(
+        map(() => {
+          this.posts = this.posts.filter((post) => post.id !== postId); // Remove o post deletado da lista
+          this.postsUpdated.next(this.posts); // Emite a nova lista de posts
+        }),
+        catchError((error) => {
+          console.error('Erro ao deletar post:', error);
+          return throwError(() => new Error('Erro ao deletar post.'));
+        })
+      );
   }
 
   // Método auxiliar para verificar se o usuário está logado
   isLoggedIn(): boolean {
     return localStorage.getItem('token') !== null; // Verifique se há token de acesso
+  }
+
+  // Método para obter um Observable com a lista atualizada de posts
+  getPostsUpdateListener(): Observable<Post[]> {
+    return this.postsUpdated.asObservable(); // Permite que outros componentes se inscrevam para atualizações
   }
 }

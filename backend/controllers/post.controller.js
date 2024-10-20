@@ -81,6 +81,7 @@ exports.getPostsAdmin = (req, res) => {
 // Função para listar todos os posts, incluindo públicos e os do usuário logado
 exports.getAllPosts = (req, res) => {
   const userId = req.userId; // O ID do usuário vem do token JWT decodificado
+  console.log("User ID:", userId); // Log do ID do usuário
 
   // Consulta SQL para buscar posts, usuários, comentários e categorias
   const query = `
@@ -98,7 +99,7 @@ exports.getAllPosts = (req, res) => {
   LEFT JOIN categories ON post_categories.categoryId = categories.id
   WHERE posts.visibility = 'public' 
     OR (posts.visibility = 'private' AND posts.user_id = ?)
-`;
+  `;
 
   const params = [userId];
 
@@ -107,6 +108,8 @@ exports.getAllPosts = (req, res) => {
       console.error("Erro na consulta SQL:", err); // Log do erro da consulta
       return res.status(500).json({ error: err.message });
     }
+
+    console.log("Results da consulta:", results); // Log dos resultados da consulta
 
     // Organizar resultados para incluir comentários e categorias nos posts
     const postsWithDetails = results.reduce((acc, post) => {
@@ -151,9 +154,11 @@ exports.getAllPosts = (req, res) => {
       return acc;
     }, []);
 
+    console.log("Posts com detalhes:", postsWithDetails); // Log dos posts processados
     res.json(postsWithDetails); // Retorna posts com comentários e categorias
   });
 };
+
 
 // Função para obter um post específico por ID
 exports.getPostById = (req, res) => { 
@@ -346,49 +351,63 @@ exports.updatePost = (req, res) => {
 // Função para deletar um post por ID
 exports.deletePost = (req, res) => {
   const postId = req.params.id; // ID do post a ser excluído
+  console.log('Attempting to delete post with ID:', postId); // Log do ID do post
 
   db.beginTransaction((err) => {
     if (err) {
+      console.error('Transaction begin error:', err); // Log do erro
       return res.status(500).json({ error: err.message });
     }
 
-    // Primeiro, remover as referências na tabela post_categories
-    const deleteReferencesQuery =
-      "DELETE FROM post_categories WHERE postId = ?";
-    db.query(deleteReferencesQuery, [postId], (err) => {
+    // Primeiro, remover as referências na tabela likes
+    const deleteLikesQuery = "DELETE FROM likes WHERE post_id = ?";
+    db.query(deleteLikesQuery, [postId], (err) => {
       if (err) {
+        console.error('Error deleting likes:', err); // Log do erro
         return db.rollback(() => {
-          res.status(500).json({ error: "Falha ao remover referências." });
+          res.status(500).json({ error: "Falha ao remover likes." });
         });
       }
 
-      // Agora, remover o post da tabela posts
-      const deletePostQuery = "DELETE FROM posts WHERE id = ?";
-      db.query(deletePostQuery, [postId], (err, results) => {
+      // Depois, remover as referências na tabela post_categories
+      const deleteReferencesQuery = "DELETE FROM post_categories WHERE postId = ?";
+      db.query(deleteReferencesQuery, [postId], (err) => {
         if (err) {
+          console.error('Error deleting references:', err); // Log do erro
           return db.rollback(() => {
-            res.status(500).json({ error: err.message });
+            res.status(500).json({ error: "Falha ao remover referências." });
           });
         }
 
-        // Verifica se o post foi encontrado e excluído
-        if (results.affectedRows === 0) {
-          return db.rollback(() => {
-            res.status(404).json({ error: "Post não encontrado." });
-          });
-        }
-
-        // Confirmar a transação
-        db.commit((err) => {
+        // Agora, remover o post da tabela posts
+        const deletePostQuery = "DELETE FROM posts WHERE id = ?";
+        db.query(deletePostQuery, [postId], (err, results) => {
           if (err) {
+            console.error('Error deleting post:', err); // Log do erro
             return db.rollback(() => {
-              res
-                .status(500)
-                .json({ error: "Falha ao confirmar a transação." });
+              res.status(500).json({ error: err.message });
             });
           }
 
-          res.status(204).send(); // Sucesso, post excluído
+          // Verifica se o post foi encontrado e excluído
+          console.log('Delete results:', results); // Log dos resultados
+          if (results.affectedRows === 0) {
+            return db.rollback(() => {
+              res.status(404).json({ error: "Post não encontrado." });
+            });
+          }
+
+          // Confirmar a transação
+          db.commit((err) => {
+            if (err) {
+              console.error('Transaction commit error:', err); // Log do erro
+              return db.rollback(() => {
+                res.status(500).json({ error: "Falha ao confirmar a transação." });
+              });
+            }
+
+            res.status(204).send(); // Sucesso, post excluído
+          });
         });
       });
     });

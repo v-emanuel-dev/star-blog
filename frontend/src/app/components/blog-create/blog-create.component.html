@@ -59,8 +59,23 @@
           <option value="public">Public</option>
           <option value="private">Private</option>
         </select>
+        <form (submit)="addCategory()" class="mt-4">
+          <div class="mb-3">
+            <input
+              type="text"
+              [(ngModel)]="newCategoryName"
+              name="newCategoryName"
+              placeholder="New category"
+              required
+              class="form-control"
+            />
+          </div>
+          <button type="submit" class="btn btn-outline-success">
+            Add Category
+          </button>
+        </form>
       </div>
-      <h2 class="mb-3">Select Categories:</h2>
+      <h2 *ngIf="categories.length > 0" class="mb-3">Select Categories:</h2>
       <button
         *ngFor="let category of categories"
         type="button"
@@ -80,7 +95,8 @@
         <button type="submit" class="btn btn-primary">Create Post</button>
       </div>
     </form>
-    <div *ngIf="categories.length > 0" class="container">
+
+    <div *ngIf="categories.length > 0" class="container mb-5">
       <h2 class="mb-3">Categories List:</h2>
 
       <ul class="list-group">
@@ -106,21 +122,6 @@
           </div>
         </li>
       </ul>
-      <form (submit)="addCategory()" class="mt-4">
-        <div class="mb-3">
-          <input
-            type="text"
-            [(ngModel)]="newCategoryName"
-            name="newCategoryName"
-            placeholder="New category"
-            required
-            class="form-control"
-          />
-        </div>
-        <button type="submit" class="btn btn-outline-success">
-          Add Category
-        </button>
-      </form>
     </div>
   </div>
 </div>
