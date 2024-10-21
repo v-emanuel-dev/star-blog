@@ -4,7 +4,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms'; // Importa√ß√
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
-import { DashboardComponent } from '../app/components/admin/users/dashboard.component';
+import { DashboardComponent } from './components/admin/dashboard/dashboard.component';
 import { AuthGuard } from '../app/guards/auth.guard';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -19,6 +19,9 @@ import { NotificationsComponent } from './components/notifications/notifications
 import { RegisterComponent } from './components/register/register.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { AuthService } from './services/auth.service';
+import { PostsComponent } from './components/admin/posts/posts.component';
+import { CommentsComponent } from './components/admin/comments/comments.component';
+import { CategoriesComponent } from './components/admin/categories/categories.component';
 
 @NgModule({
   declarations: [
@@ -34,6 +37,9 @@ import { AuthService } from './services/auth.service';
     NotificationsComponent,
     DashboardComponent,
     AccessDeniedComponent,
+    PostsComponent,
+    CommentsComponent,
+    CategoriesComponent,
   ],
   imports: [
     BrowserModule,

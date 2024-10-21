@@ -38,12 +38,14 @@
       <input [(ngModel)]="editingUser.username" class="border p-2" />
       <label class="mt-2">Email:</label>
       <input [(ngModel)]="editingUser.email" class="border p-2" />
-      <button (click)="saveEditUser()" class="bg-blue-500 text-white px-4 py-2 mt-4">
-        Save
-      </button>
-      <button (click)="cancelEdit()" class="bg-gray-500 text-white px-4 py-2 mt-4 ml-2">
-        Cancel
-      </button>
+      <div class="flex flex-col">
+        <button (click)="saveEditUser()" class="bg-blue-500 text-white px-4 py-2 mt-4 w-full">
+          Save
+        </button>
+        <button (click)="cancelEdit()" class="bg-gray-500 text-white px-4 py-2 mt-2 w-full">
+          Cancel
+        </button>
+      </div>
     </div>
   </div>
 </div>

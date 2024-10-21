@@ -29,10 +29,15 @@ router.get(
   (req, res) => {
     const user = req.user;
 
+    // Log do objeto user
+    console.log('User after authentication:', user);
+
     // Criar o token JWT
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign(
+      { id: user.id, role: user.role }, // Use user.role aqui
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
 
     // Criar um objeto com os dados que você deseja enviar
     const responseData = {
@@ -41,13 +46,15 @@ router.get(
       email: user.email,
       username: user.username,
       profilePicture: user.profilePicture,
+      userRole: user.role, // Use user.role aqui
     };
 
     // Redirecionar para o frontend com os dados
-    const frontendUrl = `http://localhost:4200/blog?token=${token}&userId=${user.id}&email=${user.email}&username=${user.username}&profilePicture=${user.profilePicture}`;
+    const frontendUrl = `http://localhost:4200/blog?token=${token}&userId=${user.id}&email=${user.email}&username=${user.username}&profilePicture=${user.profilePicture}&userRole=${user.role}`; // Use user.role aqui
     res.redirect(frontendUrl);
   }
 );
+
 
 // Rota protegida que requer autenticação
 router.post('/protected-route', authenticateToken, (req, res) => {

@@ -23,6 +23,7 @@ export class AppComponent implements OnInit {
       const email = params['email'];
       const username = params['username'];
       const profilePicture = params['profilePicture'];
+      const userRole = params['userRole'];
       // Verifica se o token e outros dados estão presentes antes de armazenar
       if (token) {
         // Armazena os dados no localStorage
@@ -31,6 +32,7 @@ export class AppComponent implements OnInit {
         localStorage.setItem('email', email);
         localStorage.setItem('username', username);
         localStorage.setItem('profilePicture', profilePicture);
+        localStorage.setItem('userRole', userRole);
       }
     });
   }

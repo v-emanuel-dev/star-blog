@@ -162,37 +162,67 @@ exports.deleteUser = (req, res) => {
         }
         console.log('Foreign key checks disabled'); // Log de sucesso
 
-        // Deletar o usuário
-        const deleteQuery = 'DELETE FROM users WHERE id = ?';
-        db.query(deleteQuery, [userId], (err, results) => {
+        // Deletar os likes do usuário
+        const deleteLikesQuery = 'DELETE FROM likes WHERE user_id = ?';
+        db.query(deleteLikesQuery, [userId], (err, results) => {
             if (err) {
-                console.error('Database error during deletion:', err);
-                return res.status(500).json({ message: 'Database error', error: err });
+                console.error('Database error during likes deletion:', err);
+                return res.status(500).json({ message: 'Database error during likes deletion', error: err });
             }
+            console.log('Likes deleted successfully for user ID:', userId); // Log de sucesso da deleção dos likes
 
-            console.log('Deletion results:', results); // Log dos resultados da deleção
-
-            if (results.affectedRows === 0) {
-                console.warn('No user found with ID:', userId);
-                return res.status(404).json({ message: 'User not found' });
-            }
-
-            console.log('User deleted successfully with ID:', userId); // Log de sucesso da deleção
-
-            // Reativar verificações de chave estrangeira
-            db.query('SET FOREIGN_KEY_CHECKS = 1', (err) => {
+            // Deletar os comentários do usuário
+            const deleteCommentsQuery = 'DELETE FROM comments WHERE user_id = ?';
+            db.query(deleteCommentsQuery, [userId], (err, results) => {
                 if (err) {
-                    console.error('Error re-enabling foreign key checks:', err);
-                    return res.status(500).json({ message: 'Error re-enabling foreign key checks', error: err });
+                    console.error('Database error during comments deletion:', err);
+                    return res.status(500).json({ message: 'Database error during comments deletion', error: err });
                 }
+                console.log('Comments deleted successfully for user ID:', userId); // Log de sucesso da deleção dos comentários
 
-                console.log('Foreign key checks re-enabled'); // Log de sucesso
-                res.status(200).json({ message: 'User deleted successfully' });
+                // Deletar os posts do usuário
+                const deletePostsQuery = 'DELETE FROM posts WHERE user_id = ?';
+                db.query(deletePostsQuery, [userId], (err, results) => {
+                    if (err) {
+                        console.error('Database error during posts deletion:', err);
+                        return res.status(500).json({ message: 'Database error during posts deletion', error: err });
+                    }
+                    console.log('Posts deleted successfully for user ID:', userId); // Log de sucesso da deleção dos posts
+
+                    // Deletar o usuário
+                    const deleteUserQuery = 'DELETE FROM users WHERE id = ?';
+                    db.query(deleteUserQuery, [userId], (err, results) => {
+                        if (err) {
+                            console.error('Database error during deletion:', err);
+                            return res.status(500).json({ message: 'Database error', error: err });
+                        }
+
+                        console.log('Deletion results:', results); // Log dos resultados da deleção
+
+                        if (results.affectedRows === 0) {
+                            console.warn('No user found with ID:', userId);
+                            return res.status(404).json({ message: 'User not found' });
+                        }
+
+                        console.log('User deleted successfully with ID:', userId); // Log de sucesso da deleção
+
+                        // Reativar verificações de chave estrangeira
+                        db.query('SET FOREIGN_KEY_CHECKS = 1', (err) => {
+                            if (err) {
+                                console.error('Error re-enabling foreign key checks:', err);
+                                return res.status(500).json({ message: 'Error re-enabling foreign key checks', error: err });
+                            }
+
+                            console.log('Foreign key checks re-enabled'); // Log de sucesso
+                            res.status(200).json({ message: 'User and related data deleted successfully' });
+                        });
+                    });
+                });
             });
         });
     });
 };
-s
+
 
   
   

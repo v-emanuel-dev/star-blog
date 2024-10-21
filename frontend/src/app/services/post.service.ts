@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { catchError, map, Observable, of, Subject, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, map, Observable, of, Subject, tap, throwError } from 'rxjs';
 import { Post } from '../models/post.model';
 
 @Injectable({
@@ -10,12 +10,59 @@ export class PostService {
   private apiUrl = 'http://localhost:3000/api/posts';
   private postsUpdated = new Subject<Post[]>();
   private posts: Post[] = []; // Armazena a lista atual de posts
+  private postsSubject = new BehaviorSubject<Post[]>([]);
+  posts$ = this.postsSubject.asObservable();
 
   constructor(private http: HttpClient) {}
 
-  // Método para obter o token
+  getPostsAdmin(): Observable<Post[]> {
+    const token = this.getToken();
+    const headers = token
+      ? new HttpHeaders({ Authorization: `Bearer ${token}` })
+      : new HttpHeaders();
+
+    return this.http.get<Post[]>(`${this.apiUrl}/admin`, { headers }).pipe(
+      map((posts) => {
+        posts.forEach((post) => (post.likes = post.likes || 0));
+        this.postsSubject.next(posts); // Atualiza o BehaviorSubject
+        return posts;
+      }),
+      catchError((error) => {
+        console.error('Erro ao buscar posts para admin:', error);
+        return of([]); // Retorna um array vazio em caso de erro
+      })
+    );
+  }
+
+  getPosts(): Observable<Post[]> {
+    console.log('Fetching posts from API...'); // Log quando a função é chamada
+    return this.http.get<Post[]>(this.apiUrl).pipe(
+      map((posts) => {
+        console.log('Posts fetched successfully:', posts); // Log quando os posts são recebidos
+        this.postsSubject.next(posts); // Atualiza o BehaviorSubject
+        return posts;
+      }),
+      catchError((error) => {
+        console.error('Error fetching posts:', error); // Log de erro
+        return of([]); // Retorna um array vazio em caso de erro
+      })
+    );
+  }
+
   private getToken(): string | null {
     return localStorage.getItem('token'); // Certifique-se de recuperar o token correto
+  }
+
+  // Método para iniciar a edição de um post
+  startEditPost(postId: number) {
+    // Lógica para carregar o post com base no ID e iniciar o modo de edição
+    const posts = this.postsSubject.value;
+    const postToEdit = posts.find(post => post.id === postId);
+    if (postToEdit) {
+      // Emitir post para edição (pode ser através de um BehaviorSubject, por exemplo)
+      console.log('Editando post:', postToEdit);
+      // Adicione a lógica para editar aqui
+    }
   }
 
   toggleLike(postId: number): Observable<any> {
@@ -57,51 +104,12 @@ export class PostService {
     );
   }
 
-  getPostsAdmin(): Observable<Post[]> {
-    const token = this.getToken();
-    const headers = token
-      ? new HttpHeaders({ Authorization: `Bearer ${token}` })
-      : new HttpHeaders();
-
-    return this.http.get<Post[]>(`${this.apiUrl}/admin`, { headers });
-  }
-
-  getPosts(): Observable<Post[]> {
-    const token = this.getToken();
-    const headers = token
-        ? new HttpHeaders({ Authorization: `Bearer ${token}` })
-        : new HttpHeaders();
-
-    return this.http.get<Post[]>(this.apiUrl, { headers }).pipe(
-        map((posts) => {
-            console.log('Posts recebidos da API:', posts);
-
-            // Processa likes
-            posts.forEach((post) => {
-                post.likes = post.likes || 0;
-            });
-
-            // Filtra posts públicos se não estiver logado
-            const filteredPosts = this.isLoggedIn()
-                ? posts
-                : posts.filter((post) => post.visibility === 'public');
-
-            console.log('Posts filtrados:', filteredPosts); // Log dos posts filtrados
-            return filteredPosts; // Retorna os posts filtrados
-        }),
-        catchError((error) => {
-            console.error('Erro ao buscar posts:', error);
-            return of([]); // Retorna um array vazio em caso de erro
-        })
-    );
-}
-
   // Método para buscar um post específico pelo ID
   getPostById(postId: number): Observable<Post> {
-    const token = this.getToken();
-    const headers = token
-      ? new HttpHeaders({ Authorization: `Bearer ${token}` })
-      : new HttpHeaders();
+    const headers = new HttpHeaders().set(
+      'Authorization',
+      `Bearer ${this.getToken()}`
+    );
 
     return this.http.get<Post>(`${this.apiUrl}/${postId}`, { headers });
   }
@@ -117,35 +125,41 @@ export class PostService {
   }
 
   // Método para atualizar um post
-  updatePost(postId: number, post: Post): Observable<Post> {
-    const token = this.getToken();
-    return this.http.put<Post>(`${this.apiUrl}/${postId}`, post, {
-      headers: {
-        Authorization: `Bearer ${token}`, // Inclui o token no cabeçalho
-      },
-    });
+  updatePost(postId: number, updatedPost: Post): Observable<Post> {
+    // Obtenha o token do serviço de autenticação
+    const headers = new HttpHeaders().set(
+      'Authorization',
+      `Bearer ${this.getToken()}`
+    );
+    return this.http.put<Post>(`${this.apiUrl}/${postId}`, updatedPost, { headers }).pipe(
+      tap(() => {
+        const currentPosts = this.postsSubject.getValue();
+        const updatedPosts = currentPosts.map(post =>
+          post.id === postId ? updatedPost : post
+        );
+        this.postsSubject.next(updatedPosts);
+      })
+    );
   }
 
   // Método para deletar um post
-  deletePost(postId: number): Observable<void> {
-    const token = this.getToken();
-    return this.http
-      .delete<void>(`${this.apiUrl}/${postId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`, // Inclua o token
-        },
-      })
-      .pipe(
-        map(() => {
-          this.posts = this.posts.filter((post) => post.id !== postId); // Remove o post deletado da lista
-          this.postsUpdated.next(this.posts); // Emite a nova lista de posts
-        }),
-        catchError((error) => {
-          console.error('Erro ao deletar post:', error);
-          return throwError(() => new Error('Erro ao deletar post.'));
-        })
-      );
-  }
+  // Ajuste no PostService
+deletePost(id: number): Observable<void> {
+  const headers = new HttpHeaders().set('Authorization', `Bearer ${this.getToken()}`);
+  return this.http.delete<void>(`${this.apiUrl}/${id}`, { headers }).pipe(
+    map(() => {
+      // Atualiza a lista local de posts após a deleção
+      const currentPosts = this.postsSubject.getValue();
+      const updatedPosts = currentPosts.filter((post) => post.id !== id);
+      this.postsSubject.next(updatedPosts);
+    }),
+    catchError((error) => {
+      console.error('Erro ao deletar post:', error);
+      return throwError(() => new Error('Erro ao deletar post.'));
+    })
+  );
+}
+
 
   // Método auxiliar para verificar se o usuário está logado
   isLoggedIn(): boolean {

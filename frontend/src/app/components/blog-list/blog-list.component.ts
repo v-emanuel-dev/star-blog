@@ -7,6 +7,7 @@ import { AuthService } from '../../services/auth.service';
 import { CategoryService } from '../../services/category.service';
 import { catchError, forkJoin, of } from 'rxjs';
 import { UserService } from '../../services/user.service';
+import { Category } from '../../models/category.model';
 
 @Component({
   selector: 'app-blog-list',
@@ -26,6 +27,7 @@ export class BlogListComponent implements OnInit {
   currentPostId: number | null = null;
   message: string | null = null; // Mensagem a ser exibida
   isLoadingCategories: boolean = true;
+  categories: Category[] = []; // Array para armazenar as categorias
 
   constructor(
     private postService: PostService,
@@ -37,6 +39,7 @@ export class BlogListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.loadCategories()
     this.route.queryParams.subscribe((params) => {
       const profileImageUrl = params['profileImage'];
 
@@ -60,6 +63,17 @@ export class BlogListComponent implements OnInit {
         this.success = false;
       }
     });
+  }
+
+  loadCategories(): void {
+    this.categoryService.getCategoriesByPostId(this.postId).subscribe(
+      (data: Category[]) => {
+        this.categories = data;
+      },
+      (error) => {
+        console.error('Erro ao obter categorias:', error);
+      }
+    );
   }
 
   toggleLike(postId: number): void {
@@ -129,51 +143,83 @@ export class BlogListComponent implements OnInit {
 
     // Obter o papel do usuário, se já estiver disponível
     const userRole = localStorage.getItem('userRole'); // Exemplo de como recuperar o papel
+    console.log('Retrieved user role from localStorage:', userRole);
 
     // Se o papel não estiver disponível, solicite-o ao AuthService
     if (!userRole) {
-      this.authService.getUserRole().subscribe(
-        (role) => {
-          if (role) {
-            localStorage.setItem('userRole', role); // Armazena o papel do usuário
-            this.loadPosts(role); // Chama loadPosts apenas se role não for null
-          } else {
-            console.error('User role is null'); // Lida com o caso em que o papel é null
-            this.loading = false; // Para o carregamento em caso de erro
-          }
-        },
-        (error) => {
-          console.error('Error fetching user role:', error);
-          this.loading = false; // Para o carregamento em caso de erro
-        }
-      );
+        this.authService.getUserRole().subscribe(
+            (role) => {
+                console.log('Fetched user role from AuthService:', role);
+                if (role) {
+                    localStorage.setItem('userRole', role); // Armazena o papel do usuário
+                    this.loadPosts(role); // Chama loadPosts apenas se role não for null
+                } else {
+                    console.error('User role is null'); // Lida com o caso em que o papel é null
+                    this.loading = false; // Para o carregamento em caso de erro
+                }
+            },
+            (error) => {
+                console.error('Error fetching user role:', error);
+                this.loading = false; // Para o carregamento em caso de erro
+            }
+        );
     } else {
-      this.loadPosts(userRole); // Carrega posts com o papel já armazenado
+        this.loadPosts(userRole); // Carrega posts com o papel já armazenado
     }
-  }
+}
 
-  private loadPosts(userRole: string): void {
-    const isAdmin = userRole === 'admin';
-    const postsObservable = isAdmin
-      ? this.postService.getPostsAdmin()
-      : this.postService.getPosts();
 
-    postsObservable.subscribe({
+
+private loadPosts(userRole: string): void {
+  const isAdmin = userRole === 'admin';
+  console.log('Loading posts. Is admin:', isAdmin);
+
+  // Log do token do usuário
+  const token = this.authService.getToken(); // Altere este método conforme sua implementação
+  console.log('User token:', token);
+
+  const postsObservable = isAdmin
+    ? this.postService.getPostsAdmin()
+    : this.postService.getPosts();
+
+  postsObservable.subscribe({
       next: (data: Post[]) => {
-        this.posts = data;
-        this.filteredPosts = this.isLoggedIn
-          ? this.posts
-          : this.posts.filter((post) => post.visibility === 'public');
+          console.log('Posts fetched successfully:', data); // Loga os dados recebidos
 
-        this.updatePostsTitle(); // Atualiza o título com base na nova lógica
-        this.loading = false;
+          // Verifica se os dados são válidos
+          if (!data || data.length === 0) {
+              console.warn('No posts were fetched.'); // Aviso caso não sejam recebidos posts
+          }
+
+          this.posts = data;
+
+          // Verifica se o usuário está logado
+          console.log('Is user logged in:', this.isLoggedIn);
+
+          // Filtra os posts com base no papel do usuário
+          if (this.isLoggedIn) {
+              console.log('User is logged in, displaying all posts.');
+              this.filteredPosts = this.posts;
+          } else {
+              console.log('User is not logged in, filtering public posts.');
+              this.filteredPosts = this.posts.filter((post) => post.visibility === 'public');
+          }
+
+          console.log('Filtered posts based on visibility:', this.filteredPosts); // Log para verificar posts filtrados
+
+          this.updatePostsTitle();
+          this.loading = false;
       },
       error: (error) => {
-        console.error('Error fetching posts:', error);
-        this.loading = false;
+          console.error('Error fetching posts:', error);
+          console.error('Error details:', error.message); // Log detalhado do erro
+          this.loading = false;
       },
-    });
-  }
+  });
+}
+
+
+
 
   filterPosts(): void {
     const searchTermLower = this.searchTerm.toLowerCase().trim();
