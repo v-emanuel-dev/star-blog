@@ -1,80 +1,32 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, catchError, map, Observable, of, Subject, tap, throwError } from 'rxjs';
+import { catchError, map, Observable, throwError } from 'rxjs';
 import { Post } from '../models/post.model';
+import { AuthService } from './auth.service'; // Importe o AuthService
 
 @Injectable({
   providedIn: 'root',
 })
 export class PostService {
   private apiUrl = 'http://localhost:3000/api/posts';
-  private postsUpdated = new Subject<Post[]>();
-  private posts: Post[] = []; // Armazena a lista atual de posts
-  private postsSubject = new BehaviorSubject<Post[]>([]);
-  posts$ = this.postsSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private authService: AuthService) {} // Injete AuthService
 
-  getPostsAdmin(): Observable<Post[]> {
-    const token = this.getToken();
-    const headers = token
-      ? new HttpHeaders({ Authorization: `Bearer ${token}` })
-      : new HttpHeaders();
-
-    return this.http.get<Post[]>(`${this.apiUrl}/admin`, { headers }).pipe(
-      map((posts) => {
-        posts.forEach((post) => (post.likes = post.likes || 0));
-        this.postsSubject.next(posts); // Atualiza o BehaviorSubject
-        return posts;
-      }),
-      catchError((error) => {
-        console.error('Erro ao buscar posts para admin:', error);
-        return of([]); // Retorna um array vazio em caso de erro
-      })
-    );
-  }
-
-  getPosts(): Observable<Post[]> {
-    console.log('Fetching posts from API...'); // Log quando a função é chamada
-    return this.http.get<Post[]>(this.apiUrl).pipe(
-      map((posts) => {
-        console.log('Posts fetched successfully:', posts); // Log quando os posts são recebidos
-        this.postsSubject.next(posts); // Atualiza o BehaviorSubject
-        return posts;
-      }),
-      catchError((error) => {
-        console.error('Error fetching posts:', error); // Log de erro
-        return of([]); // Retorna um array vazio em caso de erro
-      })
-    );
-  }
-
+  // Método para obter o token
   private getToken(): string | null {
     return localStorage.getItem('token'); // Certifique-se de recuperar o token correto
   }
 
-  // Método para iniciar a edição de um post
-  startEditPost(postId: number) {
-    // Lógica para carregar o post com base no ID e iniciar o modo de edição
-    const posts = this.postsSubject.value;
-    const postToEdit = posts.find(post => post.id === postId);
-    if (postToEdit) {
-      // Emitir post para edição (pode ser através de um BehaviorSubject, por exemplo)
-      console.log('Editando post:', postToEdit);
-      // Adicione a lógica para editar aqui
-    }
-  }
-
   toggleLike(postId: number): Observable<any> {
-    const token = this.getToken();
+    const token = localStorage.getItem('token'); // Assumindo que o token está armazenado no localStorage
 
     return this.http.post<any>(
       `${this.apiUrl}/${postId}/like`,
       {},
       {
         headers: {
-          Authorization: `Bearer ${token}`, // Inclui o token de autenticação no cabeçalho
-        },
+          Authorization: `Bearer ${token}` // Inclui o token de autenticação no cabeçalho
+        }
       }
     );
   }
@@ -92,11 +44,6 @@ export class PostService {
     );
 
     return this.http.post<Post>(this.apiUrl, post, { headers }).pipe(
-      map((newPost) => {
-        this.posts.push(newPost); // Adiciona o novo post à lista de posts
-        this.postsUpdated.next(this.posts); // Emite a nova lista de posts
-        return newPost;
-      }),
       catchError((error) => {
         console.error('Erro ao criar post:', error);
         return throwError(() => new Error('Erro ao criar post.'));
@@ -104,12 +51,66 @@ export class PostService {
     );
   }
 
+  getPostsAdmin(): Observable<Post[]> {
+    const token = this.getToken();
+    const headers = token
+      ? new HttpHeaders({ Authorization: `Bearer ${token}` })
+      : new HttpHeaders();
+
+    return this.http.get<Post[]>(`${this.apiUrl}/admin`, { headers });
+  }
+
+  getPosts(): Observable<Post[]> {
+    console.log('Iniciando a busca de posts...');
+
+    const token = this.getToken();
+    const headers = token
+      ? new HttpHeaders({ Authorization: `Bearer ${token}` })
+      : new HttpHeaders();
+
+    return this.http.get<Post[]>(this.apiUrl, { headers }).pipe(
+      map((posts) => {
+        console.log('Posts recebidos da API:', posts);
+
+        // Processar comentários e likes nos posts
+        posts.forEach((post) => {
+          post.likes = post.likes || 0; // Garantir que likes está definido
+          console.log(`Post ID: ${post.id} - Likes: ${post.likes}`); // Log da contagem de likes
+        });
+
+        // Se o usuário estiver logado, retorne todos os posts
+        if (this.isLoggedIn()) {
+          console.log('Usuário está logado. Retornando todos os posts.');
+
+          return posts.sort((a, b) => {
+            const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return dateB - dateA; // Ordenação decrescente
+          });
+        } else {
+          console.log('Usuário não está logado. Retornando apenas posts públicos.');
+
+          // Retornar apenas posts públicos e ordená-los
+          return posts
+            .filter((post) => post.visibility === 'public')
+            .sort((a, b) => {
+              const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+              const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+              return dateB - dateA; // Ordenação decrescente
+            });
+        }
+      })
+    );
+  }
+
+
+
   // Método para buscar um post específico pelo ID
   getPostById(postId: number): Observable<Post> {
-    const headers = new HttpHeaders().set(
-      'Authorization',
-      `Bearer ${this.getToken()}`
-    );
+    const token = this.getToken();
+    const headers = token
+      ? new HttpHeaders({ Authorization: `Bearer ${token}` })
+      : new HttpHeaders();
 
     return this.http.get<Post>(`${this.apiUrl}/${postId}`, { headers });
   }
@@ -125,49 +126,27 @@ export class PostService {
   }
 
   // Método para atualizar um post
-  updatePost(postId: number, updatedPost: Post): Observable<Post> {
-    // Obtenha o token do serviço de autenticação
-    const headers = new HttpHeaders().set(
-      'Authorization',
-      `Bearer ${this.getToken()}`
-    );
-    return this.http.put<Post>(`${this.apiUrl}/${postId}`, updatedPost, { headers }).pipe(
-      tap(() => {
-        const currentPosts = this.postsSubject.getValue();
-        const updatedPosts = currentPosts.map(post =>
-          post.id === postId ? updatedPost : post
-        );
-        this.postsSubject.next(updatedPosts);
-      })
-    );
+  updatePost(postId: number, post: Post): Observable<Post> {
+    const token = this.getToken(); // Certifique-se de que o token está sendo obtido corretamente
+    return this.http.put<Post>(`${this.apiUrl}/${postId}`, post, {
+      headers: {
+        Authorization: `Bearer ${token}`, // Inclui o token no cabeçalho
+      },
+    });
   }
 
   // Método para deletar um post
-  // Ajuste no PostService
-deletePost(id: number): Observable<void> {
-  const headers = new HttpHeaders().set('Authorization', `Bearer ${this.getToken()}`);
-  return this.http.delete<void>(`${this.apiUrl}/${id}`, { headers }).pipe(
-    map(() => {
-      // Atualiza a lista local de posts após a deleção
-      const currentPosts = this.postsSubject.getValue();
-      const updatedPosts = currentPosts.filter((post) => post.id !== id);
-      this.postsSubject.next(updatedPosts);
-    }),
-    catchError((error) => {
-      console.error('Erro ao deletar post:', error);
-      return throwError(() => new Error('Erro ao deletar post.'));
-    })
-  );
-}
-
+  deletePost(postId: number): Observable<void> {
+    const token = this.getToken();
+    return this.http.delete<void>(`${this.apiUrl}/${postId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`, // Inclua o token
+      },
+    });
+  }
 
   // Método auxiliar para verificar se o usuário está logado
   isLoggedIn(): boolean {
     return localStorage.getItem('token') !== null; // Verifique se há token de acesso
-  }
-
-  // Método para obter um Observable com a lista atualizada de posts
-  getPostsUpdateListener(): Observable<Post[]> {
-    return this.postsUpdated.asObservable(); // Permite que outros componentes se inscrevam para atualizações
   }
 }
