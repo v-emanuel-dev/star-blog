@@ -29,7 +29,11 @@ export class AuthService {
   private profileImageUrlSubject = new BehaviorSubject<string | null>(null);
   profileImageUrl$ = this.profileImageUrlSubject.asObservable();
 
-  private userRoleSubject = new BehaviorSubject<string | null>(null);
+  private userRoleSubject = new BehaviorSubject<string>(''); // Valor inicial como string vazia
+  userRole$ = this.userRoleSubject.asObservable();
+
+  private userDetailsSubject = new BehaviorSubject<any>(null);
+  userDetails$ = this.userDetailsSubject.asObservable();
 
   constructor(
     private http: HttpClient,
@@ -41,6 +45,17 @@ export class AuthService {
     if (savedRole) {
       this.userRoleSubject.next(savedRole);
     }
+
+    const storedRole = localStorage.getItem('userRole') || ''; // Usando uma string vazia como fallback
+    this.userRoleSubject.next(storedRole); // Inicializa com o valor armazenado no localStorage
+  }
+
+  setUserRole(role: string) {
+    this.userRoleSubject.next(role);
+  }
+
+  setUserDetails(details: any) {
+    this.userDetailsSubject.next(details);
   }
 
   login(email: string, password: string) {
@@ -88,7 +103,6 @@ export class AuthService {
       );
   }
 
-
   updateProfileImageUrl(url: string): void {
     localStorage.setItem('profilePicture', url);
     this.profileImageUrlSubject.next(url);
@@ -111,12 +125,6 @@ export class AuthService {
 
   getUserRole() {
     return this.userRoleSubject.asObservable();
-  }
-
-  // Função para atualizar a role do usuário
-  setUserRole(role: string) {
-    this.userRoleSubject.next(role);
-    localStorage.setItem('userRole', role); // Armazenar no localStorage para persistência
   }
 
   getUserName(): string {

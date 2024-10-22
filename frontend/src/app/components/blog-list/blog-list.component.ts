@@ -1,11 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { saveAs } from 'file-saver';
 import { Post } from '../../models/post.model';
 import { PostService } from '../../services/post.service';
 import { AuthService } from '../../services/auth.service';
 import { CategoryService } from '../../services/category.service';
-import { catchError, forkJoin, of } from 'rxjs';
+import { catchError, forkJoin, of, Subscription } from 'rxjs';
 import { UserService } from '../../services/user.service';
 import { Category } from '../../models/category.model';
 
@@ -28,6 +28,10 @@ export class BlogListComponent implements OnInit {
   currentPostId: number | null = null;
   message: string | null = null; // Mensagem a ser exibida
   isLoadingCategories: boolean = true;
+  isAdmin: boolean = false; // Adicione esta variável
+  userRole: string | null = null; // Propriedade para armazenar o papel do usuário
+
+  private roleSubscription: Subscription = new Subscription();
 
   constructor(
     private postService: PostService,
@@ -35,12 +39,15 @@ export class BlogListComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private categoryService: CategoryService,
-    private userService: UserService
+    private userService: UserService,
+    private cd: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.categoryService.categories$.subscribe((categories) => {
-      this.categories = categories;
+
+    this.roleSubscription = this.authService.userRole$.subscribe((role) => {
+      this.userRole = role;
+      this.cd.detectChanges(); // Força a atualização da view
     });
 
     this.route.queryParams.subscribe((params) => {
@@ -48,10 +55,6 @@ export class BlogListComponent implements OnInit {
 
       if (profileImageUrl) {
         this.userService.updateProfilePicture(profileImageUrl);
-        console.log(
-          'Profile image updated after Google login:',
-          profileImageUrl
-        );
       }
     });
 

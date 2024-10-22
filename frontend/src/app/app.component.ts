@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ImageService } from './services/image.service';
+import { AuthService } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -10,7 +11,8 @@ import { ImageService } from './services/image.service';
 export class AppComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
-    private imageService: ImageService
+    private imageService: ImageService,
+    private authService: AuthService
   ) {
     this.imageService.initialize();
   }
@@ -33,6 +35,10 @@ export class AppComponent implements OnInit {
         localStorage.setItem('username', username);
         localStorage.setItem('profilePicture', profilePicture);
         localStorage.setItem('userRole', userRole);
+
+        // Atualize o BehaviorSubject no AuthService com o novo papel do usuário
+        this.authService.setUserRole(userRole);
+        this.authService.setUserDetails({ userId, username, profilePicture });
       }
     });
   }
