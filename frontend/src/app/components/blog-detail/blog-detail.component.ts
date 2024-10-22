@@ -55,11 +55,11 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
 
   toggleLike(postId: number): void {
     this.postService.toggleLike(postId).subscribe(
-      response => {
+      (response) => {
         console.log(response);
         this.loadPost(); // Atualiza o post após curtir/descurtir
       },
-      error => {
+      (error) => {
         console.error('Erro ao curtir/descurtir post:', error);
       }
     );
@@ -80,7 +80,10 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
   loadComments(): void {
     this.commentService.getCommentsByPostId(this.postId).subscribe(
       (comments: Comment[]) => {
-        this.comments = comments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        this.comments = comments.sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
       },
       (error) => {
         console.error('Erro ao carregar comentários:', error);
@@ -129,7 +132,9 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
   saveComment(): void {
     if (this.editCommentContent && this.editCommentId !== null) {
       // Encontre o comentário que está sendo editado
-      const commentToUpdate = this.comments.find(c => c.id === this.editCommentId);
+      const commentToUpdate = this.comments.find(
+        (c) => c.id === this.editCommentId
+      );
 
       if (commentToUpdate) {
         const updatedComment: Comment = {
@@ -137,26 +142,31 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
           content: this.editCommentContent, // Atualiza apenas o conteúdo
         };
 
-        this.commentService.updateComment(this.editCommentId, updatedComment).subscribe(
-          (response) => {
-            const index = this.comments.findIndex(c => c.id === this.editCommentId);
-            if (index !== -1) {
-              this.comments[index].content = updatedComment.content; // Atualiza o conteúdo do comentário
+        this.commentService
+          .updateComment(this.editCommentId, updatedComment)
+          .subscribe(
+            (response) => {
+              const index = this.comments.findIndex(
+                (c) => c.id === this.editCommentId
+              );
+              if (index !== -1) {
+                this.comments[index].content = updatedComment.content; // Atualiza o conteúdo do comentário
+              }
+              this.cancelEdit(); // Cancela a edição
+            },
+            (error) => {
+              console.error('Erro ao salvar comentário:', error);
             }
-            this.cancelEdit(); // Cancela a edição
-          },
-          (error) => {
-            console.error('Erro ao salvar comentário:', error);
-          }
-        );
+          );
       }
     }
   }
 
-
   deleteComment(commentId: number): void {
     this.commentService.deleteComment(commentId).subscribe(() => {
-      this.comments = this.comments.filter(comment => comment.id !== commentId);
+      this.comments = this.comments.filter(
+        (comment) => comment.id !== commentId
+      );
     });
   }
 
@@ -172,12 +182,15 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
         postId: this.postId,
       };
 
-      this.categoryService.createCategory(category).subscribe(() => {
-        this.loadCategories(); // Recarrega a lista de categorias após a adição
-        this.newCategoryName = ''; // Limpa o campo de entrada após adicionar
-      }, (error) => {
-        console.error('Erro ao criar categoria:', error);
-      });
+      this.categoryService.createCategory(category).subscribe(
+        () => {
+          this.loadCategories(); // Recarrega a lista de categorias após a adição
+          this.newCategoryName = ''; // Limpa o campo de entrada após adicionar
+        },
+        (error) => {
+          console.error('Erro ao criar categoria:', error);
+        }
+      );
     } else {
       console.error('O nome da categoria não pode estar vazio');
     }
@@ -196,23 +209,36 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
         postId: this.postId,
       };
 
-      this.categoryService.updateCategory(this.editCategoryId, updatedCategory).subscribe(() => {
-        this.loadCategories(); // Recarrega a lista de categorias após a atualização
-        this.cancelEditCategory(); // Limpa o estado de edição
-      }, (error) => {
-        console.error('Erro ao atualizar categoria:', error);
-      });
+      this.categoryService
+        .updateCategory(this.editCategoryId, updatedCategory)
+        .subscribe(
+          () => {
+            this.loadCategories(); // Recarrega a lista de categorias após a atualização
+            this.cancelEditCategory(); // Limpa o estado de edição
+          },
+          (error) => {
+            console.error('Erro ao atualizar categoria:', error);
+          }
+        );
     } else {
-      console.error('O nome da categoria e o ID do post não podem estar vazios');
+      console.error(
+        'O nome da categoria e o ID do post não podem estar vazios'
+      );
     }
   }
 
-  deleteCategory(categoryId: number): void {
-    this.categoryService.deleteCategory(categoryId).subscribe(() => {
-      this.loadCategories(); // Recarrega a lista após a exclusão
-    }, (error) => {
-      console.error('Erro ao deletar categoria:', error);
-    });
+  deleteCategoryFromPost(postId: number, categoryId: number): void {
+    this.categoryService.deleteCategoryFromPost(categoryId, postId).subscribe(
+      () => {
+        this.loadCategories(); // Recarrega a lista após a exclusão da associação
+      },
+      (error) => {
+        console.error(
+          'Erro ao deletar a associação da categoria ao post:',
+          error
+        );
+      }
+    );
   }
 
   cancelEditCategory(): void {

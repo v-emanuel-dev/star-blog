@@ -124,6 +124,37 @@ exports.updateCategory = (req, res) => {
   });
 };
 
+exports.deleteCategoryFromPost = (req, res) => {
+  const { postId, categoryId } = req.params;
+
+  console.log(`Deleting category ID: ${categoryId} from post ID: ${postId}`); // Log dos IDs
+
+  // Verificar se a associação existe
+  const checkQuery = "SELECT * FROM post_categories WHERE postId = ? AND categoryId = ?";
+  db.query(checkQuery, [postId, categoryId], (err, result) => {
+    if (err) {
+      console.error("Error checking association existence:", err); // Log de erro
+      return res.status(500).json({ error: err.message });
+    }
+    if (result.length === 0) {
+      console.warn("Association not found for post ID:", postId, "and category ID:", categoryId); // Log de aviso
+      return res.status(404).json({ message: "Association not found." });
+    }
+
+    // Deletar a associação
+    const deleteQuery = "DELETE FROM post_categories WHERE postId = ? AND categoryId = ?";
+    db.query(deleteQuery, [postId, categoryId], (err) => {
+      if (err) {
+        console.error("Error deleting association:", err); // Log de erro
+        return res.status(500).json({ error: err.message });
+      }
+      console.log(`Association deleted successfully for post ID: ${postId} and category ID: ${categoryId}`); // Log de sucesso
+      res.status(204).send();
+    });
+  });
+};
+
+
 // Delete a category
 exports.deleteCategory = (req, res) => {
   const { id } = req.params;

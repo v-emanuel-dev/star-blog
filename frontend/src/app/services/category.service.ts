@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { Category } from '../models/category.model';
-import { tap } from 'rxjs/operators';
+import { catchError, tap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root',
@@ -38,6 +38,22 @@ export class CategoryService {
     return this.http
       .put<Category>(`${this.apiUrl}/${id}`, category)
       .pipe(tap(() => this.loadCategories()));
+  }
+
+  deleteCategoryFromPost(postId: number, categoryId: number): Observable<any> {
+    const token = localStorage.getItem('accessToken');
+    return this.http
+      .delete(`${this.apiUrl}/${postId}/categories/${categoryId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .pipe(
+        catchError((error) => {
+          console.error('Error occurred while deleting category:', error);
+          return throwError(error); // Repassa o erro para que possa ser tratado onde a função é chamada
+        })
+      );
   }
 
   deleteCategory(categoryId: number): Observable<any> {

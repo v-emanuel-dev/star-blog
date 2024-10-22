@@ -17,6 +17,8 @@ router.post("/", categoryController.createCategory);
 // Rota para atualizar uma categoria por ID
 router.put("/:id", categoryController.updateCategory);
 
+router.delete('/:postId/categories/:categoryId', categoryController.deleteCategoryFromPost);
+
 // Rota para deletar uma categoria por ID
 router.delete("/:id", categoryController.deleteCategory);
 

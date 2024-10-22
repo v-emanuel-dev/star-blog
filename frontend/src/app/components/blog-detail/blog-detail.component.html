@@ -18,8 +18,8 @@
           <span class="text-black mr-3">{{ category.name }}</span>
           <!-- Texto preto -->
           <button
-            (click)="deleteCategory(category.id!)"
-            class="remove-icon focus:outline-none"
+          (click)="deleteCategoryFromPost(category.id!, postId)"
+          class="remove-icon focus:outline-none"
             aria-label="Remove category"
           >
             <i class="fa-solid fa-times"></i>
@@ -212,7 +212,7 @@
         </button>
         <button
           *ngIf="category.id !== undefined"
-          (click)="deleteCategory(category.id)"
+          (click)="deleteCategoryFromPost(category.id!, postId)"
           class="text-red-600 hover:text-red-900 transition"
         >
           Delete
