@@ -54,8 +54,9 @@ export class BlogListComponent implements OnInit {
         );
       }
     });
-    this.loadPostsAndCategories();
+
     this.getPosts(); // Carrega os posts na inicialização
+
     this.isLoggedIn = this.authService.isLoggedIn();
 
     // Verifica se há mensagens de erro nos parâmetros de consulta
@@ -83,90 +84,53 @@ export class BlogListComponent implements OnInit {
     );
   }
 
-  loadPostsAndCategories(): void {
-    this.isLoadingCategories = true;
-
-    // Primeiro carrega os posts
-    this.postService.getPosts().subscribe({
-      next: (posts) => {
-        this.posts = posts;
-        console.log('Posts carregados:', posts); // Log dos posts carregados
-
-        // Cria uma lista de observables para carregar as categorias de cada post
-        const categoryRequests = this.posts.map((post) => {
-          if (post.id !== undefined) {
-            // Requisição para carregar as categorias por postId
-            return this.categoryService.getCategoriesByPostId(post.id).pipe(
-              catchError((error) => {
-                console.error(
-                  `Erro ao carregar categorias do post ${post.id}:`,
-                  error
-                );
-                return of([]); // Retorna um array vazio caso ocorra um erro
-              })
-            );
-          } else {
-            return of([]); // Caso o post não tenha id, retorna um array vazio
-          }
-        });
-
-        // Usa forkJoin para esperar que todas as requisições de categorias sejam concluídas
-        forkJoin(categoryRequests).subscribe({
-          next: (categoriesArray) => {
-            // Log das categorias carregadas
-            console.log('Categorias carregadas:', categoriesArray);
-
-            // Atribui as categorias carregadas aos posts correspondentes
-            categoriesArray.forEach((categories, index) => {
-              console.log(
-                `Categorias do post ${this.posts[index].id}:`,
-                categories
-              );
-              this.posts[index].categories = categories;
-            });
-
-            this.isLoadingCategories = false; // Carregamento concluído
-            this.updatePostsTitle(); // Atualiza o título após carregar categorias
-          },
-          error: (error) => {
-            console.error('Erro ao carregar as categorias:', error);
-            this.isLoadingCategories = false;
-          },
-        });
+  loadCategories(postId: number): void {
+    this.categoryService.getCategoriesByPostId(postId).subscribe(
+      (data: Category[]) => {
+        // Encontre o post correspondente e atualize suas categorias
+        const post = this.posts.find((p) => p.id === postId);
+        if (post) {
+          post.categories = data;
+        }
       },
-      error: (error) => {
-        console.error('Erro ao carregar os posts:', error);
-        this.isLoadingCategories = false;
-      },
-    });
+      (error) => {
+        console.error('Erro ao obter categorias:', error);
+      }
+    );
   }
 
   getPosts(): void {
     this.loading = true;
 
-    // Inscreva-se no Observable para obter o papel do usuário
     this.authService.getUserRole().subscribe(
       (userRole) => {
-        const isAdmin = userRole === 'admin'; // Verifica se o papel é admin
-
-        // Se for admin, carrega todos os posts usando getPostsAdmin
+        const isAdmin = userRole === 'admin';
         const postsObservable = isAdmin
           ? this.postService.getPostsAdmin()
           : this.postService.getPosts();
 
         postsObservable.subscribe({
           next: (data: Post[]) => {
-            this.posts = data; // Atribui posts à variável posts
+            this.posts = data;
             console.log('Data:', data);
             this.filteredPosts = this.isLoggedIn
               ? this.posts
               : this.posts.filter((post) => post.visibility === 'public');
             this.updatePostsTitle();
-            this.loading = false; // Para parar o loading
+            this.loading = false;
+
+            // Carrega as categorias para cada post, verificando se o ID é válido
+            this.posts.forEach((post) => {
+              if (post.id !== undefined) {
+                this.loadCategories(post.id);
+              } else {
+                console.error('Post ID é undefined:', post);
+              }
+            });
           },
           error: (error) => {
             console.error('Erro ao obter posts:', error);
-            this.loading = false; // Para parar o loading em caso de erro
+            this.loading = false;
           },
         });
 
@@ -175,7 +139,7 @@ export class BlogListComponent implements OnInit {
       },
       (error) => {
         console.error('Error fetching user role:', error);
-        this.loading = false; // Para parar o loading em caso de erro ao buscar o papel do usuário
+        this.loading = false;
       }
     );
   }

@@ -37,7 +37,6 @@ export class PostService {
 
   // Método para criar um post
   createPost(post: Post): Observable<Post> {
-    console.log('Post a ser criado:', post); // Adicione este log para depuração
     const headers = new HttpHeaders().set(
       'Authorization',
       `Bearer ${this.getToken()}`
@@ -70,17 +69,14 @@ export class PostService {
 
     return this.http.get<Post[]>(this.apiUrl, { headers }).pipe(
       map((posts) => {
-        console.log('Posts recebidos da API:', posts);
 
         // Processar comentários e likes nos posts
         posts.forEach((post) => {
           post.likes = post.likes || 0; // Garantir que likes está definido
-          console.log(`Post ID: ${post.id} - Likes: ${post.likes}`); // Log da contagem de likes
         });
 
         // Se o usuário estiver logado, retorne todos os posts
         if (this.isLoggedIn()) {
-          console.log('Usuário está logado. Retornando todos os posts.');
 
           return posts.sort((a, b) => {
             const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
