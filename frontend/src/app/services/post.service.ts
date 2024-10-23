@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { catchError, map, Observable, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, map, Observable, tap, throwError } from 'rxjs';
 import { Post } from '../models/post.model';
 import { AuthService } from './auth.service'; // Importe o AuthService
 
@@ -9,6 +9,9 @@ import { AuthService } from './auth.service'; // Importe o AuthService
 })
 export class PostService {
   private apiUrl = 'http://localhost:3000/api/posts';
+
+  private postsSubject = new BehaviorSubject<any[]>([]);
+  posts$ = this.postsSubject.asObservable();
 
   constructor(private http: HttpClient, private authService: AuthService) {} // Injete AuthService
 
@@ -25,14 +28,67 @@ export class PostService {
       {},
       {
         headers: {
-          Authorization: `Bearer ${token}` // Inclui o token de autenticação no cabeçalho
-        }
+          Authorization: `Bearer ${token}`, // Inclui o token de autenticação no cabeçalho
+        },
       }
     );
   }
 
   updatePostLikes(postId: number, likes: number): Observable<void> {
     return this.http.patch<void>(`${this.apiUrl}/${postId}`, { likes });
+  }
+
+  getPostsAdminDashboard(): Observable<Post[]> {
+    const token = this.getToken();
+    const headers = token
+      ? new HttpHeaders({ Authorization: `Bearer ${token}` })
+      : new HttpHeaders();
+
+    return this.http.get<Post[]>(`${this.apiUrl}/admin`, { headers }).pipe(
+      tap((posts) => this.postsSubject.next(posts)) // Atualiza o BehaviorSubject
+    );
+  }
+
+  // Método para atualizar um post e refletir no BehaviorSubject
+  updatePostDashboard(postId: number, post: Post): Observable<Post> {
+    const token = this.getToken();
+
+    return this.http
+      .put<Post>(`${this.apiUrl}/${postId}`, post, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .pipe(
+        tap((updatedPost) => {
+          // Atualiza a lista no BehaviorSubject
+          const currentPosts = this.postsSubject.value;
+          const updatedPosts = currentPosts.map((p) =>
+            p.id === postId ? updatedPost : p
+          );
+          this.postsSubject.next(updatedPosts);
+        })
+      );
+  }
+
+  // Método para deletar um post e refletir no BehaviorSubject
+  deletePostDashboard(postId: number): Observable<void> {
+    const token = this.getToken();
+
+    return this.http
+      .delete<void>(`${this.apiUrl}/${postId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .pipe(
+        tap(() => {
+          // Remove o post deletado do BehaviorSubject
+          const currentPosts = this.postsSubject.value;
+          const updatedPosts = currentPosts.filter((p) => p.id !== postId);
+          this.postsSubject.next(updatedPosts);
+        })
+      );
   }
 
   // Método para criar um post
@@ -69,7 +125,6 @@ export class PostService {
 
     return this.http.get<Post[]>(this.apiUrl, { headers }).pipe(
       map((posts) => {
-
         // Processar comentários e likes nos posts
         posts.forEach((post) => {
           post.likes = post.likes || 0; // Garantir que likes está definido
@@ -77,14 +132,15 @@ export class PostService {
 
         // Se o usuário estiver logado, retorne todos os posts
         if (this.isLoggedIn()) {
-
           return posts.sort((a, b) => {
             const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
             const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
             return dateB - dateA; // Ordenação decrescente
           });
         } else {
-          console.log('Usuário não está logado. Retornando apenas posts públicos.');
+          console.log(
+            'Usuário não está logado. Retornando apenas posts públicos.'
+          );
 
           // Retornar apenas posts públicos e ordená-los
           return posts
@@ -98,8 +154,6 @@ export class PostService {
       })
     );
   }
-
-
 
   // Método para buscar um post específico pelo ID
   getPostById(postId: number): Observable<Post> {
