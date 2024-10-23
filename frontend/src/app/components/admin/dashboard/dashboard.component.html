@@ -17,128 +17,97 @@
     </ul>
   </nav>
 
-<!-- Users Tab -->
-<div
-  *ngIf="selectedTab === 'users'"
-  class="grid grid-cols-1 lg:grid-cols-2 gap-6"
->
-  <div class="bg-white shadow-lg rounded-lg p-6">
-    <h2 class="text-xl font-bold mb-4">Manage Users</h2>
-    <ul>
-      <li
-        *ngFor="let user of users$ | async"
-        class="bg-gray-100 p-4 rounded-lg mb-3"
-      >
-        <div class="flex justify-between items-center">
-          <span>{{ user.email }}</span>
-          <div>
-            <button
-              class="bg-yellow-500 text-white py-1 px-3 rounded mr-2"
-              (click)="startEditUser(user)"
-            >
-              Edit
-            </button>
-            <button
-              class="bg-red-500 text-white py-1 px-3 rounded"
-              (click)="deleteUser(user.id)"
-            >
-              Delete
-            </button>
+  <!-- Users Tab -->
+  <div *ngIf="selectedTab === 'users'" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white shadow-lg rounded-lg p-6">
+      <h2 class="text-xl font-bold mb-4">Manage Users</h2>
+      <ul>
+        <li *ngFor="let user of users$ | async" class="bg-gray-100 p-4 rounded-lg mb-3">
+          <div class="flex justify-between items-center">
+            <span>{{ user.email }}</span>
+            <div>
+              <button class="bg-yellow-500 text-white py-1 px-3 rounded mr-2" (click)="startEditUser(user)">Edit</button>
+              <button class="bg-red-500 text-white py-1 px-3 rounded" (click)="deleteUser(user.id)">Delete</button>
+            </div>
           </div>
-        </div>
-
-        <!-- Formulário de Edição -->
-        <div *ngIf="editingUserId === user.id" class="mt-4">
-          <input
-            type="text"
-            [(ngModel)]="editingUser!.username"
-            placeholder="Edit Username"
-            required
-            class="form-control mb-2"
-          />
-          <input
-            type="email"
-            [(ngModel)]="editingUser!.email"
-            placeholder="Edit Email"
-            required
-            class="form-control mb-2"
-          />
-          <button
-            (click)="saveEditUser(editingUser)"
-            class="bg-green-500 text-white py-1 px-3 rounded mr-2"
-          >
-            Save
-          </button>
-          <button
-            (click)="cancelUserEdit()"
-            class="bg-gray-500 text-white py-1 px-3 rounded"
-          >
-            Cancel
-          </button>
-        </div>
-      </li>
-    </ul>
+          <div *ngIf="editingUserId === user.id" class="mt-4">
+            <input type="text" [(ngModel)]="editingUser!.username" placeholder="Edit Username" required class="form-control mb-2" />
+            <input type="email" [(ngModel)]="editingUser!.email" placeholder="Edit Email" required class="form-control mb-2" />
+            <button (click)="saveEditUser(editingUser)" class="bg-green-500 text-white py-1 px-3 rounded mr-2">Save</button>
+            <button (click)="cancelUserEdit()" class="bg-gray-500 text-white py-1 px-3 rounded">Cancel</button>
+          </div>
+        </li>
+      </ul>
+    </div>
   </div>
-</div>
 
-<!-- Posts Tab -->
-<div
-  *ngIf="selectedTab === 'posts'"
-  class="grid grid-cols-1 lg:grid-cols-2 gap-6"
->
-  <div class="bg-white shadow-lg rounded-lg p-6">
-    <h2 class="text-xl font-bold mb-4">Manage Posts</h2>
-    <ul>
-      <li
-        *ngFor="let post of posts$ | async"
-        class="bg-gray-100 p-4 rounded-lg mb-3"
-      >
-        <div class="flex justify-between items-center">
-          <span>{{ post.title }}</span>
-          <div>
-            <button
-              class="bg-yellow-500 text-white py-1 px-3 rounded mr-2"
-              (click)="startEditPost(post)"
-            >
-              Edit
-            </button>
-            <button
-            *ngIf="post.id !== undefined"
-              class="bg-red-500 text-white py-1 px-3 rounded"
-              (click)="deletePost(post.id)"
-            >
-              Delete
-            </button>
+  <!-- Posts Tab -->
+  <div *ngIf="selectedTab === 'posts'" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white shadow-lg rounded-lg p-6">
+      <h2 class="text-xl font-bold mb-4">Manage Posts</h2>
+      <ul>
+        <li *ngFor="let post of posts$ | async" class="bg-gray-100 p-4 rounded-lg mb-3">
+          <div class="flex justify-between items-center">
+            <span>{{ post.title }}</span>
+            <div>
+              <button class="bg-yellow-500 text-white py-1 px-3 rounded mr-2" (click)="startEditPost(post)">Edit</button>
+              <button *ngIf="post.id !== undefined" class="bg-red-500 text-white py-1 px-3 rounded" (click)="deletePost(post.id)">Delete</button>
+            </div>
           </div>
-        </div>
-        <div *ngIf="editingPostId === post.id && editingPost !== null">
-          <input
-            type="text"
-            [(ngModel)]="editingPost.title"
-            placeholder="Edit Title"
-            required
-            class="form-control mb-2"
-          />
-          <textarea
-            [(ngModel)]="editingPost.content"
-            placeholder="Edit Content"
-            required
-            class="form-control mb-2"
-          ></textarea>
-          <button
-            (click)="saveEditPost()"
-            class="bg-green-500 text-white py-1 px-3 rounded mr-2"
-          >
-            Save
-          </button>
-          <button
-            (click)="cancelPostEdit()"
-            class="bg-gray-500 text-white py-1 px-3 rounded"
-          >
-            Cancel
-          </button>
-        </div>
-      </li>
-    </ul>
+          <div *ngIf="editingPostId === post.id && editingPost !== null">
+            <input type="text" [(ngModel)]="editingPost.title" placeholder="Edit Title" required class="form-control mb-2" />
+            <textarea [(ngModel)]="editingPost.content" placeholder="Edit Content" required class="form-control mb-2"></textarea>
+            <button (click)="saveEditPost()" class="bg-green-500 text-white py-1 px-3 rounded mr-2">Save</button>
+            <button (click)="cancelPostEdit()" class="bg-gray-500 text-white py-1 px-3 rounded">Cancel</button>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Categories Tab -->
+  <div *ngIf="selectedTab === 'categories'" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white shadow-lg rounded-lg p-6">
+      <h2 class="text-xl font-bold mb-4">Manage Categories</h2>
+      <ul>
+        <li *ngFor="let category of categories$ | async" class="bg-gray-100 p-4 rounded-lg mb-3">
+          <div class="flex justify-between items-center">
+            <span>{{ category.name }}</span>
+            <div>
+              <button class="bg-yellow-500 text-white py-1 px-3 rounded mr-2" (click)="startEditCategory(category)">Edit</button>
+              <button class="bg-red-500 text-white py-1 px-3 rounded" (click)="deleteCategory(category.id ?? -1)">Delete</button>
+            </div>
+          </div>
+          <div *ngIf="editingCategoryId === category.id" class="mt-4">
+            <input type="text" [(ngModel)]="editingCategory!.name" placeholder="Edit Category Name" required class="form-control mb-2" />
+            <button (click)="saveEditCategory(editingCategory)" class="bg-green-500 text-white py-1 px-3 rounded mr-2">Save Category</button>
+            <button (click)="cancelEditCategory()" class="bg-gray-500 text-white py-1 px-3 rounded">Cancel</button>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Comments Tab -->
+  <div *ngIf="selectedTab === 'comments'" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white shadow-lg rounded-lg p-6">
+      <h2 class="text-xl font-bold mb-4">Manage Comments</h2>
+      <ul>
+        <li *ngFor="let comment of comments$ | async" class="bg-gray-100 p-4 rounded-lg mb-3">
+          <div class="flex justify-between items-center">
+            <span>{{ comment.content }}</span>
+            <div>
+              <button class="bg-yellow-500 text-white py-1 px-3 rounded mr-2" (click)="startEditComment(comment)">Edit</button>
+              <button class="bg-red-500 text-white py-1 px-3 rounded" (click)="deleteComment(comment.id ?? -1)">Delete</button>
+            </div>
+          </div>
+          <div *ngIf="editingCommentId === comment.id" class="mt-4">
+            <textarea [(ngModel)]="editingComment!.content" placeholder="Edit Comment" required class="form-control mb-2"></textarea>
+            <button (click)="saveEditComment(editingComment)" class="bg-green-500 text-white py-1 px-3 rounded mr-2">Save</button>
+            <button (click)="cancelEditComment()" class="bg-gray-500 text-white py-1 px-3 rounded">Cancel</button>
+          </div>
+        </li>
+      </ul>
+    </div>
   </div>
 </div>

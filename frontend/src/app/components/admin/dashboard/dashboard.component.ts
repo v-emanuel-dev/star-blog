@@ -15,7 +15,6 @@ import { CommentService } from '../../../services/comment.service';
   styleUrls: ['./dashboard.component.css'],
 })
 export class DashboardComponent implements OnInit {
-
   logout() {}
   users$: Observable<User[]>;
   posts$: Observable<Post[]>;
@@ -29,9 +28,9 @@ export class DashboardComponent implements OnInit {
   editingCategory: Category | null = null;
   editingComment: Comment | null = null;
   editingPostId: number | undefined; // Aceita undefined
-  editingCategoryId: number | null = null; // Agora é do tipo number | null
+  editingCategoryId: number | null | undefined; // Agora é do tipo number | null
   editingUserId: number | null = null; // Agora é do tipo number | null
-  editingCommentId: number | null = null; // Agora é do tipo number | null
+  editingCommentId: number | null | undefined;
   selectedTab: string = 'users'; // Inicializa com a aba "users" selecionada
 
   constructor(
@@ -219,6 +218,13 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  // Iniciar a edição de uma categoria
+  startEditCategory(category: Category): void {
+    console.log('Editing category:', category);
+    this.editingCategoryId = category.id; // Armazena o ID da categoria
+    this.editingCategory = { ...category }; // Cópia da categoria para edição
+  }
+
   // Método para adicionar uma nova categoria
   addCategory(newCategory: string): void {
     console.log('Adding new category:', newCategory);
@@ -234,30 +240,24 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // Iniciar a edição de uma categoria
-  startEditCategory(category: Category): void {
-    console.log('Editing category:', category);
-    this.editingCategory = { ...category };
-  }
-
   // Salvar as alterações na categoria
-  saveEditCategory(category: Category): void {
-    if (this.editingCategory && this.editingCategory.id !== undefined) {
-      console.log('Saving category:', this.editingCategory);
-      this.categoryService
-        .updateCategory(this.editingCategory.id, this.editingCategory)
-        .subscribe({
-          next: () => {
-            console.log('Category updated successfully');
-            this.editingCategory = null; // Limpa o campo de edição
-            this.loadCategories(); // Recarrega as categorias após a edição
-          },
-          error: (err) => {
-            console.error('Error updating category:', err);
-          },
-        });
+  // Salvar as alterações na categoria
+  saveEditCategory(category: Category | null): void {
+    if (category && category.id !== undefined) {
+      // Verifica se category não é null
+      console.log('Saving category:', category);
+      this.categoryService.updateCategory(category.id, category).subscribe({
+        next: () => {
+          console.log('Category updated successfully');
+          this.editingCategory = null; // Limpa o campo de edição
+          this.loadCategories(); // Recarrega as categorias após a edição
+        },
+        error: (err) => {
+          console.error('Error updating category:', err);
+        },
+      });
     } else {
-      console.error('Category ID is undefined');
+      console.error('Category is null or ID is undefined');
     }
   }
 
@@ -281,8 +281,8 @@ export class DashboardComponent implements OnInit {
 
   // Cancelar a edição de uma categoria
   cancelEditCategory(): void {
-    console.log('Edit canceled');
-    this.editingCategory = null; // Limpa a edição
+    this.editingCategory = null;
+    this.editingCategoryId = null; // Limpa a edição
   }
 
   // Método para deletar um comentário
@@ -306,11 +306,12 @@ export class DashboardComponent implements OnInit {
   // Iniciar a edição de um comentário
   startEditComment(comment: Comment): void {
     console.log('Editing comment:', comment);
-    this.editingComment = { ...comment };
+    this.editingCommentId = comment.id; // Armazena o ID do comentário
+    this.editingComment = { ...comment }; // Cópia do comentário para edição
   }
 
   // Salvar as alterações no comentário
-  saveEditComment(comment: Comment): void {
+  saveEditComment(comment: Comment | null): void {
     if (this.editingComment && this.editingComment.id !== undefined) {
       console.log('Saving comment:', this.editingComment);
       this.commentService
@@ -332,14 +333,8 @@ export class DashboardComponent implements OnInit {
 
   // Cancelar a edição de um comentário
   cancelEditComment(): void {
-    console.log('Edit canceled');
     this.editingComment = null; // Limpa a edição
-  }
-
-  // Método para cancelar a edição de uma categoria
-  cancelCategoryEdit(): void {
-    console.log('Canceled category edit');
-    this.editingCategory = null; // Limpa a edição
+    this.editingCommentId = null;
   }
 
   // Selecionar a aba atual
