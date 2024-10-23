@@ -34,17 +34,26 @@ export class UserService {
       Authorization: `Bearer ${token}`,
     };
 
-    return this.http.put(`${this.apiUrl}/admin/update/${id}`, userData, {
-      headers,
-    }).pipe(
-      tap(() => {
-        const updatedUsers = this.usersSubject.value.map((u) =>
-          u.id === id ? { ...u, ...userData } : u
-        );
-        this.usersSubject.next(updatedUsers);
+    console.log('Updating user:', { id, userData, token }); // Log do usuário que está sendo atualizado
+
+    return this.http.put(`${this.apiUrl}/admin/update/${id}`, userData, { headers }).pipe(
+      tap({
+        next: (response) => {
+          console.log('Update response:', response); // Log de resposta do servidor
+
+          const updatedUsers = this.usersSubject.value.map((u) =>
+            u.id === id ? { ...u, ...userData } : u
+          );
+          this.usersSubject.next(updatedUsers);
+          console.log('Updated users list:', updatedUsers); // Log da lista de usuários atualizada
+        },
+        error: (err) => {
+          console.error('Error updating user:', err); // Log de erro caso ocorra
+        }
       })
     );
   }
+
 
   deleteUser(userId: number): Observable<any> {
     const token = localStorage.getItem('accessToken');

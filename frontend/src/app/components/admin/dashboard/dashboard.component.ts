@@ -15,15 +15,8 @@ import { CommentService } from '../../../services/comment.service';
   styleUrls: ['./dashboard.component.css'],
 })
 export class DashboardComponent implements OnInit {
-cancelCommentEdit() {
-throw new Error('Method not implemented.');
-}
-cancelUserEdit() {
-throw new Error('Method not implemented.');
-}
-logout() {
-throw new Error('Method not implemented.');
-}
+
+  logout() {}
   users$: Observable<User[]>;
   posts$: Observable<Post[]>;
   categories$: Observable<Category[]>;
@@ -35,7 +28,7 @@ throw new Error('Method not implemented.');
   editingPost: Post | null = null;
   editingCategory: Category | null = null;
   editingComment: Comment | null = null;
-  editingPostId: number | null = null; // Agora é do tipo number | null
+  editingPostId: number | undefined; // Aceita undefined
   editingCategoryId: number | null = null; // Agora é do tipo number | null
   editingUserId: number | null = null; // Agora é do tipo number | null
   editingCommentId: number | null = null; // Agora é do tipo number | null
@@ -132,12 +125,17 @@ throw new Error('Method not implemented.');
 
   // Iniciar a edição de um post
   startEditPost(post: Post): void {
-    console.log('Editing post:', post);
-    this.editingPost = { ...post };
+    if (post && post.id !== undefined) {
+      // Verifica se post e post.id são válidos
+      this.editingPostId = post.id; // Atribuição segura
+      this.editingPost = { ...post }; // Cópia do post para edição
+    } else {
+      console.error('Post is invalid or has no ID');
+    }
   }
 
   // Salvar as alterações no post
-  saveEditPost(post: Post): void {
+  saveEditPost(): void {
     if (this.editingPost && this.editingPost.id !== undefined) {
       console.log('Saving post:', this.editingPost);
       this.postService
@@ -146,6 +144,7 @@ throw new Error('Method not implemented.');
           next: () => {
             console.log('Post updated successfully');
             this.editingPost = null; // Limpa o campo de edição
+            this.editingPostId = undefined; // Fecha o formulário de edição
             this.loadPostsAdmin(); // Recarrega os posts após a edição
           },
           error: (err) => {
@@ -153,7 +152,7 @@ throw new Error('Method not implemented.');
           },
         });
     } else {
-      console.error('Post ID is undefined');
+      console.error('Post ID is undefined or editingPost is null');
     }
   }
 
@@ -175,54 +174,47 @@ throw new Error('Method not implemented.');
     });
   }
 
-  // Cancelar a edição de um post
-  cancelEditPost(): void {
-    console.log('Edit canceled');
+  cancelPostEdit(): void {
     this.editingPost = null; // Limpa a edição
+    this.editingPostId = undefined; // Fecha o formulário de edição
   }
 
+  // Editar usuário
   startEditUser(user: User): void {
-    console.log('Editing user:', user);
-    this.editingUser = { ...user };
+    this.editingUserId = user.id;
+    this.editingUser = { ...user }; // Clona o objeto user para edição
   }
 
-  saveEditUser(user: User): void {
-    if (this.editingUser) {
-      console.log('Saving user:', this.editingUser);
-      this.userService
-        .updateUserAdmin(this.editingUser.id, this.editingUser)
-        .subscribe({
-          next: () => {
-            console.log('User updated successfully:', this.editingUser);
-            this.editingUser = null; // Limpa a edição
-            this.loadUsers(); // Recarrega os usuários após a edição
-          },
-          error: (err) => {
-            console.error('Error updating user:', err);
-          },
-        });
+  saveEditUser(user: User | null): void {
+    if (user && this.editingUser) {
+      // Verifica se user e editingUser não são null
+      this.userService.updateUserAdmin(user.id, this.editingUser).subscribe({
+        next: () => {
+          console.log('User updated successfully:', this.editingUser);
+          this.editingUserId = null; // Limpa a edição
+          this.editingUser = null;
+          this.loadUsers(); // Recarrega os usuários após a edição
+        },
+        error: (err) => {
+          console.error('Error updating user:', err);
+        },
+      });
     }
   }
 
-  cancelEditUser(): void {
-    console.log('Edit canceled');
-    this.editingUser = null; // Limpa a edição
+  cancelUserEdit(): void {
+    this.editingUserId = null;
+    this.editingUser = null;
   }
 
-  // Métodos relacionados a usuários
   deleteUser(userId: number): void {
-    console.log('Attempting to delete user with ID:', userId);
-    this.loading = true;
     this.userService.deleteUser(userId).subscribe({
       next: () => {
-        console.log('User deleted successfully:', userId);
-        this.message = 'User deleted successfully!';
-        this.loading = false;
+        console.log('User deleted successfully');
+        this.loadUsers(); // Recarrega a lista de usuários
       },
-      error: (error) => {
-        console.error('Error deleting user:', error);
-        this.message = 'Failed to delete user.';
-        this.loading = false;
+      error: (err) => {
+        console.error('Error deleting user:', err);
       },
     });
   }
