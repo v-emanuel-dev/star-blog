@@ -60,6 +60,11 @@ export class DashboardComponent implements OnInit {
     this.selectedTab = tab;
   }
 
+  onTabChange(event: Event): void {
+    const target = event.target as HTMLSelectElement; // Assegura que o 'target' é um select
+    this.selectTab(target.value); // Chama o método selectTab com o valor selecionado
+  }
+
   // Método para carregar usuários
   loadUsers(): void {
     this.loading = true; // Inicia o estado de carregamento

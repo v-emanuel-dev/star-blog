@@ -61,56 +61,73 @@
     </button>
   </div>
 
-  <!-- Tabs for Navigation -->
-  <div class="flex space-x-2 mb-6">
-    <button
-      (click)="selectTab('users')"
-      class="flex-1 py-2 text-center rounded-md transition-all duration-200 ease-in-out"
-      [ngClass]="{
-        'bg-blue-600 text-white': selectedTab === 'users',
-        'bg-gray-100 text-gray-600': selectedTab !== 'users'
-      }"
-    >
-      Users
-    </button>
-    <button
-      (click)="selectTab('posts')"
-      class="flex-1 py-2 text-center rounded-md transition-all duration-200 ease-in-out"
-      [ngClass]="{
-        'bg-blue-600 text-white': selectedTab === 'posts',
-        'bg-gray-100 text-gray-600': selectedTab !== 'posts'
-      }"
-    >
-      Posts
-    </button>
-    <button
-      (click)="selectTab('categories')"
-      class="flex-1 py-2 text-center rounded-md transition-all duration-200 ease-in-out"
-      [ngClass]="{
-        'bg-blue-600 text-white': selectedTab === 'categories',
-        'bg-gray-100 text-gray-600': selectedTab !== 'categories'
-      }"
-    >
-      Categorias
-    </button>
-    <button
-      (click)="selectTab('comments')"
-      class="flex-1 py-2 text-center rounded-md transition-all duration-200 ease-in-out"
-      [ngClass]="{
-        'bg-blue-600 text-white': selectedTab === 'comments',
-        'bg-gray-100 text-gray-600': selectedTab !== 'comments'
-      }"
-    >
-      Comentários
-    </button>
+  <!-- Tabs/Select for Navigation -->
+  <div class="mb-6">
+    <!-- Tabs for larger screens -->
+    <div class="hidden sm:flex space-x-2">
+      <button
+        (click)="selectTab('users')"
+        class="flex-1 py-2 text-center rounded-md transition-all duration-200 ease-in-out"
+        [ngClass]="{
+          'bg-blue-600 text-white': selectedTab === 'users',
+          'bg-gray-100 text-gray-600': selectedTab !== 'users'
+        }"
+      >
+        Users
+      </button>
+      <button
+        (click)="selectTab('posts')"
+        class="flex-1 py-2 text-center rounded-md transition-all duration-200 ease-in-out"
+        [ngClass]="{
+          'bg-blue-600 text-white': selectedTab === 'posts',
+          'bg-gray-100 text-gray-600': selectedTab !== 'posts'
+        }"
+      >
+        Posts
+      </button>
+      <button
+        (click)="selectTab('categories')"
+        class="flex-1 py-2 text-center rounded-md transition-all duration-200 ease-in-out"
+        [ngClass]="{
+          'bg-blue-600 text-white': selectedTab === 'categories',
+          'bg-gray-100 text-gray-600': selectedTab !== 'categories'
+        }"
+      >
+        Categorias
+      </button>
+      <button
+        (click)="selectTab('comments')"
+        class="flex-1 py-2 text-center rounded-md transition-all duration-200 ease-in-out"
+        [ngClass]="{
+          'bg-blue-600 text-white': selectedTab === 'comments',
+          'bg-gray-100 text-gray-600': selectedTab !== 'comments'
+        }"
+      >
+        Comentários
+      </button>
+    </div>
+
+    <!-- Dropdown for smaller screens -->
+    <div class="sm:hidden">
+      <select
+        [(ngModel)]="selectedTab"
+        (change)="onTabChange($event)"
+        class="w-full border border-gray-300 rounded-md p-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="users">Users</option>
+        <option value="posts">Posts</option>
+        <option value="categories">Categorias</option>
+        <option value="comments">Comentários</option>
+      </select>
+    </div>
   </div>
 
   <ng-container *ngIf="selectedTab === 'users'">
-    <h2 class="text-xl font-semibold mb-4 mt-6 text-gray-800">Users</h2>
+    <h2 class="text-xl font-semibold mb-4 mt-6 mx-4 text-gray-800">Users</h2>
     <ul class="space-y-3">
       <li
         *ngFor="let user of users$ | async"
-        class="flex flex-col md:flex-row justify-between items-center p-3 bg-gray-50 rounded-md shadow-sm hover:shadow-md transition-shadow duration-150"
+        class="mx-4 flex flex-col md:flex-row justify-between items-center p-3 bg-gray-50 rounded-md shadow-sm hover:shadow-md transition-shadow duration-150"
       >
         <div
           *ngIf="editingUser?.id !== user.id"
