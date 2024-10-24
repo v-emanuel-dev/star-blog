@@ -1,44 +1,54 @@
 import { Component, OnInit } from '@angular/core';
-import { Observable, of } from 'rxjs';
 import { UserService } from '../../../services/user.service';
+import { CategoryService } from '../../../services/category.service';
+import { CommentService } from '../../../services/comment.service';
 import { PostService } from '../../../services/post.service';
+import { catchError, forkJoin, Observable, of, tap } from 'rxjs';
 import { User } from '../../../models/user.model';
 import { Post } from '../../../models/post.model';
-import { CategoryService } from '../../../services/category.service';
 import { Category } from '../../../models/category.model';
 import { Comment } from '../../../models/comment.model';
-import { CommentService } from '../../../services/comment.service';
-
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.css'],
+  styleUrls: ['./dashboard.component.css'], // Corrigi 'styleUrl' para 'styleUrls'
 })
 export class DashboardComponent implements OnInit {
-  logout() {}
+  users: any[] = [];
+  editingUser: any = null;
+  categories: any[] = [];
+  editingCategory: any = null;
+  comments: any[] = [];
+  editingComment: any = null;
+  posts: any[] = [];
+  editingPost: any = null;
+  success: boolean = false; // Status de sucesso ou falha das ações
+  message: string | null = null; // Mensagem a ser exibida
+  isModalOpen: boolean = false;
+  currentPostId: number | null = null;
+  currentId: number | null = null; // ID do item a ser deletado (genérico para post, user, comment, category)
+  itemType: 'user' | 'post' | 'comment' | 'category' | null = null; // Tipo de item
+  loading: boolean = true; // Indicador de carregamento
+  sections = [
+    { name: 'Users', isEditing: false },
+    { name: 'Categories', isEditing: false },
+    { name: 'Comments', isEditing: false },
+    { name: 'Posts', isEditing: false },
+  ];
+
   users$: Observable<User[]>;
   posts$: Observable<Post[]>;
   categories$: Observable<Category[]>;
   comments$: Observable<Comment[]>;
-
-  loading: boolean = true; // Indicador de carregamento
-  message: string | null = null;
-  editingUser: User | null = null;
-  editingPost: Post | null = null;
-  editingCategory: Category | null = null;
-  editingComment: Comment | null = null;
-  editingPostId: number | undefined; // Aceita undefined
-  editingCategoryId: number | null | undefined; // Agora é do tipo number | null
-  editingUserId: number | null = null; // Agora é do tipo number | null
-  editingCommentId: number | null | undefined;
-  selectedTab: string = 'users'; // Inicializa com a aba "users" selecionada
+  selectedTab: string;
 
   constructor(
     private userService: UserService,
-    private postService: PostService,
     private categoryService: CategoryService,
-    private commentService: CommentService
+    private commentService: CommentService,
+    private postService: PostService
   ) {
+    this.selectedTab = 'users'; // Defina o valor inicial da aba selecionada
     this.users$ = this.userService.users$; // Assina os usuários
     this.posts$ = this.postService.posts$; // Assina os posts
     this.categories$ = this.categoryService.categories$; // Assina as categorias
@@ -47,10 +57,11 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit() {
     console.log('ngOnInit called');
-    this.loadUsers(); // Carrega usuários inicialmente
-    this.loadPostsAdmin(); // Carrega posts de admin
-    this.loadCategories();
-    this.loadComments();
+    this.loadAllData();
+  }
+
+  selectTab(tab: string): void {
+    this.selectedTab = tab;
   }
 
   // Método para carregar usuários
@@ -122,224 +133,356 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // Iniciar a edição de um post
-  startEditPost(post: Post): void {
-    if (post && post.id !== undefined) {
-      // Verifica se post e post.id são válidos
-      this.editingPostId = post.id; // Atribuição segura
-      this.editingPost = { ...post }; // Cópia do post para edição
-    } else {
-      console.error('Post is invalid or has no ID');
-    }
+  // Editar usuário
+  startEditUser(user: any) {
+    console.log('Editing user:', user);
+    this.editingUser = { ...user };
   }
 
-  // Salvar as alterações no post
-  saveEditPost(): void {
-    if (this.editingPost && this.editingPost.id !== undefined) {
-      console.log('Saving post:', this.editingPost);
-      this.postService
-        .updatePostDashboard(this.editingPost.id, this.editingPost)
+  saveEditUser() {
+    if (this.editingUser) {
+      this.loading = true;
+      console.log('Saving user:', this.editingUser);
+      this.userService
+        .updateUserAdmin(this.editingUser.id, this.editingUser)
         .subscribe({
           next: () => {
-            console.log('Post updated successfully');
-            this.editingPost = null; // Limpa o campo de edição
-            this.editingPostId = undefined; // Fecha o formulário de edição
-            this.loadPostsAdmin(); // Recarrega os posts após a edição
+            console.log('User updated successfully:', this.editingUser);
+            this.message = 'User updated successfully!';
+            this.success = true;
+            this.loadUsers();
+            this.editingUser = null;
           },
-          error: (err) => {
-            console.error('Error updating post:', err);
+          error: (error) => {
+            console.error('Error updating user:', error);
+            this.message = 'Failed to update user.';
+            this.success = false;
+            this.loading = false; // Garantindo que loading seja false em caso de erro
+          },
+          complete: () => {
+            this.loading = false; // Finaliza o carregamento
           },
         });
-    } else {
-      console.error('Post ID is undefined or editingPost is null');
     }
   }
 
-  // Método para deletar um post
-  deletePost(postId: number): void {
-    console.log('Attempting to delete post with ID:', postId);
-    this.loading = true;
-    this.postService.deletePost(postId).subscribe({
-      next: () => {
-        console.log('Post deleted successfully:', postId);
-        this.message = 'Post deleted successfully!';
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error deleting post:', error);
-        this.message = 'Failed to delete post.';
-        this.loading = false;
-      },
-    });
-  }
-
-  cancelPostEdit(): void {
-    this.editingPost = null; // Limpa a edição
-    this.editingPostId = undefined; // Fecha o formulário de edição
-  }
-
-  // Editar usuário
-  startEditUser(user: User): void {
-    this.editingUserId = user.id;
-    this.editingUser = { ...user }; // Clona o objeto user para edição
-  }
-
-  saveEditUser(user: User | null): void {
-    if (user && this.editingUser) {
-      // Verifica se user e editingUser não são null
-      this.userService.updateUserAdmin(user.id, this.editingUser).subscribe({
-        next: () => {
-          console.log('User updated successfully:', this.editingUser);
-          this.editingUserId = null; // Limpa a edição
-          this.editingUser = null;
-          this.loadUsers(); // Recarrega os usuários após a edição
-        },
-        error: (err) => {
-          console.error('Error updating user:', err);
-        },
-      });
-    }
-  }
-
-  cancelUserEdit(): void {
-    this.editingUserId = null;
+  cancelEditUser() {
+    console.log('Edit canceled for user:', this.editingUser);
     this.editingUser = null;
   }
 
-  deleteUser(userId: number): void {
-    this.userService.deleteUser(userId).subscribe({
-      next: () => {
-        console.log('User deleted successfully');
-        this.loadUsers(); // Recarrega a lista de usuários
+  // Deletar usuário
+  deleteUser(id: number) {
+    this.loading = true;
+    this.userService.deleteUser(id).subscribe({
+      next: (response) => {
+        console.log('User deleted successfully:', response);
+        this.message = 'User deleted successfully!';
+        this.success = true;
+        this.loadUsers();
       },
       error: (err) => {
         console.error('Error deleting user:', err);
+        this.message = 'Failed to delete user.';
+        this.success = false;
+      },
+      complete: () => {
+        this.loading = false; // Finaliza o carregamento
       },
     });
   }
 
-  // Iniciar a edição de uma categoria
-  startEditCategory(category: Category): void {
+  // Editar categoria
+  startEditCategory(category: any) {
     console.log('Editing category:', category);
-    this.editingCategoryId = category.id; // Armazena o ID da categoria
-    this.editingCategory = { ...category }; // Cópia da categoria para edição
+    this.editingCategory = { ...category };
   }
 
-  // Método para adicionar uma nova categoria
-  addCategory(newCategory: string): void {
-    console.log('Adding new category:', newCategory);
-    const category: Category = { id: 0, name: newCategory, postId: 0 }; // Supondo que o ID será gerado no backend
-    this.categoryService.createCategory(category).subscribe({
-      next: () => {
-        console.log('Category added successfully');
-        this.loadCategories(); // Recarrega as categorias após a adição
-      },
-      error: (error) => {
-        console.error('Error adding category:', error);
-      },
-    });
-  }
-
-  // Salvar as alterações na categoria
-  // Salvar as alterações na categoria
-  saveEditCategory(category: Category | null): void {
-    if (category && category.id !== undefined) {
-      // Verifica se category não é null
-      console.log('Saving category:', category);
-      this.categoryService.updateCategory(category.id, category).subscribe({
-        next: () => {
-          console.log('Category updated successfully');
-          this.editingCategory = null; // Limpa o campo de edição
-          this.loadCategories(); // Recarrega as categorias após a edição
-        },
-        error: (err) => {
-          console.error('Error updating category:', err);
-        },
-      });
-    } else {
-      console.error('Category is null or ID is undefined');
+  saveEditCategory() {
+    if (this.editingCategory) {
+      this.loading = true;
+      console.log('Saving category:', this.editingCategory);
+      this.categoryService
+        .updateCategory(this.editingCategory.id, this.editingCategory)
+        .subscribe({
+          next: () => {
+            console.log('Category updated successfully:', this.editingCategory);
+            this.message = 'Category updated successfully!';
+            this.success = true;
+            this.loadCategories();
+            this.editingCategory = null;
+          },
+          error: (error) => {
+            console.error('Error updating category:', error);
+            this.message = 'Failed to update category.';
+            this.success = false;
+          },
+          complete: () => {
+            this.loading = false; // Finaliza o carregamento
+          },
+        });
     }
   }
 
-  deleteCategory(categoryId: number): void {
-    console.log('Attempting to delete category with ID:', categoryId);
-    this.loading = true; // Define o estado de carregamento como verdadeiro
-
-    this.categoryService.deleteCategory(categoryId).subscribe({
-      next: () => {
-        console.log('Category deleted successfully:', categoryId);
-        this.message = 'Category deleted successfully!'; // Mensagem de sucesso
-        this.loading = false; // Define o estado de carregamento como falso
-      },
-      error: (error) => {
-        console.error('Error deleting category:', error);
-        this.message = 'Failed to delete category.'; // Mensagem de erro
-        this.loading = false; // Define o estado de carregamento como falso
-      },
-    });
-  }
-
-  // Cancelar a edição de uma categoria
-  cancelEditCategory(): void {
+  cancelEditCategory() {
+    console.log('Edit canceled for category:', this.editingCategory);
     this.editingCategory = null;
-    this.editingCategoryId = null; // Limpa a edição
   }
 
-  // Método para deletar um comentário
-  deleteComment(commentId: number): void {
-    console.log('Attempting to delete comment with ID:', commentId);
+  // Deletar categoria
+  deleteCategory(id: number) {
     this.loading = true;
-    this.commentService.deleteComment(commentId).subscribe({
-      next: () => {
-        console.log('Comment deleted successfully:', commentId);
-        this.message = 'Comment deleted successfully!';
-        this.loading = false;
+    this.categoryService.deleteCategory(id).subscribe({
+      next: (response) => {
+        console.log('Category deleted successfully:', response);
+        this.message = 'Category deleted successfully!';
+        this.success = true;
+        this.loadCategories();
       },
-      error: (error) => {
-        console.error('Error deleting comment:', error);
-        this.message = 'Failed to delete comment.';
-        this.loading = false;
+      error: (err) => {
+        console.error('Error deleting category:', err);
+        this.message = 'Failed to delete category.';
+        this.success = false;
+      },
+      complete: () => {
+        this.loading = false; // Finaliza o carregamento
       },
     });
   }
 
-  // Iniciar a edição de um comentário
-  startEditComment(comment: Comment): void {
+  // Editar comentário
+  startEditComment(comment: any) {
     console.log('Editing comment:', comment);
-    this.editingCommentId = comment.id; // Armazena o ID do comentário
-    this.editingComment = { ...comment }; // Cópia do comentário para edição
+    this.editingComment = { ...comment };
   }
 
-  // Salvar as alterações no comentário
-  saveEditComment(comment: Comment | null): void {
-    if (this.editingComment && this.editingComment.id !== undefined) {
+  saveEditComment() {
+    if (this.editingComment) {
+      this.loading = true;
       console.log('Saving comment:', this.editingComment);
       this.commentService
         .updateComment(this.editingComment.id, this.editingComment)
         .subscribe({
           next: () => {
-            console.log('Comment updated successfully');
-            this.editingComment = null; // Limpa o campo de edição
-            this.loadComments(); // Recarrega os comentários após a edição
+            console.log('Comment updated successfully:', this.editingComment);
+            this.message = 'Comment updated successfully!';
+            this.success = true;
+            this.loadComments();
+            this.editingComment = null;
           },
-          error: (err) => {
-            console.error('Error updating comment:', err);
+          error: (error) => {
+            console.error('Error updating comment:', error);
+            this.message = 'Failed to update comment.';
+            this.success = false;
+            this.loading = false; // Finaliza o carregamento
+          },
+          complete: () => {
+            this.loading = false; // Finaliza o carregamento
           },
         });
-    } else {
-      console.error('Comment ID is undefined');
     }
   }
 
-  // Cancelar a edição de um comentário
-  cancelEditComment(): void {
-    this.editingComment = null; // Limpa a edição
-    this.editingCommentId = null;
+  cancelEditComment() {
+    console.log('Edit canceled for comment:', this.editingComment);
+    this.editingComment = null;
   }
 
-  // Selecionar a aba atual
-  selectTab(tab: string): void {
-    console.log('Tab selected:', tab);
-    this.selectedTab = tab; // Atualiza a aba selecionada
+  // Deletar comentário
+  deleteComment(id: number) {
+    this.loading = true;
+    this.commentService.deleteComment(id).subscribe({
+      next: (response) => {
+        console.log('Comment deleted successfully:', response);
+        this.message = 'Comment deleted successfully!';
+        this.success = true;
+        this.loadComments();
+      },
+      error: (err) => {
+        console.error('Error deleting comment:', err);
+        this.message = 'Failed to delete comment.';
+        this.success = false;
+        this.loading = false; // Finaliza o carregamento
+      },
+      complete: () => {
+        this.loading = false; // Finaliza o carregamento
+      },
+    });
+  }
+
+  // Editar post
+  startEditPost(post: any) {
+    console.log('Editing post:', post);
+    this.editingPost = { ...post };
+  }
+
+  saveEditPost() {
+    if (this.editingPost) {
+      this.loading = true;
+      console.log('Saving post:', this.editingPost);
+      this.postService
+        .updatePost(this.editingPost.id, this.editingPost)
+        .subscribe({
+          next: () => {
+            console.log('Post updated successfully:', this.editingPost);
+            this.message = 'Post updated successfully!';
+            this.success = true;
+            this.loadPostsAdmin();
+            this.editingPost = null;
+          },
+          error: (error) => {
+            console.error('Error updating post:', error);
+            this.message = 'Failed to update post.';
+            this.success = false;
+            this.loading = false; // Finaliza o carregamento
+          },
+          complete: () => {
+            this.loading = false; // Finaliza o carregamento
+          },
+        });
+    }
+  }
+
+  cancelEditPost() {
+    console.log('Edit canceled for post:', this.editingPost);
+    this.editingPost = null;
+  }
+
+  // Deletar post
+  deletePost(id: number) {
+    this.loading = true;
+    this.postService.deletePost(id).subscribe({
+      next: (response) => {
+        console.log('Post deleted successfully:', response);
+        this.message = 'Post deleted successfully!';
+        this.success = true;
+        this.loadPostsAdmin();
+      },
+      error: (err) => {
+        console.error('Error deleting post:', err);
+        this.message = 'Failed to delete post.';
+        this.success = false;
+        this.loading = false; // Finaliza o carregamento
+      },
+      complete: () => {
+        this.loading = false; // Finaliza o carregamento
+      },
+    });
+  }
+
+  // Método para abrir o modal para qualquer tipo de item
+  openModal(
+    itemId: number,
+    type: 'user' | 'post' | 'comment' | 'category'
+  ): void {
+    this.currentId = itemId;
+    this.itemType = type;
+    this.isModalOpen = true;
+  }
+
+  // Método para fechar o modal
+  closeModal(): void {
+    this.isModalOpen = false;
+    this.currentId = null;
+    this.itemType = null;
+  }
+
+  // Método para confirmar a deleção
+  confirmDelete(
+    itemId: number,
+    type: 'user' | 'post' | 'comment' | 'category'
+  ): void {
+    this.openModal(itemId, type);
+  }
+
+  // Método para deletar o item conforme seu tipo
+  deleteItemModal(): void {
+    if (this.currentId && this.itemType) {
+      let deleteObservable;
+
+      // Verifica o tipo do item e atribui o serviço correspondente
+      switch (this.itemType) {
+        case 'user':
+          deleteObservable = this.userService.deleteUser(this.currentId);
+          break;
+        case 'post':
+          deleteObservable = this.postService.deletePost(this.currentId);
+          break;
+        case 'category':
+          deleteObservable = this.categoryService.deleteCategory(
+            this.currentId
+          );
+          break;
+        case 'comment':
+          deleteObservable = this.commentService.deleteComment(this.currentId);
+          break;
+        default:
+          console.error('Tipo de item não reconhecido:', this.itemType);
+          return;
+      }
+
+      // Executa o serviço de deleção e trata o resultado
+      deleteObservable.subscribe({
+        next: () => {
+          // Chama o método correto para recarregar a lista após a exclusão
+          switch (this.itemType) {
+            case 'user':
+              this.loadUsers();
+              break;
+            case 'post':
+              this.loadPostsAdmin();
+              break;
+            case 'category':
+              this.loadCategories();
+              break;
+            case 'comment':
+              this.loadComments();
+              break;
+          }
+
+          this.message = `${this.itemType} deletado com sucesso!`;
+          this.success = true;
+          this.closeModal(); // Fecha o modal após a deleção
+        },
+        error: (err) => {
+          console.error(`Erro ao deletar ${this.itemType}:`, err); // Exibe o erro detalhado no console
+          this.message = `Falha ao deletar ${this.itemType}.`;
+          this.success = false;
+        },
+        complete: () => {
+          setTimeout(() => {
+            this.message = ''; // Limpa a mensagem após um tempo
+          }, 2000);
+        },
+      });
+    } else {
+      console.error(
+        'ID ou tipo de item não são válidos:',
+        this.currentId,
+        this.itemType
+      );
+    }
+  }
+
+  // Método para carregar todos os dados
+  loadAllData() {
+    this.loading = true; // Inicia o carregamento
+    // Cria um array de observables para aguardar a conclusão de todas as operações
+    forkJoin([
+      this.loadUsers(),
+      this.loadCategories(),
+      this.loadComments(),
+      this.loadPostsAdmin(),
+    ]).subscribe({
+      next: () => {
+        console.log('All data loaded successfully.');
+      },
+      error: (error) => {
+        console.error('Error loading data:', error);
+      },
+      complete: () => {
+        this.loading = false; // Finaliza o carregamento quando todos os dados forem carregados
+      },
+    });
   }
 }
