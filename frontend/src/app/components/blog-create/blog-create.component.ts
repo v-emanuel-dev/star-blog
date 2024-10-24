@@ -7,7 +7,6 @@ import { CategoryService } from '../../services/category.service';
 import { Category } from '../../models/category.model';
 import * as ClassicEditor from '@ckeditor/ckeditor5-build-classic'; // Importa a classe do editor
 import { HttpClient } from '@angular/common/http';
-import { ImageUpload } from '../../components/image-upload/image-upload.component';
 
 @Component({
   selector: 'app-blog-create',
@@ -28,6 +27,7 @@ export class BlogCreateComponent implements OnInit {
   message: string | null = null; // Permite que message seja uma string ou null
   editorContent: string = '';
   isModalOpen: boolean = false;
+  currentCategoryId: number | null = null; // Adicione esta nova propriedade
 
   public Editor = ClassicEditor.default; // Use a propriedade .default aqui
   public blogEditorContent: string = ''; // Variável renomeada para evitar conflitos
@@ -48,9 +48,8 @@ export class BlogCreateComponent implements OnInit {
       '|',
       'undo',
       'redo',
-    ]
+    ],
   };
-
 
   constructor(
     private postService: PostService,
@@ -68,7 +67,7 @@ export class BlogCreateComponent implements OnInit {
 
       // Chame loadCategories apenas se currentPostId não for null
       if (this.currentPostId !== null) {
-        this.loadCategories(this.currentPostId); // Passa o currentPostId como argumento
+        this.loadCategories(); // Passa o currentPostId como argumento
       } else {
         console.error(
           'currentPostId é null. Não é possível carregar categorias.'
@@ -87,7 +86,6 @@ export class BlogCreateComponent implements OnInit {
 
     // Se necessário, você pode adicionar outras configurações aqui
   }
-
 
   private getUserId(): void {
     const storedUserId = localStorage.getItem('userId');
@@ -165,7 +163,7 @@ export class BlogCreateComponent implements OnInit {
     this.message = error?.error?.message || 'Failed to create post.';
   }
 
-  loadCategories(postId: number): void {
+  loadCategories(): void {
     this.categoryService.getAllCategories().subscribe(
       (data: Category[]) => {
         this.categories = data; // Armazena as categorias
@@ -187,7 +185,7 @@ export class BlogCreateComponent implements OnInit {
         next: () => {
           // Passa o currentPostId ao chamar loadCategories
           if (this.currentPostId !== null) {
-            this.loadCategories(this.currentPostId);
+            this.loadCategories();
           } else {
             console.error('currentPostId is null. Cannot load categories.');
           }
@@ -203,8 +201,6 @@ export class BlogCreateComponent implements OnInit {
   }
 
   editCategory(category: Category): void {
-    //this.newCategoryName = category.name;
-    //this.selectedCategoryIds = category.id !== undefined ? category.id : null;
   }
 
   deleteCategory(categoryId: number): void {
@@ -213,7 +209,7 @@ export class BlogCreateComponent implements OnInit {
         next: () => {
           // Verifica se currentPostId não é null antes de chamar loadCategories
           if (this.currentPostId !== null) {
-            this.loadCategories(this.currentPostId); // Passa o postId para recarregar as categorias
+            this.loadCategories(); // Passa o postId para recarregar as categorias
           } else {
             console.error(
               'currentPostId is null. Cannot load categories after deletion.'
@@ -249,9 +245,8 @@ export class BlogCreateComponent implements OnInit {
     console.log('Categorias selecionadas:', this.selectedCategoryIds);
   }
 
-  // Método para abrir o modal
-  openModal(postId: number): void {
-    this.currentPostId = postId; // Armazena o ID do post a ser deletado
+  openModal(categoryId: number): void {
+    this.currentCategoryId = categoryId; // Armazena o ID da categoria a ser deletada
     this.isModalOpen = true; // Abre o modal
   }
 
@@ -259,36 +254,40 @@ export class BlogCreateComponent implements OnInit {
   closeModal(): void {
     this.isModalOpen = false; // Fecha o modal
     this.currentPostId = null; // Limpa o ID atual
+    this.currentCategoryId = null; // Limpa o ID da categoria atual
   }
 
-  // Método de confirmação de deleção
-  confirmDelete(postId: number): void {
-    this.openModal(postId); // Abre o modal com o ID do post
+  confirmDelete(categoryId: number): void {
+    this.openModal(categoryId);
   }
 
-  // Método para deletar o post
-  deletePostModal(postId: number): void {
-    if (postId) {
-      this.postService.deletePost(postId).subscribe({
+  // Método para deletar a categoria do post
+  deletePostCategory(): void {
+    if (this.currentCategoryId) {
+      this.categoryService.deleteCategory(this.currentCategoryId).subscribe({
         next: () => {
-          this.message = 'Category deleted successfully!';
+          this.message = 'Category removed successfully!';
           this.success = true;
-          this.closeModal(); // Fecha o modal após a deleção
+          this.closeModal();
+          this.loadCategories(); // Chame sem argumento
         },
         error: (err) => {
-          console.error('Error category post:', err); // Exibe o erro detalhado no console
-          this.message = 'Failed to category.';
+          console.error('Error removing category from post:', err);
+          this.message = 'Failed to remove category.';
           this.success = false;
         },
         complete: () => {
           setTimeout(() => {
-            this.message = ''; // Limpa a mensagem após um tempo
-          }, 2000);
-        },
+            this.message = '';
+          }, 1500);
+        }
       });
     } else {
-      console.error('Post ID is not valid:', postId);
+      console.error('Invalid Category ID:', {
+        categoryId: this.currentCategoryId
+      });
     }
   }
+
 
 }
