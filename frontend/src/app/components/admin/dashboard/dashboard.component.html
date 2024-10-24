@@ -200,9 +200,15 @@
           *ngIf="editingPost?.id !== post.id"
           class="flex justify-between items-center w-full"
         >
-          <span class="text-lg text-gray-800 truncate md:w-2/3"
-            >{{ post.title }} - {{ post.created_at | date : "short" }}</span
+          <span
+            class="text-lg text-gray-800 flex items-center space-x-2 md:w-2/3"
           >
+            <span>{{ post.title }}</span>
+            <span>-</span>
+            <span [innerHTML]="post.content"></span>
+            <span>-</span>
+            <span>{{ post.created_at | date : "short" }}</span>
+          </span>
           <div class="flex space-x-2">
             <button
               (click)="startEditPost(post)"
@@ -224,8 +230,13 @@
             placeholder="Title"
             class="border border-gray-300 rounded-md p-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
           />
-          <input
+          <ckeditor
             [(ngModel)]="editingPost.content"
+            name="content"
+            [editor]="Editor"
+            [config]="editorConfig"
+            (ready)="onReady($event)"
+            class="custom-editor"
             class="border border-gray-300 rounded-md p-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
           />
           <div class="flex space-x-2">
@@ -259,9 +270,9 @@
           *ngIf="editingCategory?.id !== category.id"
           class="flex justify-between items-center w-full"
         >
-          <span class="text-lg text-gray-800 truncate md:w-2/3">{{
-            category.name
-          }}</span>
+          <span class="text-lg text-gray-800 truncate md:w-2/3">
+            {{ category.name }}
+          </span>
           <div class="flex space-x-2">
             <button
               (click)="startEditCategory(category)"
@@ -317,9 +328,9 @@
           *ngIf="editingComment?.id !== comment.id"
           class="flex justify-between items-center w-full"
         >
-          <span class="text-lg text-gray-800 truncate md:w-2/3">{{
-            comment.content
-          }}</span>
+          <span class="text-lg text-gray-800 truncate md:w-2/3">
+            {{ comment.content }} - {{ comment.created_at | date : "short" }}
+          </span>
           <div class="flex space-x-2">
             <button
               (click)="startEditComment(comment)"

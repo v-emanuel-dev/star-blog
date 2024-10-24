@@ -8,6 +8,8 @@ import { User } from '../../../models/user.model';
 import { Post } from '../../../models/post.model';
 import { Category } from '../../../models/category.model';
 import { Comment } from '../../../models/comment.model';
+import * as ClassicEditor from '@ckeditor/ckeditor5-build-classic'; // Importa a classe do editor
+
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
@@ -37,7 +39,26 @@ export class DashboardComponent implements OnInit {
   categories$: Observable<Category[]>;
   comments$: Observable<Comment[]>;
   selectedTab: string;
-
+  public Editor = ClassicEditor.default; // Use a propriedade .default aqui
+  public editorConfig = {
+    toolbar: [
+      'heading',
+      '|',
+      'bold',
+      'italic',
+      'link',
+      'bulletedList',
+      'numberedList',
+      '|',
+      'imageUpload',
+      'blockQuote',
+      'insertTable',
+      'mediaEmbed',
+      '|',
+      'undo',
+      'redo',
+    ],
+  };
   constructor(
     private userService: UserService,
     private categoryService: CategoryService,
@@ -132,6 +153,10 @@ export class DashboardComponent implements OnInit {
         this.loading = false; // Atualiza o estado de carregamento
       },
     });
+  }
+
+  public onReady(editor: any): void {
+    delete editor.plugins.get('FileRepository').createUploadAdapter;
   }
 
   // Editar usuário
