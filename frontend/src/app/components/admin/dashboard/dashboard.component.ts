@@ -14,13 +14,9 @@ import { Comment } from '../../../models/comment.model';
   styleUrls: ['./dashboard.component.css'], // Corrigi 'styleUrl' para 'styleUrls'
 })
 export class DashboardComponent implements OnInit {
-  users: any[] = [];
   editingUser: any = null;
-  categories: any[] = [];
   editingCategory: any = null;
-  comments: any[] = [];
   editingComment: any = null;
-  posts: any[] = [];
   editingPost: any = null;
   success: boolean = false; // Status de sucesso ou falha das ações
   message: string | null = null; // Mensagem a ser exibida
