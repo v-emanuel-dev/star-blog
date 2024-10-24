@@ -46,9 +46,7 @@
 </div>
 
 <!-- Comments Section -->
-<div class="container mx-auto my-10 p-4">
-  <h1 class="text-2xl font-bold mb-6">Comments:</h1>
-
+<div class="container mx-auto mt-4">
   <!-- Add Comment -->
   <div class="bg-white shadow-md rounded-lg mb-6">
     <div class="px-4 py-3 border-b">
@@ -62,13 +60,12 @@
       ></textarea>
       <button
         (click)="addComment()"
-        class="bg-gray-800 text-white rounded-lg px-4 py-2 hover:bg-gray-700 transition"
+        class="bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-gray-700 transition"
       >
         Add Comment
       </button>
     </div>
   </div>
-
   <!-- Comment List -->
   <div
     *ngFor="let comment of comments"
@@ -105,28 +102,32 @@
         <button
           *ngIf="editCommentId !== comment.id"
           (click)="editComment(comment)"
-          class="text-gray-600 hover:text-gray-900 transition"
+          class="bg-yellow-500 text-white py-1 px-3 rounded hover:bg-yellow-600 transition duration-300"
         >
           Edit
         </button>
+
+
         <button
           *ngIf="editCommentId === comment.id"
           (click)="saveComment()"
-          class="text-green-600 hover:text-green-900 transition"
+          class="bg-green-500 text-white py-1 px-2 rounded-md hover:bg-green-400 transition duration-200 shadow-sm"
         >
           Save
         </button>
         <button
           *ngIf="editCommentId === comment.id"
           (click)="cancelEdit()"
-          class="text-red-600 hover:text-red-900 transition"
+          class="bg-gray-300 text-gray-800 py-1 px-2 rounded-md hover:bg-gray-400 transition duration-200 shadow-sm"
         >
           Cancel
         </button>
+
+
         <button
           *ngIf="comment.id !== undefined"
           (click)="deleteComment(comment.id)"
-          class="text-red-600 hover:text-red-900 transition"
+          class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-300"
         >
           Delete
         </button>
@@ -136,9 +137,7 @@
 </div>
 
 <!-- Categories Section -->
-<div *ngIf="isLoggedIn" class="container mx-auto my-10 p-4">
-  <h1 class="text-2xl font-bold mb-6">Categories:</h1>
-
+<div *ngIf="isLoggedIn" class="container mx-auto mt-3">
   <!-- Add Category -->
   <div class="bg-white shadow-md rounded-lg mb-6">
     <div class="px-4 py-3 border-b">
@@ -152,7 +151,7 @@
       />
       <button
         (click)="addCategory()"
-        class="bg-gray-800 text-white rounded-lg px-4 py-2 hover:bg-gray-700 transition"
+        class="bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-gray-700 transition"
       >
         Add Category
       </button>
