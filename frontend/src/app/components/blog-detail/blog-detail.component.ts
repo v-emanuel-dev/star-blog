@@ -81,17 +81,20 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
   }
 
   loadComments(): void {
-    this.commentService.getCommentsByPostId(this.postId).subscribe(
+    // Inscrevendo-se no Observable `comments$` diretamente
+    this.commentService.comments$.subscribe(
       (comments: Comment[]) => {
         this.comments = comments.sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
       },
       (error) => {
         console.error('Erro ao carregar comentários:', error);
       }
     );
+
+    // Chame getCommentsByPostId para carregar os comentários do post
+    this.commentService.getCommentsByPostId(this.postId).subscribe();
   }
 
   loadCategories(): void {

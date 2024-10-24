@@ -73,7 +73,7 @@
   >
     <div class="px-4 py-3 border-b flex items-center justify-between">
       <div>
-        <strong class="text-gray-900">{{ comment.username }}</strong>
+        <strong class="text-gray-900">{{ comment.username || 'Visitor' }}</strong>
         <p class="text-sm text-gray-500">
           {{ comment.created_at | date : "short" }}
         </p>

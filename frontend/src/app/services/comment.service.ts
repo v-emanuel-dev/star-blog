@@ -19,11 +19,7 @@ export class CommentService {
   private commentsSubject = new BehaviorSubject<Comment[]>([]);
   comments$ = this.commentsSubject.asObservable(); // Expondo o observable
 
-  constructor(private http: HttpClient) {
-    this.getAllComments().subscribe((comments) => {
-      this.commentsSubject.next(comments);
-    });
-  }
+  constructor(private http: HttpClient) {}
 
   addComment(comment: { content: string; postId: number; username: string }): Observable<Comment> {
     return this.http.post<Comment>(this.apiUrl, comment).pipe(
@@ -38,27 +34,31 @@ export class CommentService {
     console.log('Fetching all comments from API...');
     return this.http.get<Comment[]>(this.apiUrl).pipe(
       tap((comments) => {
-        this.commentsSubject.next(comments); // Atualizando o BehaviorSubject
+        this.commentsSubject.next(comments); // Atualizando o BehaviorSubject com os novos comentários
       }),
       catchError((error) => {
         console.error('Error fetching comments:', error);
+        this.commentsSubject.next([]); // Atualizando o BehaviorSubject com um array vazio em caso de erro
         return of([]); // Retorna um array vazio em caso de erro
+      })
+    );
+  }
+
+  getCommentsByPostId(postId: number): Observable<Comment[]> {
+    return this.http.get<Comment[]>(`${this.apiUrl}/post/${postId}`).pipe(
+      tap((comments) => {
+        this.commentsSubject.next(comments); // Atualiza o BehaviorSubject com os comentários recebidos
+        console.log('Comentários recebidos:', comments);
+      }),
+      catchError((error) => {
+        console.error('Erro ao buscar comentários:', error);
+        return throwError(error);
       })
     );
   }
 
   updateComments(comments: Comment[]): void {
     this.commentsSubject.next(comments);
-  }
-
-  getCommentsByPostId(postId: number): Observable<Comment[]> {
-    return this.http.get<Comment[]>(`${this.apiUrl}/post/${postId}`).pipe(
-      tap((comments) => console.log('Comentários recebidos:', comments)),
-      catchError((error) => {
-        console.error('Erro ao buscar comentários:', error);
-        return throwError(error);
-      })
-    );
   }
 
   updateComment(commentId: number, commentData: Comment): Observable<Comment> {
