@@ -127,14 +127,14 @@
     <ul class="space-y-3">
       <li
         *ngFor="let user of users$ | async"
-        class="mx-4 flex flex-col md:flex-row justify-between items-center p-3 bg-gray-50 rounded-md shadow-sm hover:shadow-md transition-shadow duration-150"
+        class="mx-2 flex flex-col md:flex-row justify-between items-center p-3 bg-gray-50 rounded-md shadow-sm hover:shadow-md transition-shadow duration-150"
       >
         <div
           *ngIf="editingUser?.id !== user.id"
           class="flex justify-between items-center w-full"
         >
           <span class="text-lg text-gray-800 truncate md:w-2/3"
-            >{{ user.username }} - {{ user.email }}</span
+            >{{ user.username }} - {{ user.email }} - {{ user.role }}</span
           >
           <div class="flex space-x-2">
             <button
@@ -194,7 +194,7 @@
     <ul class="space-y-3">
       <li
         *ngFor="let post of posts$ | async"
-        class="flex flex-col md:flex-row justify-between items-center p-3 bg-gray-50 rounded-md shadow-sm hover:shadow-md transition-shadow duration-150"
+        class="mx-2 flex flex-col md:flex-row justify-between items-center p-3 bg-gray-50 rounded-md shadow-sm hover:shadow-md transition-shadow duration-150"
       >
         <div
           *ngIf="editingPost?.id !== post.id"
@@ -253,7 +253,7 @@
     <ul class="space-y-3">
       <li
         *ngFor="let category of categories$ | async"
-        class="flex flex-col md:flex-row justify-between items-center p-3 bg-gray-50 rounded-md shadow-sm hover:shadow-md transition-shadow duration-150"
+        class="mx-2 flex flex-col md:flex-row justify-between items-center p-3 bg-gray-50 rounded-md shadow-sm hover:shadow-md transition-shadow duration-150"
       >
         <div
           *ngIf="editingCategory?.id !== category.id"
@@ -311,7 +311,7 @@
     <ul class="space-y-3">
       <li
         *ngFor="let comment of comments$ | async"
-        class="flex flex-col md:flex-row justify-between items-center p-3 bg-gray-50 rounded-md shadow-sm hover:shadow-md transition-shadow duration-150"
+        class="mx-2 flex flex-col md:flex-row justify-between items-center p-3 bg-gray-50 rounded-md shadow-sm hover:shadow-md transition-shadow duration-150"
       >
         <div
           *ngIf="editingComment?.id !== comment.id"
