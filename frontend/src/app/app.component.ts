@@ -21,6 +21,7 @@ export class AppComponent implements OnInit {
     // Captura os parâmetros da URL ao iniciar o componente
     this.route.queryParams.subscribe((params) => {
       const token = params['token'];
+      const accessToken = params['accessToken'];
       const userId = params['userId'];
       const email = params['email'];
       const username = params['username'];
@@ -30,6 +31,7 @@ export class AppComponent implements OnInit {
       if (token) {
         // Armazena os dados no localStorage
         localStorage.setItem('token', token);
+        localStorage.setItem('accessToken', token);
         localStorage.setItem('userId', userId);
         localStorage.setItem('email', email);
         localStorage.setItem('username', username);

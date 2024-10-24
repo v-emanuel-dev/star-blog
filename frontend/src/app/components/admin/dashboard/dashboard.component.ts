@@ -167,8 +167,9 @@ export class DashboardComponent implements OnInit {
 
   saveEditUser() {
     if (this.editingUser) {
-      this.loading = true;
+      this.loading = true; // Inicia o carregamento
       console.log('Saving user:', this.editingUser);
+
       this.userService
         .updateUserAdmin(this.editingUser.id, this.editingUser)
         .subscribe({
@@ -183,10 +184,9 @@ export class DashboardComponent implements OnInit {
             console.error('Error updating user:', error);
             this.message = 'Failed to update user.';
             this.success = false;
-            this.loading = false; // Garantindo que loading seja false em caso de erro
           },
           complete: () => {
-            this.loading = false; // Finaliza o carregamento
+            this.loading = false; // Finaliza o carregamento em caso de sucesso
           },
         });
     }
