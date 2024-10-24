@@ -104,14 +104,45 @@
           *ngFor="let category of categories"
           class="list-group-item d-flex justify-content-between align-items-center"
         >
-          {{ category.name }}
-          <div>
+          <!-- Exibe o nome da categoria -->
+          <span *ngIf="!editingCategory || editingCategory.id !== category.id">
+            {{ category.name }}
+          </span>
+
+          <!-- Campo de entrada aparece quando a categoria está sendo editada -->
+          <div
+            *ngIf="editingCategory && editingCategory.id === category.id"
+            class="d-flex align-items-center"
+          >
+            <input
+              [(ngModel)]="editingCategory.name"
+              class="form-control me-2"
+              placeholder="Edit category name"
+            />
             <button
+              class="btn btn-outline-success btn-sm me-2"
+              (click)="saveEditCategory()"
+            >
+              Save
+            </button>
+            <button
+              class="btn btn-outline-secondary btn-sm"
+              (click)="cancelEditCategory()"
+            >
+              Cancel
+            </button>
+          </div>
+
+          <div>
+            <!-- Botão para iniciar a edição -->
+            <button
+              *ngIf="!editingCategory || editingCategory.id !== category.id"
               class="btn btn-outline-warning btn-sm me-2"
-              (click)="editCategory(category)"
+              (click)="startEditCategory(category)"
             >
               Edit
             </button>
+            <!-- Botão para excluir a categoria -->
             <button
               *ngIf="category.id !== undefined && currentPostId !== null"
               (click)="confirmDelete(category.id)"

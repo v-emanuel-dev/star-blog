@@ -28,6 +28,7 @@ export class BlogCreateComponent implements OnInit {
   editorContent: string = '';
   isModalOpen: boolean = false;
   currentCategoryId: number | null = null; // Adicione esta nova propriedade
+  editingCategory: any = null;
 
   public Editor = ClassicEditor.default; // Use a propriedade .default aqui
   public blogEditorContent: string = ''; // Variável renomeada para evitar conflitos
@@ -200,7 +201,36 @@ export class BlogCreateComponent implements OnInit {
     }
   }
 
-  editCategory(category: Category): void {
+  startEditCategory(category: any) {
+    console.log('Editing category:', category);
+    this.editingCategory = { ...category };
+  }
+
+  saveEditCategory() {
+    if (this.editingCategory) {
+      console.log('Saving category:', this.editingCategory);
+      this.categoryService
+        .updateCategory(this.editingCategory.id, this.editingCategory)
+        .subscribe({
+          next: () => {
+            console.log('Category updated successfully:', this.editingCategory);
+            this.message = 'Category updated successfully!';
+            this.success = true;
+            this.loadCategories();
+            this.editingCategory = null;
+          },
+          error: (error) => {
+            console.error('Error updating category:', error);
+            this.message = 'Failed to update category.';
+            this.success = false;
+          },
+        });
+    }
+  }
+
+  cancelEditCategory() {
+    console.log('Edit canceled for category:', this.editingCategory);
+    this.editingCategory = null;
   }
 
   deleteCategory(categoryId: number): void {
@@ -280,14 +310,12 @@ export class BlogCreateComponent implements OnInit {
           setTimeout(() => {
             this.message = '';
           }, 1500);
-        }
+        },
       });
     } else {
       console.error('Invalid Category ID:', {
-        categoryId: this.currentCategoryId
+        categoryId: this.currentCategoryId,
       });
     }
   }
-
-
 }
