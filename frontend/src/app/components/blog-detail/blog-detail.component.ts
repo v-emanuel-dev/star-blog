@@ -29,6 +29,8 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
   editCategoryId: number | null = null; // ID da categoria em edição
   editCategoryName: string = ''; // Nome da categoria em edição
   private userNameSubscription: Subscription;
+  isModalOpen = false; // Controle do modal
+  currentCommentId: number | null = null; // ID do comentário atual
 
   constructor(
     private route: ActivatedRoute,
@@ -75,6 +77,7 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
         console.error('Erro ao carregar o post:', error);
       }
     );
+
   }
 
   loadComments(): void {
@@ -104,18 +107,22 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
 
   addComment(): void {
     const userId = parseInt(localStorage.getItem('userId') || '0', 10) || null;
+    const username = localStorage.getItem('userName') || 'Anônimo'; // Pegando o username do localStorage
 
     const comment: Comment = {
       postId: this.postId,
-      userId: userId, // Deve ser um número ou null
+      userId: userId,
       content: this.newComment,
       created_at: new Date().toISOString(),
       visibility: 'public',
+      username // Inclui o username no objeto enviado
     };
 
     this.commentService.addComment(comment).subscribe(
       (newComment) => {
         this.comments.push(newComment);
+        console.log('Comentário enviado ao backend:', comment); // Verifique aqui
+
         this.newComment = '';
       },
       (error) => {
@@ -248,5 +255,45 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.userNameSubscription.unsubscribe(); // Limpa a assinatura ao destruir o componente
+  }
+
+  // Método para abrir o modal para deletar comentário
+  openCommentModal(commentId: number): void {
+    this.currentCommentId = commentId; // Armazena o ID do comentário a ser deletado
+    this.isModalOpen = true; // Abre o modal
+  }
+
+  // Método de confirmação de deleção de comentário
+  confirmDeleteComment(commentId: number): void {
+    this.openCommentModal(commentId); // Abre o modal com o ID do comentário
+  }
+
+  // Método para fechar o modal
+  closeModal(): void {
+    this.isModalOpen = false; // Fecha o modal
+    this.currentCommentId = null; // Limpa o ID atual
+  }
+
+  // Método para deletar o comentário
+  deleteCommentModal(commentId: number): void {
+    if (commentId) {
+      this.commentService.deleteComment(commentId).subscribe({
+        next: () => {
+          this.comments = this.comments.filter(
+            (comment) => comment.id !== commentId
+          ); // Remove o comentário da lista
+          this.closeModal(); // Fecha o modal após a deleção
+        },
+        error: (err) => {
+          console.error('Erro ao deletar comentário:', err);
+        },
+        complete: () => {
+          setTimeout(() => {
+          }, 2000);
+        },
+      });
+    } else {
+      console.error('ID do comentário não é válido:', commentId);
+    }
   }
 }

@@ -12,7 +12,7 @@ export class AuthService {
   private baseUrl = 'http://localhost:3000/api/auth';
 
   private userNameSubject = new BehaviorSubject<string | undefined>(
-    this.getUserName()
+    localStorage.getItem('userName') || undefined // Inicializa com o valor do localStorage
   );
 
   private currentUserIdSubject = new BehaviorSubject<number | null>(
@@ -129,7 +129,10 @@ export class AuthService {
   }
 
   getUserName(): string {
-    return localStorage.getItem('username') || 'Visitor';
+    // Obtém o valor atual do BehaviorSubject. Se for indefinido, retorna 'Visitor'.
+    const username = this.userNameSubject.value || 'Visitor';
+    console.log(`Username retrieved: ${username}`); // Log para verificar o nome do usuário
+    return username; // Retorna o nome do usuário
   }
 
   getUserId(): number | null {

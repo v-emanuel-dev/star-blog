@@ -25,7 +25,7 @@ export class CommentService {
     });
   }
 
-  addComment(comment: { content: string; postId: number }): Observable<Comment> {
+  addComment(comment: { content: string; postId: number; username: string }): Observable<Comment> {
     return this.http.post<Comment>(this.apiUrl, comment).pipe(
       tap((newComment) => {
         const currentComments = this.commentsSubject.value;

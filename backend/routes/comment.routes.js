@@ -11,7 +11,7 @@ router.get('/post/:postId', (req, res) => {
   const { postId } = req.params;
 
   const query = `
-    SELECT comments.id, comments.content, comments.postId, comments.user_id, comments.created_at, posts.visibility 
+    SELECT comments.id, comments.content, comments.postId, comments.user_id, comments.username, comments.created_at, posts.visibility 
     FROM comments 
     JOIN posts ON comments.postId = posts.id 
     WHERE comments.postId = ?
@@ -57,15 +57,15 @@ router.post('/:userId/notifications', (req, res) => {
 
 // Rota para criar um novo comentário
 router.post('/', (req, res) => {
-  const { content, postId, userId } = req.body;
+  const { content, postId, userId, username } = req.body; // Adicionei o username aqui
 
   // Verifique se todos os dados necessários foram fornecidos
-  if (!content || !postId) {
-    return res.status(400).json({ error: 'Conteúdo e postId são obrigatórios.' });
+  if (!content || !postId || !username) { // username agora é obrigatório
+    return res.status(400).json({ error: 'Conteúdo, postId e username são obrigatórios.' });
   }  
 
   // Salvar o novo comentário no banco de dados
-  db.query("INSERT INTO comments (content, postId, user_id) VALUES (?, ?, ?)", [content, postId, userId], (error, result) => {
+  db.query("INSERT INTO comments (content, postId, user_id, username) VALUES (?, ?, ?, ?)", [content, postId, userId, username], (error, result) => {
     if (error) {
       console.error('Erro ao criar comentário:', error);
       return res.status(500).json({ error: 'Erro ao criar comentário' });
@@ -108,10 +108,11 @@ router.post('/', (req, res) => {
       }
 
       // Retorne a resposta com o comentário criado
-      res.status(201).json({ id: newCommentId, content, postId, userId });
+      res.status(201).json({ id: newCommentId, content, postId, userId, username }); // Incluindo username na resposta
     });
   });
 });
+
 
 // Atualizar comentário pelo ID
 router.put("/:id", (req, res) => {
