@@ -32,7 +32,7 @@ export class DashboardComponent implements OnInit {
   postId: number = 0;
   newComment: string = '';
   comments: Comment[] = []; // Adicione isso na classe DashboardComponent
-  selectedPostId: number | null = null; // ID do post selecionado (inicialmente nulo)
+  selectedPostIds: number[] = []; // Armazena múltiplos IDs de posts
 
   sections = [
     { name: 'Users', isEditing: false },
@@ -356,13 +356,26 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  onPostSelect(): void {
+    console.log('Posts selecionados:', this.selectedPostIds);
+  }
+
   addComment(): void {
     const userId = parseInt(localStorage.getItem('userId') || '0', 10) || null;
     const username = localStorage.getItem('userName') || 'Visitor';
 
-    if (this.newComment.trim()) {
+    // Verifica se há comentários e posts selecionados
+    if (this.newComment.trim() === '' || this.selectedPostIds.length === 0) {
+      console.error(
+        'Por favor, insira um comentário e selecione pelo menos um post.'
+      );
+      return;
+    }
+
+    // Itera sobre os posts selecionados
+    this.selectedPostIds.forEach((postId) => {
       const comment: Comment = {
-        postId: this.selectedPostId!,
+        postId: postId,
         userId: userId,
         content: this.newComment,
         created_at: new Date().toISOString(),
@@ -371,27 +384,20 @@ export class DashboardComponent implements OnInit {
       };
 
       console.log('Conteúdo do novo comentário:', this.newComment);
-      console.log('ID do post associado:', this.selectedPostId);
-      console.log('ID do usuário:', userId);
-      console.log('Nome de usuário:', username);
-      console.log('Comentário a ser enviado:', comment);
+      console.log('ID do post associado:', postId);
 
       this.commentService.addComment(comment).subscribe(
-        () => {
-          console.log('Comentário enviado ao backend');
-          this.newComment = '';
-          // Atualiza a lista de comentários após adicionar um novo
-          this.loadComments(); // Método para carregar os comentários do post
+        (newComment) => {
+          this.comments.push(newComment);
+          console.log('Comentário enviado ao backend:', comment);
+          this.newComment = ''; // Limpa o campo de comentário após enviar
         },
         (error) => {
           console.error('Erro ao adicionar comentário:', error);
           this.message = 'Erro ao adicionar comentário. Tente novamente.';
         }
       );
-    } else {
-      console.error('O conteúdo do comentário não pode estar vazio');
-      this.message = 'Por favor, insira um comentário antes de enviar.';
-    }
+    });
   }
 
   cancelEditComment() {
