@@ -582,24 +582,29 @@ export class DashboardComponent implements OnInit {
   }
 
   // Método para carregar todos os dados
-  loadAllData() {
+  loadAllData(): void {
     this.loading = true; // Inicia o carregamento
-    // Cria um array de observables para aguardar a conclusão de todas as operações
-    forkJoin([
-      this.loadUsers(),
-      this.loadCategories(),
-      this.loadComments(),
-      this.loadPostsAdmin(),
-    ]).subscribe({
-      next: () => {
-        console.log('All data loaded successfully.');
+    forkJoin({
+      users: this.userService.getUsers(),
+      posts: this.postService.getPostsAdminDashboard(),
+      categories: this.categoryService.getAllCategories(),
+      comments: this.commentService.getAllComments()
+    }).subscribe({
+      next: (data) => {
+        this.users$ = of(data.users);
+        this.posts$ = of(data.posts);
+        this.categories$ = of(data.categories);
+        this.comments$ = of(data.comments);
+        console.log('Dados carregados:', data);
       },
       error: (error) => {
-        console.error('Error loading data:', error);
+        console.error('Erro ao carregar dados:', error);
+        this.loading = false; // Finaliza o carregamento
       },
       complete: () => {
-        this.loading = false; // Finaliza o carregamento quando todos os dados forem carregados
-      },
+        this.loading = false; // Finaliza o carregamento
+      }
     });
   }
+
 }
