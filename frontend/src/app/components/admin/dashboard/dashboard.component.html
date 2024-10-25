@@ -122,79 +122,98 @@
     </div>
   </div>
 
-  <ng-container *ngIf="selectedTab === 'users'">
-    <h2 class="text-xl font-semibold mb-4 mt-6 mx-4 text-gray-800">Users</h2>
-    <ul class="space-y-3">
-      <li
-        *ngFor="let user of users$ | async"
-        class="mx-2 flex flex-col md:flex-row justify-between items-center p-3 bg-gray-50 rounded-md shadow-sm hover:shadow-md transition-shadow duration-150"
+<ng-container *ngIf="selectedTab === 'users'">
+  <h2 class="text-xl font-semibold mb-4 mt-6 text-gray-800">Users</h2>
+
+  <!-- Botão para criar um novo usuário -->
+  <div class="mb-4">
+    <button
+      routerLink="/register"
+      class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
+    >
+      Create new user
+    </button>
+  </div>
+
+  <ul class="space-y-3">
+    <li
+      *ngFor="let user of users$ | async"
+      class="flex flex-col md:flex-row justify-between items-center p-3 bg-gray-50 rounded-md shadow-sm hover:shadow-md transition-shadow duration-150"
+    >
+      <div
+        *ngIf="editingUser?.id !== user.id"
+        class="flex justify-between items-center w-full"
       >
-        <div
-          *ngIf="editingUser?.id !== user.id"
-          class="flex justify-between items-center w-full"
+        <span class="text-lg text-gray-800 truncate md:w-2/3"
+          >{{ user.username }} - {{ user.email }} - {{ user.role }}</span
         >
-          <span class="text-lg text-gray-800 truncate md:w-2/3"
-            >{{ user.username }} - {{ user.email }} - {{ user.role }}</span
+        <div class="flex space-x-2">
+          <button
+            (click)="startEditUser(user)"
+            class="bg-yellow-500 text-white py-1 px-3 rounded hover:bg-yellow-600 transition duration-300"
           >
-          <div class="flex space-x-2">
-            <button
-              (click)="startEditUser(user)"
-              class="bg-yellow-500 text-white py-1 px-3 rounded hover:bg-yellow-600 transition duration-300"
-            >
-              <i class="fa-solid fa-pen"></i>
-            </button>
-            <button
-              (click)="openModal(user.id, 'user')"
-              class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-300"
-            >
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </div>
-        </div>
-        <div *ngIf="editingUser?.id === user.id" class="flex flex-col w-full">
-          <input
-            [(ngModel)]="editingUser.username"
-            placeholder="Username"
-            class="border border-gray-300 rounded-md p-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-          />
-          <input
-            [(ngModel)]="editingUser.email"
-            placeholder="Email"
-            class="border border-gray-300 rounded-md p-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-          />
-          <select
-            [(ngModel)]="editingUser.role"
-            class="border border-gray-300 rounded-md p-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+            <i class="fa-solid fa-pen"></i>
+          </button>
+          <button
+            (click)="openModal(user.id, 'user')"
+            class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-300"
           >
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
-          </select>
-          <div class="flex space-x-2">
-            <button
-              (click)="saveEditUser()"
-              class="bg-green-500 text-white py-1 px-2 rounded-md hover:bg-green-400 transition duration-200 shadow-sm"
-            >
-              Save
-            </button>
-            <button
-              (click)="cancelEditUser()"
-              class="bg-gray-300 text-gray-800 py-1 px-2 rounded-md hover:bg-gray-400 transition duration-200 shadow-sm"
-            >
-              Cancel
-            </button>
-          </div>
+            <i class="fa-solid fa-trash"></i>
+          </button>
         </div>
-      </li>
-    </ul>
-  </ng-container>
+      </div>
+      <div *ngIf="editingUser?.id === user.id" class="flex flex-col w-full">
+        <input
+          [(ngModel)]="editingUser.username"
+          placeholder="Username"
+          class="border border-gray-300 rounded-md p-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+        />
+        <input
+          [(ngModel)]="editingUser.email"
+          placeholder="Email"
+          class="border border-gray-300 rounded-md p-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+        />
+        <select
+          [(ngModel)]="editingUser.role"
+          class="border border-gray-300 rounded-md p-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+        >
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+        <div class="flex space-x-2">
+          <button
+            (click)="saveEditUser()"
+            class="bg-green-500 text-white py-1 px-2 rounded-md hover:bg-green-400 transition duration-200 shadow-sm"
+          >
+            Save
+          </button>
+          <button
+            (click)="cancelEditUser()"
+            class="bg-gray-300 text-gray-800 py-1 px-2 rounded-md hover:bg-gray-400 transition duration-200 shadow-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </li>
+  </ul>
+</ng-container>
 
   <!-- Posts Section -->
   <ng-container *ngIf="selectedTab === 'posts'">
     <h2 class="text-xl font-semibold mb-4 mt-6 text-gray-800">Posts</h2>
+    <div class="mb-4">
+      <button
+        routerLink="/create"
+        class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
+      >
+        Create new post
+      </button>
+    </div>
     <ul class="space-y-3">
       <li
         *ngFor="let post of posts$ | async"
-        class="mx-2 flex flex-col md:flex-row justify-between items-center p-3 bg-gray-50 rounded-md shadow-sm hover:shadow-md transition-shadow duration-150"
+        class="flex flex-col md:flex-row justify-between items-center p-3 bg-gray-50 rounded-md shadow-sm hover:shadow-md transition-shadow duration-150"
       >
         <div
           *ngIf="editingPost?.id !== post.id"
@@ -261,6 +280,14 @@
   <!-- Categories Section -->
   <ng-container *ngIf="selectedTab === 'categories'">
     <h2 class="text-xl font-semibold mb-4 mt-6 text-gray-800">Categorias</h2>
+    <div class="mb-4">
+      <button
+        routerLink="/register"
+        class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
+      >
+        Create new category
+      </button>
+    </div>
     <ul class="space-y-3">
       <li
         *ngFor="let category of categories$ | async"
@@ -319,6 +346,14 @@
   <!-- Comments Section -->
   <ng-container *ngIf="selectedTab === 'comments'">
     <h2 class="text-xl font-semibold mb-4 mt-6 text-gray-800">Comentários</h2>
+    <div class="mb-4">
+      <button
+        routerLink="/register"
+        class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
+      >
+        Create new comment
+      </button>
+    </div>
     <ul class="space-y-3">
       <li
         *ngFor="let comment of comments$ | async"
