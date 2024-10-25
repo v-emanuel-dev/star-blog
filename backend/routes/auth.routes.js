@@ -36,7 +36,7 @@ router.get(
     const token = jwt.sign(
       { id: user.id, role: user.role }, // Use user.role aqui
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "24h" }
     );
 
     // Criar um objeto com os dados que você deseja enviar

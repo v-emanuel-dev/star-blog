@@ -7,7 +7,6 @@ passport.use(new GoogleStrategy({
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   callbackURL: "http://localhost:3000/api/auth/google/callback",
 }, (accessToken, refreshToken, profile, done) => {
-  console.log('Google profile received:', profile); // Log para verificar o perfil do Google
   
   const email = profile.emails[0].value;
   const username = profile.displayName.replace(/\s+/g, '').toLowerCase(); // Ajuste do nome de usuário
