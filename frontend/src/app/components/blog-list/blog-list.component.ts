@@ -136,9 +136,6 @@ export class BlogListComponent implements OnInit {
             this.loading = false;
           },
         });
-
-        // Define o título para admins
-        this.postsTitle = isAdmin ? 'All Posts' : this.postsTitle;
       },
       (error) => {
         console.error('Error fetching user role:', error);

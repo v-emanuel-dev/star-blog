@@ -58,6 +58,10 @@ export class AuthService {
     this.userDetailsSubject.next(details);
   }
 
+  resetUserRole(): void {
+    this.userRoleSubject.next(''); // Reseta o papel do usuário
+  }
+
   login(email: string, password: string) {
     return this.http
       .post<any>(`${this.baseUrl}/login`, { email, password })
@@ -172,9 +176,9 @@ export class AuthService {
     this.userLoggedInSubject.next(false);
     this.userNameSubject.next(undefined);
     this.currentUserIdSubject.next(null); // Limpando o ID do usuário
-
     this.profileImageUrlSubject.next(null);
     this.imageService.clearProfilePic(); // Notificar o UserService sobre a remoção da imagem
+    this.userRoleSubject.next('user'); // Método para resetar o papel
 
     // Redirecionando para a página de login após o logout
     this.router.navigate(['/login']);
