@@ -116,7 +116,6 @@ export class PostService {
   }
 
   getPosts(): Observable<Post[]> {
-    console.log('Iniciando a busca de posts...');
 
     const token = this.getToken();
     const headers = token
@@ -138,9 +137,6 @@ export class PostService {
             return dateB - dateA; // Ordenação decrescente
           });
         } else {
-          console.log(
-            'Usuário não está logado. Retornando apenas posts públicos.'
-          );
 
           // Retornar apenas posts públicos e ordená-los
           return posts

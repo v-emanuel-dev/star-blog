@@ -31,7 +31,6 @@ export class CommentService {
   }
 
   getAllComments(): Observable<Comment[]> {
-    console.log('Fetching all comments from API...');
     return this.http.get<Comment[]>(this.apiUrl).pipe(
       tap((comments) => {
         this.commentsSubject.next(comments); // Atualizando o BehaviorSubject com os novos comentários

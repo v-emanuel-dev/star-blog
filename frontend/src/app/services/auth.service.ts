@@ -81,7 +81,6 @@ export class AuthService {
             profilePicUrl = profilePicUrl.replace(/\\/g, '/');
             if (!profilePicUrl.startsWith('http')) {
               profilePicUrl = `http://localhost:3000/${profilePicUrl}`;
-              console.log(profilePicUrl);
             }
             localStorage.setItem('profilePicture', profilePicUrl);
           } else {
