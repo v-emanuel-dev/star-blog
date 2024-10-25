@@ -62,6 +62,14 @@ export class BlogCreateComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Carrega as categorias ao inicializar o componente
+    this.categoryService.loadCategories();
+
+    // Subscreve ao BehaviorSubject para receber atualizações
+    this.categoryService.categories$.subscribe((categories) => {
+      this.categories = categories; // Atualiza a lista de categorias
+    });
+
     this.route.params.subscribe((params) => {
       this.currentPostId = +params['postId']; // Converte o postId para número
       console.log('Post ID atual:', this.currentPostId);
@@ -184,12 +192,6 @@ export class BlogCreateComponent implements OnInit {
 
       this.categoryService.createCategory(category).subscribe({
         next: () => {
-          // Passa o currentPostId ao chamar loadCategories
-          if (this.currentPostId !== null) {
-            this.loadCategories();
-          } else {
-            console.error('currentPostId is null. Cannot load categories.');
-          }
           this.newCategoryName = ''; // Limpa o campo após a adição
         },
         error: (error) => {
