@@ -9,6 +9,7 @@ import { Post } from '../../../models/post.model';
 import { Category } from '../../../models/category.model';
 import { Comment } from '../../../models/comment.model';
 import * as ClassicEditor from '@ckeditor/ckeditor5-build-classic'; // Importa a classe do editor
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
@@ -27,6 +28,12 @@ export class DashboardComponent implements OnInit {
   currentId: number | null = null; // ID do item a ser deletado (genérico para post, user, comment, category)
   itemType: 'user' | 'post' | 'comment' | 'category' | null = null; // Tipo de item
   loading: boolean = true; // Indicador de carregamento
+  newCategoryName: string = '';
+  postId: number = 0;
+  newComment: string = '';
+  comments: Comment[] = []; // Adicione isso na classe DashboardComponent
+  selectedPostId: number | null = null; // ID do post selecionado (inicialmente nulo)
+
   sections = [
     { name: 'Users', isEditing: false },
     { name: 'Categories', isEditing: false },
@@ -63,7 +70,8 @@ export class DashboardComponent implements OnInit {
     private userService: UserService,
     private categoryService: CategoryService,
     private commentService: CommentService,
-    private postService: PostService
+    private postService: PostService,
+    private route: ActivatedRoute
   ) {
     this.selectedTab = 'users'; // Defina o valor inicial da aba selecionada
     this.users$ = this.userService.users$; // Assina os usuários
@@ -121,13 +129,21 @@ export class DashboardComponent implements OnInit {
   }
 
   // Método para carregar categorias
-  loadCategories(): void {
+  loadCategories(newCategory?: Category): void {
     this.loading = true; // Inicia o estado de carregamento
     console.log('Loading categories...');
+
     this.categoryService.getAllCategories().subscribe({
       next: (categories) => {
         console.log('Categories loaded successfully:', categories);
-        this.categories$ = of(categories); // Atualiza categories$
+
+        // Se uma nova categoria foi criada, adicione-a ao início da lista
+        if (newCategory) {
+          categories.unshift(newCategory); // Adiciona a nova categoria no início da lista
+        }
+
+        // Atualiza categories$
+        this.categories$ = of(categories);
         this.loading = false; // Atualiza o estado de carregamento
       },
       error: (error) => {
@@ -250,6 +266,37 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  addCategory(): void {
+    console.log('Tentando adicionar uma nova categoria');
+
+    if (this.newCategoryName.trim()) {
+      console.log('Nome da nova categoria:', this.newCategoryName);
+      console.log('ID do post associado:', this.currentPostId);
+
+      const category: Omit<Category, 'id'> = {
+        name: this.newCategoryName,
+        postId: this.currentPostId,
+      };
+
+      console.log('Criando categoria com os seguintes dados:', category);
+
+      this.categoryService.createCategory(category).subscribe({
+        next: (createdCategory) => {
+          console.log('Categoria criada com sucesso:', createdCategory);
+          this.newCategoryName = ''; // Limpa o campo após a adição
+
+          // Chama loadCategories passando a nova categoria criada
+          this.loadCategories(createdCategory);
+        },
+        error: (error) => {
+          console.error('Erro ao criar categoria:', error);
+        },
+      });
+    } else {
+      console.error('O nome da categoria não pode estar vazio');
+    }
+  }
+
   cancelEditCategory() {
     console.log('Edit canceled for category:', this.editingCategory);
     this.editingCategory = null;
@@ -306,6 +353,44 @@ export class DashboardComponent implements OnInit {
             this.loading = false; // Finaliza o carregamento
           },
         });
+    }
+  }
+
+  addComment(): void {
+    const userId = parseInt(localStorage.getItem('userId') || '0', 10) || null;
+    const username = localStorage.getItem('userName') || 'Visitor';
+
+    if (this.newComment.trim()) {
+      const comment: Comment = {
+        postId: this.selectedPostId!,
+        userId: userId,
+        content: this.newComment,
+        created_at: new Date().toISOString(),
+        visibility: 'public',
+        username,
+      };
+
+      console.log('Conteúdo do novo comentário:', this.newComment);
+      console.log('ID do post associado:', this.selectedPostId);
+      console.log('ID do usuário:', userId);
+      console.log('Nome de usuário:', username);
+      console.log('Comentário a ser enviado:', comment);
+
+      this.commentService.addComment(comment).subscribe(
+        () => {
+          console.log('Comentário enviado ao backend');
+          this.newComment = '';
+          // Atualiza a lista de comentários após adicionar um novo
+          this.loadComments(); // Método para carregar os comentários do post
+        },
+        (error) => {
+          console.error('Erro ao adicionar comentário:', error);
+          this.message = 'Erro ao adicionar comentário. Tente novamente.';
+        }
+      );
+    } else {
+      console.error('O conteúdo do comentário não pode estar vazio');
+      this.message = 'Por favor, insira um comentário antes de enviar.';
     }
   }
 

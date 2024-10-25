@@ -93,7 +93,7 @@
           'bg-gray-100 text-gray-600': selectedTab !== 'categories'
         }"
       >
-        Categorias
+        Categories
       </button>
       <button
         (click)="selectTab('comments')"
@@ -103,7 +103,7 @@
           'bg-gray-100 text-gray-600': selectedTab !== 'comments'
         }"
       >
-        Comentários
+        Comments
       </button>
     </div>
 
@@ -116,95 +116,95 @@
       >
         <option value="users">Users</option>
         <option value="posts">Posts</option>
-        <option value="categories">Categorias</option>
-        <option value="comments">Comentários</option>
+        <option value="categories">Categories</option>
+        <option value="comments">Comments</option>
       </select>
     </div>
   </div>
 
-<ng-container *ngIf="selectedTab === 'users'">
-  <h2 class="text-xl font-semibold mb-4 mt-6 text-gray-800">Users</h2>
+  <ng-container *ngIf="selectedTab === 'users'">
+    <h2 class="text-xl font-semibold mb-4 mt-6 text-gray-800">Users</h2>
 
-  <!-- Botão para criar um novo usuário -->
-  <div class="mb-4">
-    <button
-      routerLink="/register"
-      class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
-    >
-      Create new user
-    </button>
-  </div>
-
-  <ul class="space-y-3">
-    <li
-      *ngFor="let user of users$ | async"
-      class="flex flex-col md:flex-row justify-between items-center p-3 bg-gray-50 rounded-md shadow-sm hover:shadow-md transition-shadow duration-150"
-    >
-      <div
-        *ngIf="editingUser?.id !== user.id"
-        class="flex justify-between items-center w-full"
+    <!-- Botão para criar um novo usuário -->
+    <div class="mb-4">
+      <button
+        routerLink="/register"
+        class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
       >
-        <span class="text-lg text-gray-800 truncate md:w-2/3"
-          >{{ user.username }} - {{ user.email }} - {{ user.role }}</span
+        Create new user
+      </button>
+    </div>
+
+    <ul class="space-y-3">
+      <li
+        *ngFor="let user of users$ | async"
+        class="flex flex-col md:flex-row justify-between items-center p-3 bg-gray-50 rounded-md shadow-sm hover:shadow-md transition-shadow duration-150"
+      >
+        <div
+          *ngIf="editingUser?.id !== user.id"
+          class="flex justify-between items-center w-full"
         >
-        <div class="flex space-x-2">
-          <button
-            (click)="startEditUser(user)"
-            class="bg-yellow-500 text-white py-1 px-3 rounded hover:bg-yellow-600 transition duration-300"
+          <span class="text-lg text-gray-800 truncate md:w-2/3"
+            >{{ user.username }} - {{ user.email }} - {{ user.role }}</span
           >
-            <i class="fa-solid fa-pen"></i>
-          </button>
-          <button
-            (click)="openModal(user.id, 'user')"
-            class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-300"
-          >
-            <i class="fa-solid fa-trash"></i>
-          </button>
+          <div class="flex space-x-2">
+            <button
+              (click)="startEditUser(user)"
+              class="bg-yellow-500 text-white py-1 px-3 rounded hover:bg-yellow-600 transition duration-300"
+            >
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            <button
+              (click)="openModal(user.id, 'user')"
+              class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-300"
+            >
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
         </div>
-      </div>
-      <div *ngIf="editingUser?.id === user.id" class="flex flex-col w-full">
-        <input
-          [(ngModel)]="editingUser.username"
-          placeholder="Username"
-          class="border border-gray-300 rounded-md p-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-        />
-        <input
-          [(ngModel)]="editingUser.email"
-          placeholder="Email"
-          class="border border-gray-300 rounded-md p-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-        />
-        <select
-          [(ngModel)]="editingUser.role"
-          class="border border-gray-300 rounded-md p-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-        >
-          <option value="user">User</option>
-          <option value="admin">Admin</option>
-        </select>
-        <div class="flex space-x-2">
-          <button
-            (click)="saveEditUser()"
-            class="bg-green-500 text-white py-1 px-2 rounded-md hover:bg-green-400 transition duration-200 shadow-sm"
+        <div *ngIf="editingUser?.id === user.id" class="flex flex-col w-full">
+          <input
+            [(ngModel)]="editingUser.username"
+            placeholder="Username"
+            class="border border-gray-300 rounded-md p-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+          />
+          <input
+            [(ngModel)]="editingUser.email"
+            placeholder="Email"
+            class="border border-gray-300 rounded-md p-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+          />
+          <select
+            [(ngModel)]="editingUser.role"
+            class="border border-gray-300 rounded-md p-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
           >
-            Save
-          </button>
-          <button
-            (click)="cancelEditUser()"
-            class="bg-gray-300 text-gray-800 py-1 px-2 rounded-md hover:bg-gray-400 transition duration-200 shadow-sm"
-          >
-            Cancel
-          </button>
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+          <div class="flex space-x-2">
+            <button
+              (click)="saveEditUser()"
+              class="bg-green-500 text-white py-1 px-2 rounded-md hover:bg-green-400 transition duration-200 shadow-sm"
+            >
+              Save
+            </button>
+            <button
+              (click)="cancelEditUser()"
+              class="bg-gray-300 text-gray-800 py-1 px-2 rounded-md hover:bg-gray-400 transition duration-200 shadow-sm"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
-      </div>
-    </li>
-  </ul>
-</ng-container>
+      </li>
+    </ul>
+  </ng-container>
 
   <!-- Posts Section -->
   <ng-container *ngIf="selectedTab === 'posts'">
     <h2 class="text-xl font-semibold mb-4 mt-6 text-gray-800">Posts</h2>
     <div class="mb-4">
       <button
-        routerLink="/create"
+        routerLink="/blog/create"
         class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
       >
         Create new post
@@ -279,14 +279,26 @@
 
   <!-- Categories Section -->
   <ng-container *ngIf="selectedTab === 'categories'">
-    <h2 class="text-xl font-semibold mb-4 mt-6 text-gray-800">Categorias</h2>
+    <h2 class="text-xl font-semibold mb-4 mt-6 text-gray-800">Categories</h2>
     <div class="mb-4">
-      <button
-        routerLink="/register"
-        class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
-      >
-        Create new category
-      </button>
+      <form (submit)="addCategory()" class="mt-4">
+        <div class="mb-3">
+          <input
+            type="text"
+            [(ngModel)]="newCategoryName"
+            name="newCategoryName"
+            placeholder="New category"
+            required
+            class="form-control"
+          />
+        </div>
+        <button
+          type="submit"
+          class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
+        >
+          Create new category
+        </button>
+      </form>
     </div>
     <ul class="space-y-3">
       <li
@@ -345,14 +357,40 @@
 
   <!-- Comments Section -->
   <ng-container *ngIf="selectedTab === 'comments'">
-    <h2 class="text-xl font-semibold mb-4 mt-6 text-gray-800">Comentários</h2>
-    <div class="mb-4">
-      <button
-        routerLink="/register"
-        class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
-      >
-        Create new comment
-      </button>
+    <h2 class="text-xl font-semibold mb-4 mt-6 text-gray-800">Comments</h2>
+    <div class="bg-white shadow-md rounded-lg mb-6">
+      <div class="px-4 py-3 border-b">
+        <h3 class="text-lg font-semibold">Create new comment</h3>
+      </div>
+      <div class="px-4 py-3">
+        <textarea
+          [(ngModel)]="newComment"
+          placeholder="Write your comment here..."
+          class="form-control mb-4"
+        ></textarea>
+
+        <div class="mb-4">
+          <label for="postSelect" class="form-label">Select a post</label>
+          <select
+            id="postSelect"
+            [(ngModel)]="selectedPostId"
+            class="form-select"
+            multiple
+            aria-label="Selecionar múltiplos posts"
+          >
+            <option *ngFor="let post of posts$ | async" [value]="post.id">
+              {{ post.title }}
+            </option>
+          </select>
+        </div>
+
+        <button
+          (click)="addComment()"
+          class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
+        >
+          Add Comment
+        </button>
+      </div>
     </div>
     <ul class="space-y-3">
       <li
