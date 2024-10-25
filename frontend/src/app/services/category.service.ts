@@ -22,7 +22,7 @@ export class CategoryService {
 
   getAllCategories(): Observable<Category[]> {
     return this.http.get<Category[]>(`${this.apiUrl}/all`).pipe(
-      tap((categories) => console.log('Fetched categories:', categories)), // Log dos dados obtidos
+      tap((categories) => categories), // Log dos dados obtidos
       catchError((error) => {
         console.error('Error fetching categories:', error); // Log de erro
         return of([]); // Retorna um array vazio em caso de erro

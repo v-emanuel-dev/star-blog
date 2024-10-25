@@ -48,7 +48,6 @@ export class CommentService {
     return this.http.get<Comment[]>(`${this.apiUrl}/post/${postId}`).pipe(
       tap((comments) => {
         this.commentsSubject.next(comments); // Atualiza o BehaviorSubject com os comentários recebidos
-        console.log('Comentários recebidos:', comments);
       }),
       catchError((error) => {
         console.error('Erro ao buscar comentários:', error);

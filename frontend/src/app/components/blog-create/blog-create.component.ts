@@ -72,7 +72,6 @@ export class BlogCreateComponent implements OnInit {
 
     this.route.params.subscribe((params) => {
       this.currentPostId = +params['postId']; // Converte o postId para número
-      console.log('Post ID atual:', this.currentPostId);
 
       // Chame loadCategories apenas se currentPostId não for null
       if (this.currentPostId !== null) {

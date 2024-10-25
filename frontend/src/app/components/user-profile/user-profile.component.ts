@@ -52,8 +52,6 @@ export class UserProfileComponent implements OnInit, AfterViewInit {
 
   private loadUserData(): void {
     const userId = this.authService.getUserId();
-    console.log('Loading user data for ID:', userId);
-
     if (userId !== null) {
       this.userService.getUserById(userId).subscribe((user) => {
         this.updateUserData(user);

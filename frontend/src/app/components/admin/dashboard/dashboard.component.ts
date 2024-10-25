@@ -81,7 +81,6 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit() {
-    console.log('ngOnInit called');
     this.loadAllData();
   }
 
@@ -595,7 +594,6 @@ export class DashboardComponent implements OnInit {
         this.posts$ = of(data.posts);
         this.categories$ = of(data.categories);
         this.comments$ = of(data.comments);
-        console.log('Dados carregados:', data);
       },
       error: (error) => {
         console.error('Erro ao carregar dados:', error);

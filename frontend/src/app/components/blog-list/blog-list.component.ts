@@ -115,7 +115,6 @@ export class BlogListComponent implements OnInit {
         postsObservable.subscribe({
           next: (data: Post[]) => {
             this.posts = data;
-            console.log('Data:', data);
             this.filteredPosts = this.isLoggedIn
               ? this.posts
               : this.posts.filter((post) => post.visibility === 'public');
