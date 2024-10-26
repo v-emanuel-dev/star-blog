@@ -161,27 +161,23 @@ exports.deleteCategory = (req, res) => {
 
   console.log("Deleting category ID:", id); // Log do ID da categoria
 
-  // Check if the category exists before deleting
-  const checkQuery = "SELECT * FROM categories WHERE id = ?";
-  db.query(checkQuery, [id], (err, result) => {
+  const deleteAssociationsQuery = "DELETE FROM post_categories WHERE categoryId = ?";
+  const deleteCategoryQuery = "DELETE FROM categories WHERE id = ?";
+
+  db.query(deleteAssociationsQuery, [id], (err) => {
     if (err) {
-      console.error("Error checking category existence for deletion:", err); // Log de erro
+      console.error("Error deleting associations:", err);
       return res.status(500).json({ error: err.message });
     }
-    if (result.length === 0) {
-      console.warn("Category not found for deletion ID:", id); // Log de aviso
-      return res.status(404).json({ message: "Category not found." });
-    }
-
-    // Delete the category
-    const deleteQuery = "DELETE FROM categories WHERE id = ?";
-    db.query(deleteQuery, [id], (err) => {
+    
+    db.query(deleteCategoryQuery, [id], (err) => {
       if (err) {
-        console.error("Error deleting category:", err); // Log de erro
+        console.error("Error deleting category:", err);
         return res.status(500).json({ error: err.message });
       }
-      console.log("Category deleted successfully for ID:", id); // Log de sucesso
+      console.log("Category deleted successfully for ID:", id);
       res.status(204).send();
     });
   });
 };
+
