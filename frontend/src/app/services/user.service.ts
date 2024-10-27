@@ -83,10 +83,13 @@ export class UserService {
 
   updateProfilePicture(picture: string | null): void {
     console.log('Updating profile picture in UserService:', picture);
-    localStorage.setItem('profilePicture', picture ?? '');
-    this.profilePictureSubject.next(picture);
+    // Substituir barra invertida por barra normal
+    const formattedPicture = picture?.replace(/\\/g, '/') ?? '';
+    localStorage.setItem('profilePicture', formattedPicture);
+    this.profilePictureSubject.next(formattedPicture);
     console.log('Profile picture stored in localStorage:', localStorage.getItem('profilePicture'));
-  }
+}
+
 
   getUserById(userId: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/users/${userId}`);

@@ -21,7 +21,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   isNotificationsOpen: boolean = false;
   userId: number | null = null; // Inicialize com null ou um valor padrão
   profilePicture: string | null = null;
-  defaultProfilePicture: string = 'assets/img/default-profile.png';
+  defaultProfilePicture: string = 'http://localhost:4200/assets/img/default-profile.png';
   userRole: string | null = null; // Propriedade para armazenar o papel do usuário
 
   private roleSubscription: Subscription = new Subscription(); // Usa um Subscription container para gerenciar assinaturas
@@ -39,13 +39,14 @@ export class NavbarComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-
     this.roleSubscription = this.authService.userRole$.subscribe((role) => {
       this.userRole = role;
       this.cd.detectChanges(); // Força a atualização da view
     });
 
-    this.userRole = localStorage.getItem('userRole'); // Recupera o papel do usuário
+    // Recupera o papel do usuário ao inicializar
+    this.userRole = localStorage.getItem('userRole');
+
     this.imageService.profilePic$.subscribe((pic) => {
       this.profilePicture = pic || this.defaultProfilePicture;
       // Força o Angular a detectar mudanças na imagem
@@ -63,7 +64,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   isAdmin(): boolean {
-    return this.userRole === 'admin'; // Retorna true se o usuário for admin
+    const isAdmin = this.userRole === 'admin';
+    return isAdmin;
   }
 
   ngAfterViewInit(): void {

@@ -4,6 +4,7 @@ import {
   ChangeDetectorRef,
   Component,
   OnInit,
+  OnDestroy,
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -12,25 +13,29 @@ import { HttpHeaders } from '@angular/common/http';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ImageService } from '../../services/image.service';
 import { User } from '../../models/user.model';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-user-profile',
   templateUrl: './user-profile.component.html',
   styleUrls: ['./user-profile.component.css'],
 })
-export class UserProfileComponent implements OnInit, AfterViewInit {
+export class UserProfileComponent implements OnInit, AfterViewInit, OnDestroy {
   username: string = '';
   email: string | null = null;
   password: string = '';
   confirmPassword: string = '';
-  role: string | null = null; // Permite que role seja string ou null
+  role: string | null = null;
   message: string | null = null;
   success: boolean | undefined;
   selectedImage: File | null = null;
   selectedImagePreview: SafeUrl | null = null;
   profilePicture: string | null = null;
-  defaultPicture: string = 'assets/img/default-profile.png'; // URL da imagem padrão
-  isAdmin: boolean = false; // Flag para verificar se o usuário é admin
+  defaultPicture: string =
+    'http://localhost:4200/assets/img/default-profile.png';
+  isAdmin: boolean = false;
+
+  private roleSubscription: Subscription = new Subscription();
 
   constructor(
     private authService: AuthService,
@@ -41,9 +46,14 @@ export class UserProfileComponent implements OnInit, AfterViewInit {
   ) {}
 
   ngOnInit(): void {
+    this.roleSubscription = this.authService.userRole$.subscribe((role) => {
+      this.role = role;
+      this.isAdmin = role === 'admin';
+      this.cd.detectChanges();
+    });
+
     this.loadUserData();
     this.subscribeToImageUpdates();
-    this.subscribeToUserRole();
   }
 
   ngAfterViewInit(): void {
@@ -64,27 +74,14 @@ export class UserProfileComponent implements OnInit, AfterViewInit {
   private updateUserData(user: User): void {
     this.username = user.username || '';
     this.email = user.email || '';
-    this.role = user.role || 'user';
-
-    const profilePictureUrl = user.profilePicture
-      ? this.imageService.getFullProfilePicUrl(user.profilePicture)
-      : this.defaultPicture; // Imagem padrão
-
-    this.imageService.updateProfilePic(profilePictureUrl);
-    this.profilePicture = profilePictureUrl; // Defina a imagem do perfil
+    this.role = user.role ?? 'user';
+    this.isAdmin = this.role === 'admin';
   }
 
   private subscribeToImageUpdates(): void {
     this.imageService.profilePic$.subscribe((pic) => {
       this.profilePicture = pic || this.defaultPicture;
       this.cd.detectChanges();
-    });
-  }
-
-  private subscribeToUserRole(): void {
-    this.authService.getUserRole().subscribe((role) => {
-      this.role = role;
-      this.isAdmin = role === 'admin'; // Verifica se o usuário é admin
     });
   }
 
@@ -113,24 +110,45 @@ export class UserProfileComponent implements OnInit, AfterViewInit {
 
     if (userId === null) {
       this.setMessage('User ID not found.');
+      console.warn('User ID not found in localStorage.');
       return;
     }
 
-    console.log('Updating user with ID:', userId);
-    this.userService.updateUser(
-      String(userId),
-      this.username,
-      this.email ?? '',
-      this.password || '',
-      this.selectedImage,
-      this.role || 'user', // Use 'user' como valor padrão se role for null
-      headers
-    ).subscribe(
-      (response) => this.handleUserUpdateSuccess(response),
-      (error) => this.handleUserUpdateError(error)
-    );
-  }
+    console.log('Initiating user update with ID:', userId);
+    console.log('User update payload:', {
+      username: this.username,
+      email: this.email,
+      password: this.password ? 'Provided' : 'Not provided',
+      role: this.role || 'user',
+    });
 
+    this.userService
+      .updateUser(
+        String(userId),
+        this.username,
+        this.email ?? '',
+        this.password || '',
+        this.selectedImage,
+        this.role || 'user',
+        headers
+      )
+      .subscribe(
+        (response) => {
+          console.log('User update request successful. Handling response...');
+          this.handleUserUpdateSuccess(response);
+          // Chamada para atualizar a imagem de perfil se a resposta contiver a URL da imagem
+          if (response.profilePicture) {
+            // Formata a URL da imagem antes de passar ao ImageService
+            const formattedProfilePic = response.profilePicture.replace(
+              /\\/g,
+              '/'
+            );
+            this.imageService.updateProfilePic(formattedProfilePic);
+          }
+        },
+        (error) => this.handleUserUpdateError(error)
+      );
+  }
   private isFormInvalid(form: NgForm): boolean {
     if (form.invalid) {
       this.setMessage('Please fill in all fields correctly.');
@@ -146,21 +164,24 @@ export class UserProfileComponent implements OnInit, AfterViewInit {
   }
 
   private handleUserUpdateSuccess(response: any): void {
-    this.setMessage('User updated successfully');
-    console.log('User updated successfully. Response:', response);
-    this.loadUserData();
+    this.message = 'User updated successfully!';
+    this.success = true;
 
-    if (this.selectedImage) {
-      const imageUrl = URL.createObjectURL(this.selectedImage);
-      console.log('Creating object URL for selected image:', imageUrl);
-      this.userService.updateProfilePicture(imageUrl);
+    // Verifica e formata a URL da imagem de perfil
+    if (response.profilePicture) {
+      let formattedUrl = response.profilePicture.replace(/\\/g, '/');
+      console.log('Formatted profile picture URL:', formattedUrl);
+
+      // Atualiza a imagem no UserService e armazena a URL formatada no localStorage
+      this.profilePicture = formattedUrl;
+      this.userService.updateProfilePicture(this.profilePicture);
+      console.log('Profile picture updated in UserService.');
     }
 
+    // Recarrega os dados do usuário e limpa a imagem selecionada
+    this.loadUserData();
     this.selectedImage = null;
-    setTimeout(() => {
-      this.router.navigate(['/blog']); // Redireciona para o dashboard após 2 segundos
-      console.log('Redirecting to /blog after user update.');
-    }, 1500);
+    console.log('User data reloaded and selected image cleared.');
   }
 
   private handleUserUpdateError(error: any): void {
@@ -170,7 +191,13 @@ export class UserProfileComponent implements OnInit, AfterViewInit {
 
   private setMessage(message: string): void {
     this.message = message;
-    this.success = false;
+    this.success = message.includes('successfully');
     console.warn(message);
+  }
+
+  ngOnDestroy(): void {
+    if (this.roleSubscription) {
+      this.roleSubscription.unsubscribe();
+    }
   }
 }

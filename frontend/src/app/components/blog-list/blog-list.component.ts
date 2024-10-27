@@ -44,7 +44,6 @@ export class BlogListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-
     this.roleSubscription = this.authService.userRole$.subscribe((role) => {
       this.userRole = role;
       this.cd.detectChanges(); // Força a atualização da view
@@ -114,10 +113,18 @@ export class BlogListComponent implements OnInit {
 
         postsObservable.subscribe({
           next: (data: Post[]) => {
-            this.posts = data;
+            // Ordenação de posts mais recentes primeiro
+            this.posts = data.sort((a, b) => {
+              const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+              const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+              return dateB - dateA; // Ordem decrescente
+            });
+
+            // Filtragem para exibir apenas posts públicos para usuários não logados
             this.filteredPosts = this.isLoggedIn
               ? this.posts
               : this.posts.filter((post) => post.visibility === 'public');
+
             this.updatePostsTitle();
             this.loading = false;
 
@@ -205,7 +212,10 @@ export class BlogListComponent implements OnInit {
   }
 
   exportAsTxt(post: Post): void {
-    const content = `Título: ${post.title}\n\nConteúdo:\n${post.content}`;
+    // Remove tags HTML do conteúdo
+    const plainText = post.content.replace(/<[^>]*>/g, '');
+
+    const content = `Título: ${post.title}\n\nConteúdo:\n${plainText}`;
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     saveAs(blob, `${post.title}.txt`);
     this.message = 'Texto exportado com sucesso!';
