@@ -19,6 +19,8 @@ import { NotificationsComponent } from './components/notifications/notifications
 import { RegisterComponent } from './components/register/register.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { AuthService } from './services/auth.service';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 @NgModule({
   declarations: [
@@ -43,8 +45,9 @@ import { AuthService } from './services/auth.service';
     BrowserAnimationsModule,
     ReactiveFormsModule,
     CKEditorModule,
+    MatSnackBarModule
   ],
-  providers: [AuthService, AuthGuard],
+  providers: [AuthService, AuthGuard, provideAnimationsAsync()],
   bootstrap: [AppComponent]
 })
 export class AppModule {}

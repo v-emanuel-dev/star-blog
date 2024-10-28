@@ -146,7 +146,6 @@ exports.getUserById = (req, res) => {
 };
 
 // Função para deletar um usuário (apenas para admins)
-// userController.js
 exports.deleteUser = (req, res) => {
     const userId = req.params.id;
     console.log('Request to delete user received'); // Log para verificar a requisição
@@ -226,9 +225,3 @@ exports.deleteUser = (req, res) => {
         });
     });
 };
-
-
-  
-  
-  
-
