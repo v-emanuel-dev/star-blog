@@ -110,7 +110,7 @@ export class BlogListComponent implements OnInit {
               : this.posts.filter((post) => post.visibility === 'public');
 
             this.updatePostsTitle();
-            this.loading = false;
+            this.loading = false; // Atualiza o loading imediatamente
 
             this.posts.forEach((post) => {
               if (post.id !== undefined) {
@@ -122,13 +122,13 @@ export class BlogListComponent implements OnInit {
           },
           error: (error) => {
             this.snackbar('Error fetching posts');
-            this.loading = false;
+            this.loading = false; // Atualiza o loading imediatamente
           },
         });
       },
       (error) => {
         this.snackbar('Error fetching user role.');
-        this.loading = false;
+        this.loading = false; // Atualiza o loading imediatamente
       }
     );
   }

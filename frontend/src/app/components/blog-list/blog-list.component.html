@@ -1,3 +1,7 @@
+<div class="spinner-container" *ngIf="loading">
+  <mat-spinner [diameter]="50"></mat-spinner>
+</div>
+
 <div class="container mx-auto my-5">
   <h2 class="text-center m-4 display-4">{{ postsTitle }}</h2>
   <div class="flex justify-start mb-4">
@@ -8,33 +12,6 @@
     >
       <i class="fa-solid fa-plus mr-2"></i> New Post
     </a>
-  </div>
-  <div
-    *ngIf="loading"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-75"
-  >
-    <button
-      type="button"
-      class="bg-gray-200 text-black font-bold py-2 px-4 rounded flex items-center"
-      disabled
-    >
-      <svg class="animate-spin h-5 w-5 mr-3 text-gray-500" viewBox="0 0 24 24">
-        <circle
-          class="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          stroke-width="4"
-        ></circle>
-        <path
-          class="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8v-8H4z"
-        ></path>
-      </svg>
-      Processing...
-    </button>
   </div>
   <div class="mb-4">
     <div class="relative w-full">

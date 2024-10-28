@@ -28,6 +28,7 @@ export class BlogEditComponent implements OnInit {
   isModalOpen = false;
   currentCategoryId: number | null = null;
   editorContent: string = '';
+  loading: boolean = false;
 
   public Editor = ClassicEditor.default;
   public blogEditorContent: string = '';
@@ -87,16 +88,20 @@ export class BlogEditComponent implements OnInit {
   }
 
   loadPost(): void {
+    this.loading = true;
+
     this.postService.getPostById(this.postId).subscribe({
       next: (post: Post) => {
         this.title = post.title;
         this.content = post.content;
         this.visibility = post.visibility as 'public' | 'private';
         this.selectedCategoryIds = post.categoryIds || [];
+        this.loading = false;
       },
       error: () => {
         this.openSnackBar('Failed to load post.');
         this.router.navigate(['/blog']);
+        this.loading = false;
       },
     });
   }
@@ -119,38 +124,48 @@ export class BlogEditComponent implements OnInit {
       likes: this.post.likes || 0,
     };
 
+    this.loading = true;
+
     this.postService.updatePost(this.postId, updatedPost).subscribe(
       () => {
         this.openSnackBar('Update successful!');
-        setTimeout(() => {
-          this.router.navigate(['/blog']);
-        }, 1500);
+        this.loading = false;
+        this.router.navigate(['/blog']);
       },
       (error) => {
         this.openSnackBar('Failed to update post.');
+        this.loading = false;
       }
     );
   }
 
   loadCategories(): void {
+    this.loading = true;
+
     this.categoryService.getAllCategories().subscribe(
       (data: Category[]) => {
         this.categories = data;
         this.loadCategoriesByPostId(this.postId);
+        this.loading = false;
       },
       (error) => {
         this.openSnackBar('Error retrieving all categories:');
+        this.loading = false;
       }
     );
   }
 
   loadCategoriesByPostId(postId: number): void {
+    this.loading = true;
+
     this.categoryService.getCategoriesByPostId(postId).subscribe(
       (data: Category[]) => {
         this.selectedCategoryIds = data.map((cat) => cat.id!);
+        this.loading = false;
       },
       (error) => {
         this.openSnackBar('Error retrieving categories:');
+        this.loading = false;
       }
     );
   }
