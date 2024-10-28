@@ -68,21 +68,16 @@
         <button type="submit" class="btn btn-primary">Create Post</button>
       </div>
     </form>
-
     <div *ngIf="categories.length > 0" class="container mb-5">
       <h2 class="mb-3">Categories List:</h2>
-
       <ul class="list-group">
         <li
           *ngFor="let category of categories"
           class="list-group-item d-flex justify-content-between align-items-center"
         >
-          <!-- Exibe o nome da categoria -->
           <span *ngIf="!editingCategory || editingCategory.id !== category.id">
             {{ category.name }}
           </span>
-
-          <!-- Campo de entrada aparece quando a categoria está sendo editada -->
           <div
             *ngIf="editingCategory && editingCategory.id === category.id"
             class="d-flex align-items-center"
@@ -105,9 +100,7 @@
               Cancel
             </button>
           </div>
-
           <div>
-            <!-- Botão para iniciar a edição -->
             <button
               *ngIf="!editingCategory || editingCategory.id !== category.id"
               class="btn btn-outline-warning btn-sm me-2"
@@ -115,7 +108,6 @@
             >
               Edit
             </button>
-            <!-- Botão para excluir a categoria -->
             <button
               *ngIf="category.id !== undefined && currentPostId !== null"
               (click)="confirmDelete(category.id)"

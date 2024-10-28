@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router } from '@angular/router';
-import * as ClassicEditor from '@ckeditor/ckeditor5-build-classic'; // Importa a classe do editor
+import * as ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import { Category } from '../../models/category.model';
 import { Post } from '../../models/post.model';
 import { AuthService } from '../../services/auth.service';
 import { CategoryService } from '../../services/category.service';
 import { PostService } from '../../services/post.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-blog-create',
@@ -21,15 +21,15 @@ export class BlogCreateComponent implements OnInit {
   postId: number | null = null;
   categories: Category[] = [];
   newCategoryName: string = '';
-  selectedCategoryIds: number[] = []; // Inicializa como um array vazio
+  selectedCategoryIds: number[] = [];
   currentPostId: number | null = null;
   editorContent: string = '';
   isModalOpen: boolean = false;
-  currentCategoryId: number | null = null; // Adicione esta nova propriedade
+  currentCategoryId: number | null = null;
   editingCategory: any = null;
 
-  public Editor = ClassicEditor.default; // Use a propriedade .default aqui
-  public blogEditorContent: string = ''; // Variável renomeada para evitar conflitos
+  public Editor = ClassicEditor.default;
+  public blogEditorContent: string = '';
   public editorConfig = {
     toolbar: [
       'heading',
@@ -60,24 +60,19 @@ export class BlogCreateComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Carrega as categorias ao inicializar o componente
     this.categoryService.loadCategories();
 
-    // Subscreve ao BehaviorSubject para receber atualizações
     this.categoryService.categories$.subscribe((categories) => {
-      this.categories = categories; // Atualiza a lista de categorias
+      this.categories = categories;
     });
 
     this.route.params.subscribe((params) => {
-      this.currentPostId = +params['postId']; // Converte o postId para número
+      this.currentPostId = +params['postId'];
 
-      // Chame loadCategories apenas se currentPostId não for null
       if (this.currentPostId !== null) {
-        this.loadCategories(); // Passa o currentPostId como argumento
+        this.loadCategories();
       } else {
-        console.error(
-          'currentPostId é null. Não é possível carregar categorias.'
-        );
+        this.openSnackBar('currentPostId is null. Cannot load categories.');
       }
     });
 
@@ -86,10 +81,7 @@ export class BlogCreateComponent implements OnInit {
   }
 
   public onReady(editor: any): void {
-    // Remover o adaptador de upload de imagem
     delete editor.plugins.get('FileRepository').createUploadAdapter;
-
-    // Se necessário, você pode adicionar outras configurações aqui
   }
 
   private getUserId(): void {
@@ -105,14 +97,8 @@ export class BlogCreateComponent implements OnInit {
     this.visibility = this.authService.isLoggedIn() ? 'private' : 'public';
   }
 
-  // Create a new post
   createPost(): void {
-    const userRole = 'user'; // ou qualquer valor que faça sentido para o contexto
-
-    // Log para depuração
-    console.log('Título:', this.title);
-    console.log('Conteúdo:', this.content); // Adicione esta linha para depuração
-    console.log('IDs de categoria selecionados:', this.selectedCategoryIds); // Log dos IDs de categoria
+    const userRole = 'user';
 
     if (!this.title.trim() || !this.content.trim()) {
       this.openSnackBar('Title and content are required.');
@@ -127,15 +113,13 @@ export class BlogCreateComponent implements OnInit {
     const newPost: Post = {
       id: 0,
       title: this.title.trim(),
-      content: this.content.trim(), // Use o conteúdo do CKEditor
+      content: this.content.trim(),
       user_id: this.user_id,
       visibility: this.visibility,
       categoryIds: this.selectedCategoryIds,
       role: userRole,
-      likes: 0, // Definir likes como 0 ao criar o post
+      likes: 0,
     };
-
-    console.log('Criando post com dados:', newPost); // Log para depuração
 
     this.postService.createPost(newPost).subscribe({
       next: (response) => {
@@ -143,42 +127,37 @@ export class BlogCreateComponent implements OnInit {
         this.router.navigate(['/blog']);
       },
       error: (error) => {
-        console.error('Erro creating post:', error);
+        console.error('Error creating post:', error);
         this.openSnackBar('Error creating post.');
       },
     });
   }
 
   loadCategories(): void {
-    this.categoryService.getAllCategories().subscribe(
-      (data: Category[]) => {
-        this.categories = data; // Armazena as categorias
-      }
-    );
+    this.categoryService.getAllCategories().subscribe((data: Category[]) => {
+      this.categories = data;
+    });
   }
 
   addCategory(): void {
     if (this.newCategoryName.trim()) {
       const category: Omit<Category, 'id'> = {
         name: this.newCategoryName,
-        postId: this.currentPostId, // Certifique-se de que postId esteja associado corretamente
+        postId: this.currentPostId,
       };
 
       this.categoryService.createCategory(category).subscribe({
         next: () => {
-          this.newCategoryName = ''; // Limpa o campo após a adição
+          this.newCategoryName = '';
         },
         error: (error) => {
-          console.error('Erro ao criar categoria:', error);
+          this.openSnackBar('Error creating category:');
         },
       });
-    } else {
-      console.error('O nome da categoria não pode estar vazio');
     }
   }
 
   startEditCategory(category: any) {
-    console.log('Editing category:', category);
     this.editingCategory = { ...category };
   }
 
@@ -200,7 +179,6 @@ export class BlogCreateComponent implements OnInit {
   }
 
   cancelEditCategory() {
-    console.log('Edit canceled for category:', this.editingCategory);
     this.editingCategory = null;
   }
 
@@ -208,17 +186,16 @@ export class BlogCreateComponent implements OnInit {
     if (confirm('Are you sure you want to delete this category?')) {
       this.categoryService.deleteCategory(categoryId).subscribe({
         next: () => {
-          // Verifica se currentPostId não é null antes de chamar loadCategories
           if (this.currentPostId !== null) {
-            this.loadCategories(); // Passa o postId para recarregar as categorias
+            this.loadCategories();
           } else {
             this.openSnackBar(
-              'CurrentPostId is null. Cannot load categories after deletion.');
+              'CurrentPostId is null. Cannot load categories after deletion.'
+            );
           }
           this.openSnackBar('Category deleted successfully!');
         },
         error: (error) => {
-          console.error('Error deleting category:', error);
           this.openSnackBar('Failed to delete category.');
         },
       });
@@ -226,40 +203,34 @@ export class BlogCreateComponent implements OnInit {
   }
 
   onCategoryChange(event: Event, categoryId: number): void {
-    event.preventDefault(); // Previne o comportamento padrão
+    event.preventDefault();
 
     const isChecked = this.selectedCategoryIds.includes(categoryId);
 
     if (isChecked) {
-      // Remove o ID se o botão for clicado novamente
       this.selectedCategoryIds = this.selectedCategoryIds.filter(
         (id) => id !== categoryId
       );
     } else {
-      // Adiciona o ID se o botão for clicado
       this.selectedCategoryIds.push(categoryId);
     }
-
-    console.log('Categorias selecionadas:', this.selectedCategoryIds);
   }
 
   openModal(categoryId: number): void {
-    this.currentCategoryId = categoryId; // Armazena o ID da categoria a ser deletada
-    this.isModalOpen = true; // Abre o modal
+    this.currentCategoryId = categoryId;
+    this.isModalOpen = true;
   }
 
-  // Método para fechar o modal
   closeModal(): void {
-    this.isModalOpen = false; // Fecha o modal
-    this.currentPostId = null; // Limpa o ID atual
-    this.currentCategoryId = null; // Limpa o ID da categoria atual
+    this.isModalOpen = false;
+    this.currentPostId = null;
+    this.currentCategoryId = null;
   }
 
   confirmDelete(categoryId: number): void {
     this.openModal(categoryId);
   }
 
-  // Método para deletar a categoria do post
   deletePostCategory(): void {
     if (this.currentCategoryId) {
       this.categoryService.deleteCategory(this.currentCategoryId).subscribe({
@@ -269,7 +240,7 @@ export class BlogCreateComponent implements OnInit {
             duration: 3000,
           });
           this.closeModal();
-          this.loadCategories(); // Chame sem argumento
+          this.loadCategories();
         },
         error: (err) => {
           this.openSnackBar('Failed to remove category.');
@@ -280,7 +251,11 @@ export class BlogCreateComponent implements OnInit {
     }
   }
 
-  private openSnackBar(message: string, action: string = 'Close', duration: number = 3000): void {
+  private openSnackBar(
+    message: string,
+    action: string = 'Close',
+    duration: number = 3000
+  ): void {
     this.snackBar.open(message, action, {
       panelClass: ['star-snackbar'],
       duration: duration,
