@@ -84,6 +84,7 @@
         <input
           type="text"
           id="username"
+          (input)="convertToLowercase()"
           [(ngModel)]="username"
           name="username"
           required

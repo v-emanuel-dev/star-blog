@@ -22,8 +22,8 @@ export class RegisterComponent implements OnInit {
 
   ngOnInit(): void {
     // Verifique se o usuário é admin
-    this.authService.getUserRole().subscribe(role => {
-      this.isAdmin = (role === 'admin');
+    this.authService.getUserRole().subscribe((role) => {
+      this.isAdmin = role === 'admin';
       console.log('User role:', role);
     });
   }
@@ -54,26 +54,35 @@ export class RegisterComponent implements OnInit {
     this.loading = true;
     console.log('Loading state set to true. Initiating registration...');
 
-    this.authService.register(this.email, this.username, this.password, this.role).subscribe(
-      response => {
-        console.log('Registration response received:', response);
-        this.message = 'Registration successful! Please log in.';
-        this.success = true;
-        form.reset(); // Ou limpar campos manualmente se preferir
+    this.authService
+      .register(this.email, this.username, this.password, this.role)
+      .subscribe(
+        (response) => {
+          console.log('Registration response received:', response);
+          this.message = 'Registration successful! Please log in.';
+          this.success = true;
+          form.reset(); // Ou limpar campos manualmente se preferir
 
-        setTimeout(() => {
-          this.router.navigate(['/login']);
-        }, 1500);
-      },
-      error => {
-        this.message = error.error.message || 'Registration failed. Please try again.';
-        this.success = false;
-        console.error('Registration error occurred:', error);
-      },
-      () => {
-        this.loading = false;
-        console.log('Loading state set to false. Registration process completed.');
-      }
-    );
+          setTimeout(() => {
+            this.router.navigate(['/login']);
+          }, 1500);
+        },
+        (error) => {
+          this.message =
+            error.error.message || 'Registration failed. Please try again.';
+          this.success = false;
+          console.error('Registration error occurred:', error);
+        },
+        () => {
+          this.loading = false;
+          console.log(
+            'Loading state set to false. Registration process completed.'
+          );
+        }
+      );
   }
+
+  convertToLowercase(): void {
+    this.username = this.username.toLowerCase();
+}
 }

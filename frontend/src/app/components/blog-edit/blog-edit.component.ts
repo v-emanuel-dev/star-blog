@@ -83,7 +83,6 @@ export class BlogEditComponent implements OnInit {
         return; // Não prosseguir se o ID for inválido
       }
 
-      console.log('Post ID:', this.postId); // Log do ID do post após conversão
       this.loadPost();
       this.loadCategories();
       this.loadCategoriesByPostId(this.postId); // Carrega categorias específicas do post

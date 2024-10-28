@@ -115,19 +115,12 @@ export class BlogCreateComponent implements OnInit {
     console.log('IDs de categoria selecionados:', this.selectedCategoryIds); // Log dos IDs de categoria
 
     if (!this.title.trim() || !this.content.trim()) {
-      this.snackBar.open('Title and content are required.', 'Close', {
-        panelClass: ['star-snackbar'],
-        duration: 3000,
-      });
-      console.log('Erro: Título ou conteúdo vazio.'); // Log de erro
+      this.openSnackBar('Title and content are required.');
       return;
     }
 
     if (this.selectedCategoryIds.length === 0) {
-      this.snackBar.open('At least one category is required.', 'Close', {
-        panelClass: ['star-snackbar'],
-        duration: 3000,
-      });
+      this.openSnackBar('At least one category is required.');
       return;
     }
 
@@ -146,18 +139,12 @@ export class BlogCreateComponent implements OnInit {
 
     this.postService.createPost(newPost).subscribe({
       next: (response) => {
-        this.snackBar.open('Post created successfully!', 'Close', {
-          panelClass: ['star-snackbar'],
-          duration: 3000,
-        });
+        this.openSnackBar('Post created successfully!');
         this.router.navigate(['/blog']);
       },
       error: (error) => {
         console.error('Erro creating post:', error);
-        this.snackBar.open('Error creating post.', 'Close', {
-          panelClass: ['star-snackbar'],
-          duration: 3000,
-        });
+        this.openSnackBar('Error creating post.');
       },
     });
   }
@@ -166,9 +153,6 @@ export class BlogCreateComponent implements OnInit {
     this.categoryService.getAllCategories().subscribe(
       (data: Category[]) => {
         this.categories = data; // Armazena as categorias
-      },
-      (error) => {
-        console.error('Erro ao obter categorias:', error);
       }
     );
   }
@@ -204,18 +188,12 @@ export class BlogCreateComponent implements OnInit {
         .updateCategory(this.editingCategory.id, this.editingCategory)
         .subscribe({
           next: () => {
-            this.snackBar.open('Category updated successfully!', 'Close', {
-              panelClass: ['star-snackbar'],
-              duration: 3000,
-            });
+            this.openSnackBar('Category updated successfully!');
             this.loadCategories();
             this.editingCategory = null;
           },
           error: (error) => {
-            this.snackBar.open('Failed to update category.', 'Close', {
-              panelClass: ['star-snackbar'],
-              duration: 3000,
-            });
+            this.openSnackBar('Failed to update category.');
           },
         });
     }
@@ -234,26 +212,14 @@ export class BlogCreateComponent implements OnInit {
           if (this.currentPostId !== null) {
             this.loadCategories(); // Passa o postId para recarregar as categorias
           } else {
-            this.snackBar.open(
-              'CurrentPostId is null. Cannot load categories after deletion.',
-              'Close',
-              {
-                panelClass: ['star-snackbar'],
-                duration: 3000,
-              }
-            );
+            this.openSnackBar(
+              'CurrentPostId is null. Cannot load categories after deletion.');
           }
-          this.snackBar.open('Category deleted successfully!', 'Close', {
-            panelClass: ['star-snackbar'],
-            duration: 3000,
-          });
+          this.openSnackBar('Category deleted successfully!');
         },
         error: (error) => {
           console.error('Error deleting category:', error);
-          this.snackBar.open('Failed to delete category.', 'Close', {
-            panelClass: ['star-snackbar'],
-            duration: 3000,
-          });
+          this.openSnackBar('Failed to delete category.');
         },
       });
     }
@@ -306,16 +272,18 @@ export class BlogCreateComponent implements OnInit {
           this.loadCategories(); // Chame sem argumento
         },
         error: (err) => {
-          this.snackBar.open('Failed to remove category.', 'Close', {
-            panelClass: ['star-snackbar'],
-            duration: 3000,
-          });
+          this.openSnackBar('Failed to remove category.');
         },
       });
     } else {
-      this.snackBar.open('Invalid Category ID!', 'Close', {
-        duration: 3000,
-      });
+      this.openSnackBar('Invalid Category ID!');
     }
+  }
+
+  private openSnackBar(message: string, action: string = 'Close', duration: number = 3000): void {
+    this.snackBar.open(message, action, {
+      panelClass: ['star-snackbar'],
+      duration: duration,
+    });
   }
 }
