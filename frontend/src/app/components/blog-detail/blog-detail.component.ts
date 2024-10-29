@@ -314,14 +314,10 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  private openSnackBar(
-    message: string,
-    action: string = 'Close',
-    duration: number = 3000
-  ): void {
-    this.snackBar.open(message, action, {
-      panelClass: ['star-snackbar'],
-      duration: duration,
+  snackbar(message: string): void {
+    this.snackBar.open(message, 'Close', {
+      duration: 3000,
+      panelClass: 'star-snackbar'
     });
   }
 }
