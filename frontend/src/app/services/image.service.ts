@@ -50,7 +50,7 @@ export class ImageService {
     // Confirma que a URL está formatada corretamente
     return picUrl.startsWith('http')
       ? picUrl
-      : `http://localhost:4200/${picUrl}`;
+      : `http://localhost:3000/${picUrl}`;
   }
 
   clearProfilePic(): void {
