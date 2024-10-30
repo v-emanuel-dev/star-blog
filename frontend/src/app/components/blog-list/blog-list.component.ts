@@ -29,7 +29,7 @@ export class BlogListComponent implements OnInit {
   isLoadingCategories: boolean = true;
   isAdmin: boolean = false;
   userRole: string | null = null;
-  userName: string | null = null;
+  username: string | null = null;
 
   private userDetailsSubscription: Subscription = new Subscription();
 
@@ -51,7 +51,7 @@ export class BlogListComponent implements OnInit {
       )
       .subscribe(details => {
         this.userRole = details.userRole; // Acesso à role do usuário
-        this.userName = details.username; // Acesso ao nome do usuário
+        this.username = details.username; // Acesso ao nome do usuário
       });
 
 
@@ -128,7 +128,7 @@ export class BlogListComponent implements OnInit {
             });
           },
           error: (error) => {
-            this.snackbar('Error fetching posts');
+            console.log('Error fetching posts');
             this.loading = false;
           },
         });

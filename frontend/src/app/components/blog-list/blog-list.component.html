@@ -80,7 +80,7 @@
             </div>
             <div class="flex flex-wrap justify-end gap-2">
               <div>
-                <div class="flex space-x-2" *ngIf="post.username === userName">
+                <div class="flex space-x-2" *ngIf="post.username === username">
                   <button
                     [routerLink]="['/blog/edit', post.id]"
                     class="bg-yellow-500 text-white py-1 px-3 rounded hover:bg-yellow-600 transition duration-300"

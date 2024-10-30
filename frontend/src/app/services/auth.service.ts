@@ -89,7 +89,7 @@ export class AuthService {
 
           console.log('Login response:', response);
           localStorage.setItem('accessToken', response.accessToken);
-          localStorage.setItem('userName', response.username);
+          localStorage.setItem('username', response.username);
           localStorage.setItem('email', response.email);
           localStorage.setItem('userId', response.userId);
           localStorage.setItem('userRole', response.userRole);
