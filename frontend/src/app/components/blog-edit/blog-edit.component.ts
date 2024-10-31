@@ -95,8 +95,11 @@ export class BlogEditComponent implements OnInit {
         this.title = post.title;
         this.content = post.content;
         this.visibility = post.visibility as 'public' | 'private';
-        this.selectedCategoryIds = post.categoryIds || [];
-        this.loading = false;
+
+        // Carregar as categorias após carregar o post
+        this.loadCategoriesByPostId(this.postId); // Mova esta chamada para carregar as categorias
+
+        this.loading = false; // Mova o loading para aqui
       },
       error: () => {
         this.snackbar('Failed to load post.');
@@ -104,6 +107,39 @@ export class BlogEditComponent implements OnInit {
         this.loading = false;
       },
     });
+  }
+
+  // Ajuste na função loadCategoriesByPostId para setar selectedCategoryIds
+  loadCategoriesByPostId(postId: number): void {
+    this.loading = true;
+
+    this.categoryService.getCategoriesByPostId(postId).subscribe(
+      (data: Category[]) => {
+        this.selectedCategoryIds = data.map((cat) => cat.id ?? 0);
+      },
+      (error) => {
+        this.snackbar('Error retrieving categories by post');
+      },
+      () => {
+        this.loading = false; // Esta parte do loading deve permanecer aqui
+      }
+    );
+  }
+
+  loadCategories(): void {
+    this.loading = true;
+
+    this.categoryService.getAllCategories().subscribe(
+      (data: Category[]) => {
+        this.categories = data.sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
+        this.loadCategoriesByPostId(this.postId);
+        this.loading = false;
+      },
+      (error) => {
+        this.snackbar('Error retrieving all categories');
+        this.loading = false;
+      }
+    );
   }
 
   public onReady(editor: any): void {
@@ -134,38 +170,6 @@ export class BlogEditComponent implements OnInit {
       },
       (error) => {
         this.snackbar('Failed to update post.');
-        this.loading = false;
-      }
-    );
-  }
-
-  loadCategories(): void {
-    this.loading = true;
-
-    this.categoryService.getAllCategories().subscribe(
-      (data: Category[]) => {
-        this.categories = data.sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
-        this.loadCategoriesByPostId(this.postId);
-        this.loading = false;
-      },
-      (error) => {
-        this.snackbar('Error retrieving all categories');
-        this.loading = false;
-      }
-    );
-  }
-
-  loadCategoriesByPostId(postId: number): void {
-    this.loading = true;
-
-    this.categoryService.getCategoriesByPostId(postId).subscribe(
-      (data: Category[]) => {
-        this.selectedCategoryIds = data.map((cat) => cat.id ?? 0);
-      },
-      (error) => {
-        this.snackbar('Error retrieving categories by post');
-      },
-      () => {
         this.loading = false;
       }
     );
