@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const postController = require('../controllers/post.controller');
 const authMiddleware = require('../middlewares/auth.middleware');
-const upload = require('../middlewares/upload.middleware'); // Importa o middleware de upload
+const upload = require('../middlewares/upload.middleware');
 
 // Rota para criar um post com upload de imagem
 router.post('/', authMiddleware.verifyToken, upload.single('profilePicture'), postController.createPost);

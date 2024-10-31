@@ -1,4 +1,3 @@
-// Importing the database connection
 const db = require("../config/db");
 
 exports.getPostsAdmin = (req, res) => {
@@ -324,17 +323,91 @@ exports.deletePost = (req, res) => {
             });
           }
 
+          if (results.affectedRows === 0) {
+            return db.rollback(() => {
+              res.status(404).json({ error: "Post not found." });
+            });
+          }
+
           db.commit((err) => {
             if (err) {
               return db.rollback(() => {
                 res.status(500).json({ error: err.message });
               });
             }
-
             res.status(204).send();
           });
         });
       });
+    });
+  });
+};
+
+exports.toggleLike = (req, res) => {
+  const postId = req.params.id;
+  const userId = req.userId;
+
+  const queryCheckPost = `SELECT * FROM posts WHERE id = ?`;
+  db.query(queryCheckPost, [postId], (err, results) => {
+    if (err) {
+      console.error("Erro ao verificar o post:", err);
+      return res.status(500).json({ message: "Erro ao verificar o post" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: "Post não encontrado" });
+    }
+
+    const queryCheckLike = `SELECT * FROM likes WHERE user_id = ? AND post_id = ?`;
+    db.query(queryCheckLike, [userId, postId], (err, likeResults) => {
+      if (err) {
+        console.error("Erro ao verificar like:", err);
+        return res.status(500).json({ message: "Erro ao verificar like" });
+      }
+
+      if (likeResults.length > 0) {
+        const queryDeleteLike = `DELETE FROM likes WHERE user_id = ? AND post_id = ?`;
+        db.query(queryDeleteLike, [userId, postId], (err) => {
+          if (err) {
+            console.error("Erro ao remover like:", err);
+            return res.status(500).json({ message: "Erro ao remover like" });
+          }
+
+          const queryCountLikes = `SELECT COUNT(*) AS totalLikes FROM likes WHERE post_id = ?`;
+          db.query(queryCountLikes, [postId], (err, countResults) => {
+            if (err) {
+              console.error("Erro ao contar likes:", err);
+              return res.status(500).json({ message: "Erro ao contar likes" });
+            }
+
+            res.status(200).json({
+              message: "Like removido com sucesso",
+              likeCount: countResults[0].totalLikes,
+            });
+          });
+        });
+      } else {
+        const queryInsertLike = `INSERT INTO likes (user_id, post_id) VALUES (?, ?)`;
+        db.query(queryInsertLike, [userId, postId], (err) => {
+          if (err) {
+            console.error("Erro ao adicionar like:", err);
+            return res.status(500).json({ message: "Erro ao adicionar like" });
+          }
+
+          const queryCountLikes = `SELECT COUNT(*) AS totalLikes FROM likes WHERE post_id = ?`;
+          db.query(queryCountLikes, [postId], (err, countResults) => {
+            if (err) {
+              console.error("Erro ao contar likes:", err);
+              return res.status(500).json({ message: "Erro ao contar likes" });
+            }
+
+            res.status(200).json({
+              message: "Like adicionado com sucesso",
+              likeCount: countResults[0].totalLikes,
+            });
+          });
+        });
+      }
     });
   });
 };
