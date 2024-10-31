@@ -47,7 +47,7 @@ export class LoginComponent {
     this.authService.login(this.email, this.password).subscribe(
       (response) => {
         localStorage.setItem('token', response.accessToken);
-        this.snackbar('Login successful! Redirecting...');
+        this.snackbar('Login successful!');
 
         const userId = response.userId;
 
