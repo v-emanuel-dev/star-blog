@@ -144,9 +144,8 @@ export class BlogEditComponent implements OnInit {
 
     this.categoryService.getAllCategories().subscribe(
       (data: Category[]) => {
-        // Ordena as categorias em ordem decrescente de id (assumindo que maiores ids são mais recentes)
         this.categories = data.sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
-        this.loadCategoriesByPostId(this.postId); // Carrega as categorias relacionadas ao post
+        this.loadCategoriesByPostId(this.postId);
         this.loading = false;
       },
       (error) => {
@@ -161,17 +160,16 @@ export class BlogEditComponent implements OnInit {
 
     this.categoryService.getCategoriesByPostId(postId).subscribe(
       (data: Category[]) => {
-        // Mapeia para obter apenas os ids, tratando `id` potencialmente `undefined`
         this.selectedCategoryIds = data.map((cat) => cat.id ?? 0);
-        this.loading = false;
       },
       (error) => {
         this.snackbar('Error retrieving categories by post');
+      },
+      () => {
         this.loading = false;
       }
     );
   }
-
 
   onCategoryChange(event: Event, categoryId: number): void {
     event.preventDefault();
@@ -223,9 +221,6 @@ export class BlogEditComponent implements OnInit {
       error: (error) => {
         this.snackbar('Failed to delete category.');
       },
-      complete: () => {
-        setTimeout(() => {}, 2000);
-      },
     });
   }
 
@@ -246,7 +241,7 @@ export class BlogEditComponent implements OnInit {
   snackbar(message: string): void {
     this.snackBar.open(message, 'Close', {
       duration: 3000,
-      panelClass: 'star-snackbar'
+      panelClass: 'star-snackbar',
     });
   }
 }

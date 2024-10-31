@@ -1,11 +1,11 @@
-const { Server } = require('socket.io');
+const { Server } = require("socket.io");
 
-let io; // Variável global para a instância do Socket.io
+let io;
 
 const initSocket = (server) => {
   io = new Server(server, {
     cors: {
-      origin: "http://localhost:4200", // URL do frontend
+      origin: "http://localhost:4200",
       methods: ["GET", "POST"],
       credentials: true,
     },
@@ -14,7 +14,7 @@ const initSocket = (server) => {
 
 const getSocket = () => {
   if (!io) {
-    throw new Error('Socket.io not initialized!');
+    throw new Error("Socket.io not initialized!");
   }
   return io;
 };
