@@ -48,18 +48,14 @@
           <option value="admin">Admin</option>
         </select>
       </div>
-      <ng-container *ngIf="categories && categories.length">
+      <ng-container *ngIf="!loading && categories && categories.length">
         <button
           *ngFor="let category of categories"
           type="button"
           (click)="onCategoryChange($event, category.id!)"
           [ngClass]="{
-            'bg-blue-600 text-white': selectedCategoryIds.includes(
-              category.id!
-            ),
-            'bg-gray-200 text-gray-800': !selectedCategoryIds.includes(
-              category.id!
-            )
+            'bg-blue-600 text-white': selectedCategoryIds.includes(category.id!),
+            'bg-gray-200 text-gray-800': !selectedCategoryIds.includes(category.id!)
           }"
           class="m-1 px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
