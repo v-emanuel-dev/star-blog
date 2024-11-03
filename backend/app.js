@@ -7,6 +7,7 @@ const postRoutes = require("./routes/post.routes");
 const commentRoutes = require("./routes/comment.routes");
 const categoryRoutes = require("./routes/category.routes");
 const userRoutes = require("./routes/user.routes");
+const cartRoutes = require("./routes/cart.routes");
 const passport = require("./config/passport");
 const cors = require("cors");
 require("dotenv").config();
@@ -52,8 +53,9 @@ app.use(passport.session());
 
 const PORT = process.env.PORT || 3000;
 
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("./uploads", express.static(path.join(__dirname, "uploads")));
 
+app.use("/api/cart", cartRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);

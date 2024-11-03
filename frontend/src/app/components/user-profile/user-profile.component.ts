@@ -177,7 +177,17 @@ export class UserProfileComponent implements OnInit, AfterViewInit, OnDestroy {
       this.userService.updateProfilePicture(this.profilePicture);
     }
 
-    this.loadUserData();
+    // Atualiza o BehaviorSubject com os novos dados do usuário
+    // Atualiza o BehaviorSubject com os novos dados do usuário
+    const updatedUser = {
+      ...response,
+      role: this.role,
+      username: this.username,
+      email: this.email,
+      profilePicture: this.profilePicture,
+    };
+    this.authService.updateUserDetails(updatedUser); // Certifique-se de ter este método no AuthService
+
     this.selectedImage = null;
   }
 

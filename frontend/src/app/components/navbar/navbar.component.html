@@ -88,6 +88,24 @@
           </div>
         </div>
       </span>
+
+      <div class="relative ml-3 mr-4">
+        <button
+          type="button"
+          class="relative flex items-center text-gray-400 hover:text-white focus:outline-none"
+          routerLink="/cart"
+          title="View Cart"
+        >
+          <i class="fa-solid fa-shopping-cart fa-lg"></i>
+          <span
+            *ngIf="cartItemCount > 0"
+            class="absolute -top-1 -right-1 inline-block h-4 w-4 rounded-full bg-red-500 text-white text-xs flex items-center justify-center pointer-events-none"
+          >
+            {{ cartItemCount }}
+          </span>
+        </button>
+      </div>
+
       <div class="relative">
         <button
           type="button"
@@ -127,6 +145,7 @@
           </ng-template>
         </div>
       </div>
+
       <div class="relative ml-3">
         <div>
           <button

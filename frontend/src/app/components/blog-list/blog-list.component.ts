@@ -1,3 +1,4 @@
+import { NotificationService } from './../../services/notification.service';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -9,6 +10,8 @@ import { AuthService } from '../../services/auth.service';
 import { CategoryService } from '../../services/category.service';
 import { PostService } from '../../services/post.service';
 import { UserService } from '../../services/user.service';
+import { CartService } from '../../services/cart.service';
+import { CartItem } from '../../models/cart-item.model';
 
 @Component({
   selector: 'app-blog-list',
@@ -30,6 +33,11 @@ export class BlogListComponent implements OnInit {
   isAdmin: boolean = false;
   userRole: string | null = null;
   username: string | null = null;
+  cartItemCount = 0;
+  quantity: number = 1;
+  items: CartItem[] = [];
+
+  private subscriptions: Subscription = new Subscription();
 
   private userDetailsSubscription: Subscription = new Subscription();
 
@@ -40,8 +48,9 @@ export class BlogListComponent implements OnInit {
     private route: ActivatedRoute,
     private categoryService: CategoryService,
     private userService: UserService,
-    private cd: ChangeDetectorRef,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private cartService: CartService,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -59,8 +68,66 @@ export class BlogListComponent implements OnInit {
       }
     });
 
+    // Assinatura para atualizações do carrinho
+    this.subscriptions.add(
+      this.cartService.cartItems$.subscribe((items) => {
+        this.items = items; // Atualiza a lista de itens com o estado atual do carrinho
+      })
+    );
+
     this.getPosts();
     this.isLoggedIn = this.authService.isLoggedIn();
+  }
+
+  addToCart(postId: number): void {
+    if (!postId) {
+      console.error('Invalid postId:', postId);
+      this.notificationService.showNotification('Error: Invalid post ID');
+      return;
+    }
+    console.log('Adding to cart:', postId);
+    this.cartService.addToCart(postId); // Use o parâmetro postId, não this.postId
+  }
+
+  removeFromCart(postId: number): void {
+    if (!postId) {
+      console.error('Invalid postId:', postId);
+      this.notificationService.showNotification('Error: Invalid post ID');
+      return;
+    }
+
+    // Verifica se o item ainda existe no carrinho e tem quantidade > 0
+    const currentQuantity = this.cartService.getItemQuantity(postId);
+    if (currentQuantity <= 0) {
+      console.log('Item already removed or quantity is 0');
+      return;
+    }
+
+    console.log('Initiating cart item removal for postId:', postId);
+    this.cartService.removeFromCart(postId);
+  }
+
+  toggleCart(postId: number): void {
+    if (!postId) {
+      console.error('Invalid postId:', postId);
+      this.notificationService.showNotification('Error: Invalid post ID');
+      return;
+    }
+
+    console.log('Toggling cart for post:', postId);
+    const isItemInCart = this.items.some((item) => item.postId === postId);
+    if (isItemInCart) {
+      this.removeFromCart(postId);
+    } else {
+      this.addToCart(postId);
+    }
+  }
+
+  // Adicione o método getCartItemQuantity aqui
+  getCartItemQuantity(postId: number): number {
+    const currentCart = this.cartService.getCartItems();
+    const item = currentCart.find((item) => item.postId === postId);
+    return item ? item.quantity : 0;
   }
 
   toggleLike(postId: number): void {

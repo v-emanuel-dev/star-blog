@@ -52,6 +52,25 @@ export class AuthService {
     }
   }
 
+  updateUserDetails(updatedDetails: any) {
+    const userDetails = {
+      userId: updatedDetails.userId ? updatedDetails.userId.toString() : null,
+      email: updatedDetails.email || '',
+      username: updatedDetails.username || '',
+      profilePicture:
+        updatedDetails.profilePicture ||
+        'http://localhost:4200/assets/img/default-profile.png',
+      userRole: updatedDetails.userRole || 'user',
+    };
+
+    this.userDetailsSubject.next(userDetails);
+    localStorage.setItem('userId', userDetails.userId || '');
+    localStorage.setItem('email', userDetails.email);
+    localStorage.setItem('username', userDetails.username);
+    localStorage.setItem('profilePicture', userDetails.profilePicture);
+    localStorage.setItem('userRole', userDetails.userRole);
+  }
+
   setUserRole(role: string) {
     this.userRoleSubject.next(role);
   }

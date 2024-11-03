@@ -24,7 +24,13 @@ export class WebSocketService {
 
     this.socket.on('connect', () => {});
 
+    // Escuta notificações de novos comentários
     this.socket.on('new-comment', (data: Notification) => {
+      this.addNotification(data);
+    });
+
+    // Escuta notificações de atualizações de carrinho
+    this.socket.on('cart-update', (data: Notification) => {
       this.addNotification(data);
     });
 
@@ -40,9 +46,7 @@ export class WebSocketService {
 
   fetchNotifications(userId: string) {
     this.http
-      .get<Notification[]>(
-        `http://localhost:3000/api/comments/${userId}/notifications`
-      )
+      .get<Notification[]>(`http://localhost:3000/api/comments/${userId}/notifications`)
       .subscribe((notifications) => {
         const validNotifications = notifications.filter(
           (n) => n.message && n.postId

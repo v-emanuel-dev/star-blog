@@ -6,6 +6,9 @@ import { filter, Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { ImageService } from '../../services/image.service';
 import { WebSocketService } from '../../services/websocket.service';
+import { CartService } from '../../services/cart.service';
+import { CartItem } from '../../models/cart-item.model';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-navbar',
@@ -23,6 +26,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
   defaultProfilePicture: string =
     'http://localhost:4200/assets/img/default-profile.png';
   userRole: string | null = null;
+  cartItemCount = 0;
+  notificationCount = 0;
 
   private userDetailsSubscription: Subscription = new Subscription();
   private notificationsSubscription: Subscription | undefined;
@@ -36,7 +41,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
     private changeDetectorRef: ChangeDetectorRef,
     private imageService: ImageService,
     private cd: ChangeDetectorRef,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private cartService: CartService,
   ) {}
 
   ngOnInit(): void {
@@ -59,6 +65,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
         this.notifications = notifications;
         this.unreadNotificationsCount = this.notifications.length;
         this.changeDetectorRef.detectChanges();
+      });
+
+      this.cartService.cartItems$.subscribe((items: CartItem[]) => {
+        this.cartItemCount = items.reduce((count: number, item: CartItem) => count + item.quantity, 0); // Soma das quantidades
       });
 
     document.addEventListener('click', this.closeDropdowns.bind(this));
