@@ -8,6 +8,7 @@ const commentRoutes = require("./routes/comment.routes");
 const categoryRoutes = require("./routes/category.routes");
 const userRoutes = require("./routes/user.routes");
 const cartRoutes = require("./routes/cart.routes");
+const notificationRoutes = require("./routes/notification.routes");
 const passport = require("./config/passport");
 const cors = require("cors");
 require("dotenv").config();
@@ -61,6 +62,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/notify", notificationRoutes);
 
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

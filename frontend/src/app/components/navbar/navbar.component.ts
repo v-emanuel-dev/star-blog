@@ -4,11 +4,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
+import { CartService } from '../../services/cart.service';
 import { ImageService } from '../../services/image.service';
 import { WebSocketService } from '../../services/websocket.service';
-import { CartService } from '../../services/cart.service';
-import { CartItem } from '../../models/cart-item.model';
-import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-navbar',
@@ -26,8 +24,14 @@ export class NavbarComponent implements OnInit, OnDestroy {
   defaultProfilePicture: string =
     'http://localhost:4200/assets/img/default-profile.png';
   userRole: string | null = null;
-  cartItemCount = 0;
   notificationCount = 0;
+  showNotifications = false;
+  notificationsVisible = false;
+  unreadCartCount = 0;
+  showCartNotifications = false;
+
+  notificationsCart: string[] = [];
+  private addToCartSubscription!: Subscription;
 
   private userDetailsSubscription: Subscription = new Subscription();
   private notificationsSubscription: Subscription | undefined;
@@ -42,7 +46,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
     private imageService: ImageService,
     private cd: ChangeDetectorRef,
     private snackBar: MatSnackBar,
-    private cartService: CartService,
   ) {}
 
   ngOnInit(): void {
@@ -67,11 +70,19 @@ export class NavbarComponent implements OnInit, OnDestroy {
         this.changeDetectorRef.detectChanges();
       });
 
-      this.cartService.cartItems$.subscribe((items: CartItem[]) => {
-        this.cartItemCount = items.reduce((count: number, item: CartItem) => count + item.quantity, 0); // Soma das quantidades
+      this.addToCartSubscription = this.webSocketService.addToCart$.subscribe({
+        next: (message: string) => {
+          this.notificationsCart.push(message);
+        }
       });
 
     document.addEventListener('click', this.closeDropdowns.bind(this));
+    document.addEventListener('click', this.closeCartNotifications.bind(this));
+
+  }
+
+  toggleCartNotifications(): void {
+    this.showNotifications = !this.showNotifications;
   }
 
   isAdmin(): boolean {
@@ -175,6 +186,18 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
   }
 
+  closeCartNotifications(event: MouseEvent): void {
+    const cartButton = document.querySelector('.relative.ml-3 button');
+    const notificationsContainer = document.querySelector('.absolute.right-0.mt-2');
+
+    if (
+      cartButton && !cartButton.contains(event.target as Node) &&
+      notificationsContainer && !notificationsContainer.contains(event.target as Node)
+    ) {
+      this.showNotifications = false;  // Fechar o menu do carrinho
+    }
+  }
+
   onImageError() {
     this.snackbar('Failed to load profile picture, using default.');
     this.profilePicture = this.defaultProfilePicture;
@@ -189,7 +212,16 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.snackbar('Logged out successfully');
   }
 
+  clearNotifications(): void {
+    this.notificationsCart = [];
+  }
+
   ngOnDestroy() {
+
+    if (this.addToCartSubscription) {
+      this.addToCartSubscription.unsubscribe();
+    }
+
     this.userDetailsSubscription.unsubscribe();
     document.removeEventListener('click', this.closeDropdowns.bind(this));
   }

@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
 
 interface Notification {
@@ -15,23 +15,38 @@ interface Notification {
 })
 export class WebSocketService {
   private socket: Socket;
+
   private notificationsSubject = new BehaviorSubject<Notification[]>([]);
   notifications$ = this.notificationsSubject.asObservable();
+
+  private addToCartSubject = new Subject<string>();
+  addToCart$ = this.addToCartSubject.asObservable();
+
+  private removeFromCartSubject = new Subject<string>();
+  removeFromCart$ = this.removeFromCartSubject.asObservable();
+
   private userId: string | null = localStorage.getItem('userId');
 
   constructor(private http: HttpClient) {
     this.socket = io('http://localhost:3000');
 
-    this.socket.on('connect', () => {});
+    this.socket.on('connect', () => {
+      console.log('Connected to WebSocket server');  // Log para verificar a conexão
+    });
 
     // Escuta notificações de novos comentários
     this.socket.on('new-comment', (data: Notification) => {
       this.addNotification(data);
     });
 
-    // Escuta notificações de atualizações de carrinho
-    this.socket.on('cart-update', (data: Notification) => {
-      this.addNotification(data);
+    this.socket.on('addToCartNotification', (message: string) => {
+      console.log('Received add to cart notification:', message);
+      this.addToCartSubject.next(message);
+    });
+
+    this.socket.on('removeFromCartNotification', (message: string) => {
+      console.log('Received remove from cart notification:', message);
+      this.removeFromCartSubject.next(message);
     });
 
     this.initializeNotifications();

@@ -21,6 +21,7 @@ import { AuthService } from './services/auth.service';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { NotificationsComponent } from './components/notifications/notifications.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -34,6 +35,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     BlogDetailComponent,
     DashboardComponent,
     AccessDeniedComponent,
+    NotificationsComponent,
   ],
   imports: [
     BrowserModule,
