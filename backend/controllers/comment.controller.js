@@ -1,61 +1,58 @@
 const db = require("../config/db");
+const { getSocket } = require("../socket");
 
 exports.getAllComments = (req, res) => {
   const query = "SELECT * FROM comments";
-
   db.query(query, (error, results) => {
     if (error) {
-      return res
-        .status(500)
-        .json({ message: "Error fetching all comments.", error });
+      return res.status(500).json({ message: "Error fetching all comments.", error });
     }
     res.json(results);
   });
 };
 
-exports.addComment = (io) => (req, res) => {
+exports.addComment = (req, res) => {
+  const io = getSocket();
   const { content, postId, userId, username } = req.body;
 
   if (!content || !postId || !username) {
-    return res
-      .status(400)
-      .json({ message: "Content, post ID, and username are required." });
+    return res.status(400).json({ message: "Content, post ID, and username are required." });
   }
 
-  if (
-    typeof postId !== "number" ||
-    typeof content !== "string" ||
-    (userId !== null && typeof userId !== "number")
-  ) {
-    return res.status(400).json({ message: "Invalid data types." });
-  }
-
-  const sql =
-    "INSERT INTO comments (content, postId, user_id, username) VALUES (?, ?, ?, ?)";
+  const sql = "INSERT INTO comments (content, postId, user_id, username) VALUES (?, ?, ?, ?)";
   db.query(sql, [content, postId, userId, username], (err, result) => {
     if (err) {
       return res.status(500).json({ error: "Error inserting comment." });
     }
 
-    const newComment = {
-      id: result.insertId,
-      content,
-      postId,
-      userId: userId || null,
-      username,
-    };
+    const newComment = { id: result.insertId, content, postId, userId: userId || null, username };
 
-    if (io && postAuthorId) {
-      const notificationData = {
-        postId,
-        commentId: newComment.id,
-        message: "You have a new comment on your post!",
-        content,
-      };
-      io.to(`user_${postAuthorId}`).emit("new-comment", notificationData);
-    }
+    db.query("SELECT user_id FROM posts WHERE id = ?", [postId], (err, rows) => {
+      if (err) return res.status(500).json({ error: "Error getting post author." });
 
-    return res.status(201).json(newComment);
+      if (rows.length > 0 && rows[0].user_id !== userId) {
+        const postAuthorId = rows[0].user_id;
+        const notificationMessage = `New comment on your post ${postId}: "${content}"`;
+
+        db.query(
+          "INSERT INTO notifications (userId, message, postId) VALUES (?, ?, ?)",
+          [postAuthorId, notificationMessage, postId],
+          (err) => {
+            if (err) console.error("Error saving notification:", err);
+          }
+        );
+
+        if (io) {
+          io.to(`user_${postAuthorId}`).emit("new-comment", {
+            postId,
+            commentId: newComment.id,
+            message: notificationMessage,
+            content,
+          });
+        }
+      }
+      res.status(201).json(newComment);
+    });
   });
 };
 
@@ -68,12 +65,9 @@ exports.getCommentsByPostId = (req, res) => {
     JOIN posts ON comments.postId = posts.id 
     WHERE comments.postId = ?
   `;
-
   db.query(query, [postId], (error, results) => {
     if (error) {
-      return res
-        .status(500)
-        .json({ message: "Error fetching comments.", error });
+      return res.status(500).json({ message: "Error fetching comments.", error });
     }
     res.json(results);
   });
@@ -114,11 +108,48 @@ exports.deleteComment = (req, res) => {
     }
 
     const sqlDelete = "DELETE FROM comments WHERE id = ?";
-    db.query(sqlDelete, [commentId], (err, result) => {
+    db.query(sqlDelete, [commentId], (err) => {
       if (err) {
         return res.status(500).json({ message: "Error deleting comment." });
       }
       res.json({ message: "Comment deleted successfully!" });
     });
+  });
+};
+
+exports.getUserNotifications = (req, res) => {
+  const userId = req.params.userId;
+  const sql = "SELECT * FROM notifications WHERE userId = ?";
+  db.query(sql, [userId], (error, results) => {
+    if (error) {
+      return res.status(500).json({ message: "Error fetching notifications." });
+    }
+    res.status(200).json(results);
+  });
+};
+
+exports.addNotification = (req, res) => {
+  const { message, postId } = req.body;
+  const userId = req.params.userId;
+  const sql = "INSERT INTO notifications (userId, message, postId) VALUES (?, ?, ?)";
+  db.query(sql, [userId, message, postId], (error, results) => {
+    if (error) {
+      return res.status(500).json({ message: "Error saving notification." });
+    }
+    res.status(201).json({ id: results.insertId, message, postId });
+  });
+};
+
+exports.deleteNotification = (req, res) => {
+  const notificationId = req.params.id;
+  const sql = "DELETE FROM notifications WHERE id = ?";
+  db.query(sql, [notificationId], (error, result) => {
+    if (error) {
+      return res.status(500).json({ message: "Error removing notification." });
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Notification not found." });
+    }
+    res.status(200).json({ message: "Notification removed successfully." });
   });
 };

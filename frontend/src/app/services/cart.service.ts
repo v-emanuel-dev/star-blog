@@ -59,19 +59,23 @@ export class CartService {
       postId,
       userId,
       quantity,
-      cartId: userId
+      cartId: userId,
     };
 
-    this.http.post<{ message: string; itemId: number }>(this.apiUrl, payload).subscribe(
-      (response) => {
-        this.loadCart(); // Recarrega o carrinho para ter o estado mais atual
-        this.notificationService.showNotification('Item added to cart');
-      },
-      (error) => {
-        console.error('Error adding item to cart:', error);
-        this.notificationService.showNotification('Error adding item to cart');
-      }
-    );
+    this.http
+      .post<{ message: string; itemId: number }>(this.apiUrl, payload)
+      .subscribe(
+        (response) => {
+          this.loadCart(); // Recarrega o carrinho para ter o estado mais atual
+          this.notificationService.showNotification('Item added to cart');
+        },
+        (error) => {
+          console.error('Error adding item to cart:', error);
+          this.notificationService.showNotification(
+            'Error adding item to cart'
+          );
+        }
+      );
   }
 
   removeFromCart(postId: number): void {
@@ -88,7 +92,7 @@ export class CartService {
     // Correção do endpoint
     this.http
       .put(`${this.apiUrl}/items/${itemToRemove.id}/quantity`, {
-        newQuantity: newQuantity
+        newQuantity: newQuantity,
       })
       .subscribe({
         next: () => {
@@ -98,25 +102,27 @@ export class CartService {
         error: (error) => {
           console.error('Error updating cart item:', error);
           this.notificationService.showNotification('Failed to update item');
-        }
+        },
       });
   }
 
-
-
   // Método para obter a quantidade atual de um item
   getItemQuantity(postId: number): number {
-    const item = this.cartItemsSubject.value.find(item => item.postId === postId);
+    const item = this.cartItemsSubject.value.find(
+      (item) => item.postId === postId
+    );
     return item ? item.quantity : 0;
   }
 
   // Método para debug
   debugCartItem(cartItemId: number) {
-    const item = this.cartItemsSubject.value.find(item => item.id === cartItemId);
+    const item = this.cartItemsSubject.value.find(
+      (item) => item.id === cartItemId
+    );
     console.log('Cart item debug:', {
       itemFound: !!item,
       item: item || 'Not found',
-      allItems: this.cartItemsSubject.value
+      allItems: this.cartItemsSubject.value,
     });
   }
 
@@ -127,15 +133,20 @@ export class CartService {
 
   // Método auxiliar para debug
   getCartItemDetails(postId: number): void {
-    const item = this.cartItemsSubject.value.find(item => item.postId === postId);
+    const item = this.cartItemsSubject.value.find(
+      (item) => item.postId === postId
+    );
     console.log('Cart item details:', {
       found: !!item,
       item: item || 'Not found',
-      allItems: this.cartItemsSubject.value
+      allItems: this.cartItemsSubject.value,
     });
   }
 
   getCartItemCount(): number {
-    return this.cartItemsSubject.value.reduce((acc, item) => acc + item.quantity, 0);
+    return this.cartItemsSubject.value.reduce(
+      (acc, item) => acc + item.quantity,
+      0
+    );
   }
 }

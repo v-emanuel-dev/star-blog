@@ -1,25 +1,33 @@
-# Star Blog App
+# Star Blog 🚀
 
-A **full-stack Blog application** that enables users to register, log in, and create, read, update, and delete posts. This application is built using **Angular** for the frontend, **Node.js** with **JWT** for secure authentication in the backend, and **MySQL** for data storage.
+Star Blog is a modern, full-featured blog application with a clean, responsive interface built using Tailwind and Bootstrap. With secure authentication and role-based access, it offers a personalized experience and controlled access for different user types, including a robust admin area.
 
-## Features
+## Main Features
 
-- **User Authentication**: Secure user registration and login with JWT tokens, including integration with Google using OAuth 2.0 for easy access and profile information retrieval.
-- **User Dashboard**: Personalized user experience with easy access to create and manage posts.
-- **Responsive Design**: Mobile-friendly interface designed with **Tailwind CSS** and **Bootstrap** for a seamless user experience.
-- **CRUD Operations**: Users can create, read, update, and delete their blog posts.
-- **Easy Navigation**: Intuitive layout that enhances user experience.
-- **Comments**: Support for adding comments to posts, even for non-authenticated users.
-- **Profile Management**: Users can update their profile information, including uploading a profile picture.
+- **JWT Authentication**: Secure login system with token-based authentication.
+- **Public and Private Sections**: Organized content with controlled access for readers and administrators.
+- **Posts with Categories**: Create and organize posts with categories, including like, edit, and delete functionalities.
+- **Post Export**: Export post content in `.txt` files for easy sharing and archiving.
+- **Robust Search System**: Real-time search for quick, precise results.
+- **Real-Time Notifications**: Instant WebSocket notifications for content interactions.
+- **Profile Image Upload**: Customize user profile with image upload.
+- **Complete Navbar**: Includes user image, notifications, and intuitive navigation.
+- **Roles and Permissions**: Access control with user and admin roles.
 
-## Tech Stack
+## Admin Area
 
-- **Frontend**: [Angular](https://angular.io/)
-- **Backend**: [Node.js](https://nodejs.org/), [Express](https://expressjs.com/)
-- **Database**: [MySQL](https://www.mysql.com/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Admin Dashboard**: Full-featured interface to manage:
+  - **Posts**: View, create, edit, and delete posts.
+  - **Users**: Manage profiles and permissions.
+  - **Categories**: Organize content by category.
+  - **Comments**: Moderate and control interactions.
 
-## Installation
+## Technologies Used
+
+- **Frontend**: Angular, Tailwind CSS, Bootstrap.
+- **Backend**: Node.js, MySQL.
+- **WebSocket**: Real-time notifications to keep users updated.
+- **Database**: MySQL for efficient data storage and organization.
 
 ### Prerequisites
 

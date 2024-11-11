@@ -35,7 +35,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   private userDetailsSubscription: Subscription = new Subscription();
   private notificationsSubscription: Subscription | undefined;
-  private subscription: Subscription = new Subscription();
 
   constructor(
     private authService: AuthService,
@@ -70,11 +69,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
         this.changeDetectorRef.detectChanges();
       });
 
-      this.addToCartSubscription = this.webSocketService.addToCart$.subscribe({
+      /* this.addToCartSubscription = this.webSocketService.addToCart$.subscribe({
         next: (message: string) => {
           this.notificationsCart.push(message);
         }
-      });
+      }); */
 
     document.addEventListener('click', this.closeDropdowns.bind(this));
     document.addEventListener('click', this.closeCartNotifications.bind(this));

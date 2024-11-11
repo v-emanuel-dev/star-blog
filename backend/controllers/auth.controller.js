@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const db = require("../config/db");
+const passport = require("passport");
 
 exports.register = (req, res) => {
   const { email, password, username, role = "user" } = req.body;
@@ -54,9 +55,7 @@ exports.login = (req, res) => {
     const token = jwt.sign(
       { id: user.id, role: user.role },
       process.env.JWT_SECRET,
-      {
-        expiresIn: 86400,
-      }
+      { expiresIn: 86400 }
     );
 
     res.status(200).json({
@@ -68,4 +67,21 @@ exports.login = (req, res) => {
       userRole: user.role,
     });
   });
+};
+
+exports.googleAuth = passport.authenticate("google", {
+  scope: ["profile", "email"],
+});
+
+exports.googleCallback = (req, res) => {
+  const user = req.user;
+  const token = jwt.sign(
+    { id: user.id, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: "24h" }
+  );
+
+  const frontendUrl = `http://localhost:4200/blog?token=${token}&accessToken=${token}&userId=${user.id}&email=${user.email}&username=${user.username}&profilePicture=${user.profilePicture}&userRole=${user.role}`;
+
+  res.redirect(frontendUrl);
 };

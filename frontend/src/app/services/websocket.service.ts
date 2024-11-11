@@ -19,11 +19,14 @@ export class WebSocketService {
   private notificationsSubject = new BehaviorSubject<Notification[]>([]);
   notifications$ = this.notificationsSubject.asObservable();
 
-  private addToCartSubject = new Subject<string>();
+  /* private addToCartSubject = new Subject<string>();
   addToCart$ = this.addToCartSubject.asObservable();
 
   private removeFromCartSubject = new Subject<string>();
   removeFromCart$ = this.removeFromCartSubject.asObservable();
+
+  private updateCartSubject = new Subject<string>();
+  updateCart$ = this.updateCartSubject.asObservable(); */
 
   private userId: string | null = localStorage.getItem('userId');
 
@@ -39,15 +42,20 @@ export class WebSocketService {
       this.addNotification(data);
     });
 
-    this.socket.on('addToCartNotification', (message: string) => {
-      console.log('Received add to cart notification:', message);
+    /* this.socket.on('addToCartNotification', (message: string) => {
+      console.log('Received ADD to cart notification:', message);
       this.addToCartSubject.next(message);
     });
 
     this.socket.on('removeFromCartNotification', (message: string) => {
-      console.log('Received remove from cart notification:', message);
+      console.log('Received REMOVE from cart notification:', message);
       this.removeFromCartSubject.next(message);
     });
+
+    this.socket.on('updateCartNotification', (message: string) => {
+      console.log('Received UPDATE from cart notification:', message);
+      this.updateCartSubject.next(message);
+    }); */
 
     this.initializeNotifications();
     this.watchForUserIdAndFetchNotifications();
