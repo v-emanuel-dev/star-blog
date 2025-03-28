@@ -30,7 +30,7 @@ export class BlogEditComponent implements OnInit {
   editorContent: string = '';
   loading: boolean = false;
 
-  public Editor = ClassicEditor.default;
+  public Editor = ClassicEditor as any;
   public blogEditorContent: string = '';
   public editorConfig = {
     toolbar: [

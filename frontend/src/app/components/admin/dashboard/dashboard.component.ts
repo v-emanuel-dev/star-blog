@@ -46,7 +46,7 @@ export class DashboardComponent implements OnInit {
   selectedTab: string;
   selectedPost: string | null = '';
 
-  public Editor = ClassicEditor.default;
+  public Editor = ClassicEditor as any;
   public editorConfig = {
     toolbar: [
       'heading',

@@ -29,7 +29,7 @@ export class BlogCreateComponent implements OnInit {
   editingCategory: any = null;
   loading: boolean = false;
 
-  public Editor = ClassicEditor.default;
+  public Editor = ClassicEditor as any;
   public blogEditorContent: string = '';
   public editorConfig = {
     toolbar: [
